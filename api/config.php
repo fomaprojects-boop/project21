@@ -4,8 +4,8 @@
 // # SECURITY WARNING: DO NOT COMMIT SECRETS TO VERSION CONTROL
 // #####################################################################
 // #
-// # The credentials below (DB_PASSWORD, ENCRYPTION_KEY, GOOGLE_CLIENT_SECRET,
-// # FACEBOOK_APP_SECRET) are sensitive. Storing them directly in the code
+// # The credentials below (DB_PASSWORD, ENCRYPTION_KEY, GOOGLE_CLIENT_SECRET, 
+// # FACEBOOK_APP_SECRET) are sensitive. Storing them directly in the code 
 // # is a major security risk and is not recommended for production.
 // #
 // # RECOMMENDED PRACTICE: Use environment variables.
@@ -72,3 +72,5 @@ define('DEFAULT_SMTP_SECURE', ''); // PHPMailer::ENCRYPTION_SMTPS = 'ssl'
 define('DEFAULT_FROM_EMAIL', 'noreply@chatme.co.tz');
 define('DEFAULT_FROM_NAME', 'ChatMe Platform');
 // ------------------------------------
+
+?>
