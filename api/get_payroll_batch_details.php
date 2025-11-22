@@ -1,5 +1,6 @@
 <?php
 // api/get_payroll_batch_details.php
+// Endpoint to fetch details for a specific payroll batch
 require_once 'db.php';
 session_start();
 
@@ -35,9 +36,10 @@ try {
     $batch_details['entries'] = $entries;
 
     echo json_encode(['status' => 'success', 'data' => $batch_details]);
+    exit;
 
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    exit;
 }
-?>

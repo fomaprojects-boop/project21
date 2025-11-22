@@ -1809,6 +1809,35 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             </div>`,
         };
         const modalTemplates = {
+            payrollDetailsModal: `<div id="payrollDetailsModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
+                <div class="relative mx-auto p-5 border w-full max-w-5xl shadow-lg rounded-md bg-white h-[80vh] flex flex-col">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 class="text-xl font-bold text-gray-800">Payroll Details</h3>
+                        <button onclick="closeModal('payrollDetailsModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                    </div>
+                    <div id="payroll-details-info" class="mb-4 grid grid-cols-3 gap-4 text-sm bg-gray-50 p-3 rounded border">
+                        <!-- Batch info loaded here -->
+                    </div>
+                    <div class="flex-1 overflow-auto border rounded-lg">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-100 sticky top-0">
+                                <tr>
+                                    <th class="p-3 font-semibold">Employee</th>
+                                    <th class="p-3 font-semibold">Email</th>
+                                    <th class="p-3 font-semibold text-right">Basic Salary</th>
+                                    <th class="p-3 font-semibold text-right">Allowances</th>
+                                    <th class="p-3 font-semibold text-right">Deductions</th>
+                                    <th class="p-3 font-semibold text-right">Tax</th>
+                                    <th class="p-3 font-semibold text-right">Net Salary</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payroll-details-table-body" class="divide-y">
+                                <!-- Entries loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`,
             addInvestmentModal: `<div id="addInvestmentModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
                 <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
                     <div class="mt-3">
@@ -3561,14 +3590,18 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 response.data.forEach(batch => {
                     const statusClass = `status-${batch.status.replace(/\s+/g, '-')}`;
                     let actions = '';
+
+                    // Added View Details button
+                    actions += `<button onclick="viewPayrollDetails(${batch.id})" class="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-md font-semibold hover:bg-gray-200 mr-2">View</button>`;
+
                     if (batch.is_actionable) {
-                        actions = `<button onclick="approvePayroll(${batch.id})" class="text-sm bg-green-600 text-white font-semibold py-1 px-3 rounded-md hover:bg-green-700">Approve & Pay</button>`;
+                        actions += `<button onclick="approvePayroll(${batch.id})" class="text-sm bg-green-600 text-white font-semibold py-1 px-3 rounded-md hover:bg-green-700">Approve & Pay</button>`;
                     } else if (batch.status === 'Approved') {
-                        actions = `<button onclick="sendPayslips(${batch.id})" class="text-sm bg-blue-600 text-white font-semibold py-1 px-3 rounded-md hover:bg-blue-700">Send Payslips</button>`;
+                        actions += `<button onclick="sendPayslips(${batch.id})" class="text-sm bg-blue-600 text-white font-semibold py-1 px-3 rounded-md hover:bg-blue-700">Send Payslips</button>`;
                     } else if (batch.status === 'Paid') {
-                        actions = `<span class="text-sm text-gray-500">Completed</span>`;
+                        actions += `<span class="text-sm text-gray-500">Completed</span>`;
                     } else {
-                        actions = `<span class="text-sm text-gray-400">No action</span>`;
+                        // actions += `<span class="text-sm text-gray-400">No action</span>`;
                     }
 
                     tableBody.innerHTML += `
@@ -3622,6 +3655,48 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             if (response && response.status === 'success') {
                 alert('Payroll batch approved successfully!');
                 loadPayrollBatches();
+            }
+        }
+
+        async function viewPayrollDetails(batchId) {
+            openModal('payrollDetailsModal');
+            const infoDiv = document.getElementById('payroll-details-info');
+            const tbody = document.getElementById('payroll-details-table-body');
+
+            infoDiv.innerHTML = '<p>Loading...</p>';
+            tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">Loading details...</td></tr>';
+
+            const data = await fetchApi(`get_payroll_batch_details.php?id=${batchId}`);
+
+            if (data && data.status === 'success') {
+                const b = data.data; // Batch details
+                infoDiv.innerHTML = `
+                    <div><span class="font-semibold">Period:</span> ${b.month} ${b.year}</div>
+                    <div><span class="font-semibold">Uploaded By:</span> ${b.uploaded_by}</div> <!-- ID only in simple fetch, might need join in backend for name, but fine for now -->
+                    <div><span class="font-semibold">Status:</span> <span class="px-2 py-0.5 rounded-full text-xs status-${b.status.replace(/\s+/g, '-')}">${b.status}</span></div>
+                    <div><span class="font-semibold">Total Amount:</span> ${DEFAULT_CURRENCY} ${number_format(b.total_amount, 2)}</div>
+                `;
+
+                tbody.innerHTML = '';
+                if (b.entries && b.entries.length > 0) {
+                    b.entries.forEach(entry => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td class="p-3">${entry.employee_name}</td>
+                                <td class="p-3 text-gray-600">${entry.employee_email}</td>
+                                <td class="p-3 text-right">${number_format(entry.basic_salary, 2)}</td>
+                                <td class="p-3 text-right">${number_format(entry.allowances, 2)}</td>
+                                <td class="p-3 text-right text-red-500">-${number_format(entry.deductions, 2)}</td>
+                                <td class="p-3 text-right text-red-500">-${number_format(entry.income_tax, 2)}</td>
+                                <td class="p-3 text-right font-bold">${number_format(entry.net_salary, 2)}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">No entries found in this batch.</td></tr>';
+                }
+            } else {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">${data ? data.message : 'Failed to load details.'}</td></tr>`;
             }
         }
 

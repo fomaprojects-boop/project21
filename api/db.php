@@ -22,4 +22,3 @@ try {
     // Sitisha utekelezaji
     die();
 }
-?>
