@@ -1,0 +1,868 @@
+[09-Nov-2025 19:48:14 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../api/config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php on line 5
+[09-Nov-2025 19:48:14 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../api/config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php:5
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php on line 5
+[09-Nov-2025 23:18:09 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php on line 5
+[09-Nov-2025 23:18:09 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php:5
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(11): require_once()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php on line 5
+[09-Nov-2025 23:34:47 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php on line 5
+[09-Nov-2025 23:34:47 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php:5
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(11): require_once()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php on line 5
+[09-Nov-2025 23:35:10 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php on line 5
+[09-Nov-2025 23:35:10 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php:5
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(11): require_once()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php on line 5
+[09-Nov-2025 23:40:06 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Undefined constant "Modules\YouTubeAds\Controllers\DB_SERVER" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php:26
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(143): Modules\YouTubeAds\Controllers\AuthController->__construct()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php on line 26
+[09-Nov-2025 23:59:30 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Undefined constant "DB_SERVER" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php:26
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(143): Modules\YouTubeAds\Controllers\AuthController->__construct()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php on line 26
+[10-Nov-2025 00:07:23 Africa/Nairobi] PHP Fatal error:  Uncaught Exception: Encryption key is not set or is not 32 bytes long. in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/EncryptionService.php:11
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(32): Modules\YouTubeAds\Services\EncryptionService->__construct()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(143): Modules\YouTubeAds\Controllers\AuthController->__construct()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/EncryptionService.php on line 11
+[10-Nov-2025 00:09:50 Africa/Nairobi] PHP Fatal error:  Uncaught Exception: Encryption key is not set or is not 32 bytes long. in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/EncryptionService.php:11
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(32): Modules\YouTubeAds\Services\EncryptionService->__construct()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(143): Modules\YouTubeAds\Controllers\AuthController->__construct()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/EncryptionService.php on line 11
+[10-Nov-2025 00:10:02 Africa/Nairobi] PHP Fatal error:  Uncaught Exception: Encryption key is not set or is not 32 bytes long. in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/EncryptionService.php:11
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(32): Modules\YouTubeAds\Services\EncryptionService->__construct()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(143): Modules\YouTubeAds\Controllers\AuthController->__construct()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/EncryptionService.php on line 11
+[10-Nov-2025 00:48:31 Africa/Nairobi] PHP Fatal error:  Uncaught InvalidArgumentException: json key is missing the client_id field in /home/fomaenter/mteja.fomaentertainment.com/vendor/google/auth/src/Credentials/UserRefreshCredentials.php:90
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Client.php(1347): Google\Auth\Credentials\UserRefreshCredentials->__construct()
+#1 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Client.php(493): Google\Client->createUserRefreshCredentials()
+#2 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Client.php(967): Google\Client->authorize()
+#3 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Service/Resource.php(248): Google\Client->execute()
+#4 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient-services/src/YouTube/Resource/Channels.php(87): Google\Service\Resource->call()
+#5 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php(71): Google\Service\YouTube\Resource\Channels->listChannels()
+#6 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(147): Modules\YouTubeAds\Services\YouTubeService->getChannelInfo()
+#7 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(99): Modules\YouTubeAds\Controllers\AuthController->fetchAndStoreChannelInfo()
+#8 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(54): Modules\YouTubeAds\Controllers\AuthController->handleGoogleCallback()
+#9 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(164): Modules\YouTubeAds\Controllers\AuthController->handleRequest()
+#10 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/vendor/google/auth/src/Credentials/UserRefreshCredentials.php on line 90
+[10-Nov-2025 00:56:18 Africa/Nairobi] PHP Fatal error:  Uncaught Google\Service\Exception: {
+  "error": {
+    "code": 403,
+    "message": "YouTube Data API v3 has not been used in project 896289196300 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=896289196300 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
+    "errors": [
+      {
+        "message": "YouTube Data API v3 has not been used in project 896289196300 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=896289196300 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
+        "domain": "usageLimits",
+        "reason": "accessNotConfigured",
+        "extendedHelp": "https://console.developers.google.com"
+      }
+    ],
+    "status": "PERMISSION_DENIED",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "SERVICE_DISABLED",
+        "domain": "googleapis.com",
+        "metadata": {
+          "activationUrl": "https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=896289196300",
+          "containerInfo": "896289196300",
+          "serviceTitle": "YouTube Data API v3",
+          "service": "youtube.googleapis.com",
+          "consumer": "projects/896289196300"
+        }
+      },
+      {
+        "@type": "type.googleapis.com/google.rpc.LocalizedMessage",
+        "locale": "en-US",
+        "message": "YouTube Data API v3 has not been used in project 896289196300 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=896289196300 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+      },
+      {
+        "@type": "type.googleapis.com/google.rpc.Help",
+        "links": [
+          {
+            "description": "Google developers console API activation",
+            "url": "https://console.developers.google.com/apis/api/youtube.googleapis.com/overview?project=896289196300"
+          }
+        ]
+      }
+    ]
+  }
+}
+ in /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/REST.php:134
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/REST.php(107): Google\Http\REST::decodeHttpResponse()
+#1 [internal function]: Google\Http\REST::doExecute()
+#2 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Task/Runner.php(187): call_user_func_array()
+#3 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/REST.php(66): Google\Task\Runner->run()
+#4 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Client.php(969): Google\Http\REST::execute()
+#5 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Service/Resource.php(248): Google\Client->execute()
+#6 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient-services/src/YouTube/Resource/Channels.php(87): Google\Service\Resource->call()
+#7 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php(105): Google\Service\YouTube\Resource\Channels->listChannels()
+#8 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(159): Modules\YouTubeAds\Services\YouTubeService->getChannelInfo()
+#9 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(104): Modules\YouTubeAds\Controllers\AuthController->fetchAndStoreChannelInfo()
+#10 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(54): Modules\YouTubeAds\Controllers\AuthController->handleGoogleCallback()
+#11 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(176): Modules\YouTubeAds\Controllers\AuthController->handleRequest()
+#12 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/REST.php on line 134
+[10-Nov-2025 17:01:24 Africa/Nairobi] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'business_id' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:54
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(54): mysqli->prepare()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(34): Modules\YouTubeAds\Controllers\AdController->initializeSessionAndTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(176): Modules\YouTubeAds\Controllers\AdController->__construct()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 54
+[10-Nov-2025 17:01:34 Africa/Nairobi] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'business_id' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:54
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(54): mysqli->prepare()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(34): Modules\YouTubeAds\Controllers\AdController->initializeSessionAndTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(176): Modules\YouTubeAds\Controllers\AdController->__construct()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 54
+[10-Nov-2025 18:29:13 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method Modules\YouTubeAds\Models\YoutubeChannel::getChannelByTenant() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php:30
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 30
+[10-Nov-2025 18:29:31 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method Modules\YouTubeAds\Models\YoutubeChannel::getChannelByTenant() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php:30
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 30
+[10-Nov-2025 18:30:09 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method Modules\YouTubeAds\Models\YoutubeChannel::getChannelByTenant() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php:30
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 30
+[10-Nov-2025 18:30:25 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method Modules\YouTubeAds\Models\YoutubeChannel::getChannelByTenant() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php:30
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 30
+[10-Nov-2025 18:51:35 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method Modules\YouTubeAds\Models\YoutubeChannel::getChannelByTenant() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php:31
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 31
+[10-Nov-2025 20:57:57 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 20:57:57 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:02:51 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:02:51 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:03:01 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:03:01 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:06:11 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:06:11 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:08:16 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:08:16 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:10:08 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:10:08 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:14:26 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:14:26 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:17:56 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:17:56 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:18:11 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:18:11 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:21:17 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:21:17 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:55:44 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:55:44 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:55:46 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:55:46 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:56:07 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:56:07 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:56:08 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:56:08 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 21:59:10 Africa/Nairobi] PHP Fatal error:  Uncaught Google\Service\Exception: {
+  "error": {
+    "code": 403,
+    "message": "Request had insufficient authentication scopes.",
+    "errors": [
+      {
+        "message": "Insufficient Permission",
+        "domain": "global",
+        "reason": "insufficientPermissions"
+      }
+    ],
+    "status": "PERMISSION_DENIED",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "ACCESS_TOKEN_SCOPE_INSUFFICIENT",
+        "domain": "googleapis.com",
+        "metadata": {
+          "service": "youtube.googleapis.com",
+          "method": "youtube.api.v3.V3DataVideoService.Insert"
+        }
+      }
+    ]
+  }
+}
+ in /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/REST.php:134
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/REST.php(107): Google\Http\REST::decodeHttpResponse()
+#1 [internal function]: Google\Http\REST::doExecute()
+#2 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Task/Runner.php(187): call_user_func_array()
+#3 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/REST.php(66): Google\Task\Runner->run()
+#4 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Client.php(969): Google\Http\REST::execute()
+#5 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/MediaFileUpload.php(309): Google\Client->execute()
+#6 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/MediaFileUpload.php(289): Google\Http\MediaFileUpload->fetchResumeUri()
+#7 /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/MediaFileUpload.php(126): Google\Http\MediaFileUpload->getResumeUri()
+#8 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/UploadService.php(48): Google\Http\MediaFileUpload->nextChunk()
+#9 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(179): Modules\YouTubeAds\Services\UploadService->upload()
+#10 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(74): Modules\YouTubeAds\Controllers\AdController->createAd()
+#11 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(259): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#12 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/vendor/google/apiclient/src/Http/REST.php on line 134
+[10-Nov-2025 23:32:27 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:32:27 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:37:18 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:37:18 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:37:23 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:37:23 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:52:55 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:52:55 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:52:57 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:52:57 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:53:09 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:53:09 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:53:11 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[10-Nov-2025 23:53:11 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:39:53 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:39:53 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:39:53 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:39:53 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:39:56 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:39:56 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:44:47 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:44:47 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:44:47 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:44:47 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:44:50 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 00:44:50 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:05:28 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:05:28 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:05:28 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:05:28 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:05:28 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:05:28 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:06:35 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:06:35 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:06:35 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:06:35 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:06:35 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:06:35 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:14:03 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:14:03 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:14:03 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:14:03 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:14:03 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:14:03 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 13
+[11-Nov-2025 01:52:08 Africa/Nairobi] Ad Creation Error: SQLSTATE[HY000]: General error: 1364 Field 'due_date' doesn't have a default value
+[11-Nov-2025 01:52:40 Africa/Nairobi] Ad Creation Error: SQLSTATE[HY000]: General error: 1364 Field 'due_date' doesn't have a default value
+[11-Nov-2025 02:06:09 Africa/Nairobi] Ad Creation Error: Incorrect date value: '2025' for column `fomaenter_chatme`.`ads`.`start_date` at row 1
+[11-Nov-2025 02:17:45 Africa/Nairobi] Ad Creation Error: Incorrect date value: '2025' for column `fomaenter_chatme`.`ads`.`start_date` at row 1
+[11-Nov-2025 02:22:57 Africa/Nairobi] Ad Creation Error: Incorrect date value: '2025' for column `fomaenter_chatme`.`ads`.`start_date` at row 1
+[11-Nov-2025 02:23:44 Africa/Nairobi] Ad Creation Error: Incorrect date value: '2025' for column `fomaenter_chatme`.`ads`.`start_date` at row 1
+[11-Nov-2025 10:45:56 Africa/Nairobi] Ad Creation Error: Incorrect date value: '2025' for column `fomaenter_chatme`.`ads`.`start_date` at row 1
+[11-Nov-2025 10:51:54 Africa/Nairobi] Ad Creation Error: Incorrect date value: '2025' for column `fomaenter_chatme`.`ads`.`start_date` at row 1
+[11-Nov-2025 11:04:01 Africa/Nairobi] Ad Creation Error: Incorrect date value: '2025' for column `fomaenter_chatme`.`ads`.`start_date` at row 1
+[11-Nov-2025 14:08:47 Africa/Nairobi] Ad Creation Error: Incorrect date value: '2025' for column `fomaenter_chatme`.`ads`.`start_date` at row 1
+[11-Nov-2025 17:06:10 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::get_result() in /home/fomaenter/mteja.fomaentertainment.com/api/mailer_config.php:14
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(280): getMailerInstance()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(76): Modules\YouTubeAds\Controllers\AdController->createAd()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(371): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/mailer_config.php on line 14
+[11-Nov-2025 17:06:41 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::get_result() in /home/fomaenter/mteja.fomaentertainment.com/api/mailer_config.php:14
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(280): getMailerInstance()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(76): Modules\YouTubeAds\Controllers\AdController->createAd()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(371): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/mailer_config.php on line 14
+[11-Nov-2025 18:36:40 Africa/Nairobi] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/../../../vendor/autoload.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/MailerService.php on line 8
+[11-Nov-2025 18:36:40 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/../../../vendor/autoload.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/MailerService.php:8
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/YouTubeService.php(12): require_once()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(11): require_once('/home/fomaenter...')
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/services/MailerService.php on line 8
+[11-Nov-2025 19:02:42 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Class "Modules\YouTubeAds\Services\YouTubeService" not found in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php:41
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(287): Modules\YouTubeAds\Controllers\AuthController->__construct()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php on line 41
+[11-Nov-2025 16:11:51 UTC] PHP Fatal error:  Cannot use Modules\YouTubeAds\Services\YouTubeService as YouTubeService because the name is already in use in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php on line 17
+[11-Nov-2025 19:24:48 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Class "Modules\YouTubeAds\Services\YouTubeService" not found in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php:42
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(288): Modules\YouTubeAds\Controllers\AuthController->__construct()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php on line 42
+[11-Nov-2025 19:26:46 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Class "Modules\YouTubeAds\Services\YouTubeService" not found in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php:41
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(287): Modules\YouTubeAds\Controllers\AuthController->__construct()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php on line 41
+[11-Nov-2025 19:47:35 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:21
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(183): Modules\YouTubeAds\Models\YoutubeChannel->saveChannelInfo()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(103): Modules\YouTubeAds\Controllers\AuthController->fetchAndStoreChannelInfo()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(49): Modules\YouTubeAds\Controllers\AuthController->handleGoogleCallback()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AuthController.php(284): Modules\YouTubeAds\Controllers\AuthController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 21
+[11-Nov-2025 20:00:00 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:00:21 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:00:39 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:01:46 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:20:05 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:28:19 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:28:25 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:28:33 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:28:41 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:28:57 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:37:04 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 20:38:56 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 21:14:09 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 21:14:54 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 21:38:17 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 21:38:28 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 21:45:53 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 21:45:54 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 21:46:03 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:35:00 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:36:32 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:38:04 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:38:13 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:39:23 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:41:48 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:41:51 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:41:52 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:48:58 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:50:30 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:56:48 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:56:55 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:58:20 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 22:59:21 Africa/Nairobi] PHP Fatal error:  Uncaught ArgumentCountError: mysqli_stmt::fetch() expects exactly 0 arguments, 1 given in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php:28
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php(28): mysqli_stmt->fetch()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php(31): Modules\YouTubeAds\Models\YoutubeChannel->getChannelByTenantId()
+#2 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/YoutubeChannel.php on line 28
+[11-Nov-2025 23:07:09 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 38
+[11-Nov-2025 23:07:09 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 39
+[11-Nov-2025 23:07:35 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 38
+[11-Nov-2025 23:07:35 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 39
+[11-Nov-2025 23:07:50 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 38
+[11-Nov-2025 23:07:50 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 39
+[11-Nov-2025 23:13:34 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 38
+[11-Nov-2025 23:13:34 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 39
+[11-Nov-2025 23:14:34 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 38
+[11-Nov-2025 23:14:34 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 39
+[11-Nov-2025 23:14:40 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 38
+[11-Nov-2025 23:14:40 Africa/Nairobi] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_channel_info.php on line 39
+[12-Nov-2025 00:31:46 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Advertiser.php:62
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(367): Modules\YouTubeAds\Models\Advertiser->getVerifiedByTenant()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(90): Modules\YouTubeAds\Controllers\AdController->getAdvertisers()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Advertiser.php on line 62
+[12-Nov-2025 00:31:46 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:112
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(112): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(355): Modules\YouTubeAds\Models\Ad->getPendingCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(84): Modules\YouTubeAds\Controllers\AdController->getPendingCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 112
+[12-Nov-2025 00:31:46 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:140
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(140): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(362): Modules\YouTubeAds\Models\Ad->getActiveCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(87): Modules\YouTubeAds\Controllers\AdController->getActiveCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 140
+[12-Nov-2025 00:32:02 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:140
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(140): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(362): Modules\YouTubeAds\Models\Ad->getActiveCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(87): Modules\YouTubeAds\Controllers\AdController->getActiveCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 140
+[12-Nov-2025 00:32:02 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:112
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(112): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(355): Modules\YouTubeAds\Models\Ad->getPendingCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(84): Modules\YouTubeAds\Controllers\AdController->getPendingCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 112
+[12-Nov-2025 00:32:02 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Advertiser.php:62
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(367): Modules\YouTubeAds\Models\Advertiser->getVerifiedByTenant()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(90): Modules\YouTubeAds\Controllers\AdController->getAdvertisers()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Advertiser.php on line 62
+[12-Nov-2025 00:44:29 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:112
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(112): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(355): Modules\YouTubeAds\Models\Ad->getPendingCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(84): Modules\YouTubeAds\Controllers\AdController->getPendingCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 112
+[12-Nov-2025 00:44:29 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:140
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(140): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(362): Modules\YouTubeAds\Models\Ad->getActiveCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(87): Modules\YouTubeAds\Controllers\AdController->getActiveCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 140
+[12-Nov-2025 00:44:44 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:140
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(140): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(362): Modules\YouTubeAds\Models\Ad->getActiveCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(87): Modules\YouTubeAds\Controllers\AdController->getActiveCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 140
+[12-Nov-2025 00:44:44 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:112
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(112): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(355): Modules\YouTubeAds\Models\Ad->getPendingCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(84): Modules\YouTubeAds\Controllers\AdController->getPendingCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 112
+[12-Nov-2025 00:44:57 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:140
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(140): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(362): Modules\YouTubeAds\Models\Ad->getActiveCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(87): Modules\YouTubeAds\Controllers\AdController->getActiveCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 140
+[12-Nov-2025 00:44:57 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:112
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(112): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(355): Modules\YouTubeAds\Models\Ad->getPendingCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(84): Modules\YouTubeAds\Controllers\AdController->getPendingCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 112
+[12-Nov-2025 00:45:49 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:140
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(140): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(362): Modules\YouTubeAds\Models\Ad->getActiveCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(87): Modules\YouTubeAds\Controllers\AdController->getActiveCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 140
+[12-Nov-2025 00:45:49 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''3' OFFSET '0'' at line 7 in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php:112
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php(112): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(355): Modules\YouTubeAds\Models\Ad->getPendingCampaignsByTenant()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(84): Modules\YouTubeAds\Controllers\AdController->getPendingCampaigns()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/Ad.php on line 112
+[12-Nov-2025 09:48:18 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:37
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(348): Modules\YouTubeAds\Models\AdVideoMap->getVideosByAdId()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(81): Modules\YouTubeAds\Controllers\AdController->getLinkedVideos()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 37
+[12-Nov-2025 09:49:07 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:37
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(348): Modules\YouTubeAds\Models\AdVideoMap->getVideosByAdId()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(81): Modules\YouTubeAds\Controllers\AdController->getLinkedVideos()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 37
+[12-Nov-2025 10:27:39 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:37
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(348): Modules\YouTubeAds\Models\AdVideoMap->getVideosByAdId()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(81): Modules\YouTubeAds\Controllers\AdController->getLinkedVideos()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 37
+[12-Nov-2025 11:23:25 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:37
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(348): Modules\YouTubeAds\Models\AdVideoMap->getVideosByAdId()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(81): Modules\YouTubeAds\Controllers\AdController->getLinkedVideos()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(373): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#3 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 37
+[12-Nov-2025 09:02:21 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:02:21 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:02:43 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:02:43 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:05:22 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:05:22 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:11:35 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:11:35 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:22:35 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:22:35 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:22:41 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 09:22:41 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/../../../../config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/get_ad_reports.php on line 3
+[12-Nov-2025 12:29:10 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'created_at' in 'ORDER BY' in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:42
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php(42): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(355): Modules\YouTubeAds\Models\AdVideoMap->getVideosByAdId()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(81): Modules\YouTubeAds\Controllers\AdController->getLinkedVideos()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(380): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 42
+[12-Nov-2025 12:29:19 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'created_at' in 'ORDER BY' in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:42
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php(42): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(355): Modules\YouTubeAds\Models\AdVideoMap->getVideosByAdId()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(81): Modules\YouTubeAds\Controllers\AdController->getLinkedVideos()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(380): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 42
+[12-Nov-2025 12:50:03 Africa/Nairobi] PHP Warning:  Undefined array key "ad_id" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 345
+[12-Nov-2025 12:50:03 Africa/Nairobi] PHP Warning:  Undefined array key "video_id" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 346
+[12-Nov-2025 12:50:03 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'ad_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:17
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php(17): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(347): Modules\YouTubeAds\Models\AdVideoMap->create()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(78): Modules\YouTubeAds\Controllers\AdController->linkManualVideo()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(380): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 17
+[12-Nov-2025 12:50:17 Africa/Nairobi] PHP Warning:  Undefined array key "ad_id" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 345
+[12-Nov-2025 12:50:17 Africa/Nairobi] PHP Warning:  Undefined array key "video_id" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 346
+[12-Nov-2025 12:50:17 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'ad_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:17
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php(17): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(347): Modules\YouTubeAds\Models\AdVideoMap->create()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(78): Modules\YouTubeAds\Controllers\AdController->linkManualVideo()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(380): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 17
+[12-Nov-2025 12:54:30 Africa/Nairobi] PHP Warning:  Undefined array key "ad_id" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 345
+[12-Nov-2025 12:54:30 Africa/Nairobi] PHP Warning:  Undefined array key "video_id" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 346
+[12-Nov-2025 12:54:30 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'ad_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:17
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php(17): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(347): Modules\YouTubeAds\Models\AdVideoMap->create()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(78): Modules\YouTubeAds\Controllers\AdController->linkManualVideo()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(380): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 17
+[12-Nov-2025 12:54:40 Africa/Nairobi] PHP Warning:  Undefined array key "ad_id" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 345
+[12-Nov-2025 12:54:40 Africa/Nairobi] PHP Warning:  Undefined array key "video_id" in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php on line 346
+[12-Nov-2025 12:54:40 Africa/Nairobi] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'ad_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php:17
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php(17): PDOStatement->execute()
+#1 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(347): Modules\YouTubeAds\Models\AdVideoMap->create()
+#2 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(78): Modules\YouTubeAds\Controllers\AdController->linkManualVideo()
+#3 /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/controllers/AdController.php(380): Modules\YouTubeAds\Controllers\AdController->handleRequest()
+#4 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/modules/youtube_ads/models/AdVideoMap.php on line 17
