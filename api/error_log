@@ -1,0 +1,1358 @@
+[23-Oct-2025 12:03:19 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_details' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:47
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(47): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 47
+[23-Oct-2025 12:03:25 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_details' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:47
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(47): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 47
+[23-Oct-2025 12:03:33 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_details' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:47
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(47): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 47
+[23-Oct-2025 12:03:52 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_details' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:47
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(47): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 47
+[23-Oct-2025 12:04:50 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_details' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:47
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(47): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 47
+[23-Oct-2025 12:21:40 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:21:46 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:22:05 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:22:10 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:24:33 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:27:33 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:39:30 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:41:49 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:42:55 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:53:55 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 12:54:00 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 13:04:23 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 13:05:25 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_url' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 53
+[23-Oct-2025 13:05:57 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_details' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:47
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(47): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 47
+[23-Oct-2025 13:06:00 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_details' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:47
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(47): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 47
+[23-Oct-2025 13:06:04 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_details' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:47
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(47): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 47
+[23-Oct-2025 13:06:14 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_details' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php:47
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php(47): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invoice_request.php on line 47
+[23-Oct-2025 13:53:31 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 13:54:57 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:04:17 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:06:12 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:19:22 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:19:32 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:24:43 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:90
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 90
+[23-Oct-2025 14:24:48 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:90
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 90
+[23-Oct-2025 14:27:52 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:90
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 90
+[23-Oct-2025 14:29:51 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'request_token' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php:57
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php(57): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php on line 57
+[23-Oct-2025 14:30:02 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:90
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 90
+[23-Oct-2025 14:34:41 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:90
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 90
+[23-Oct-2025 14:38:01 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:90
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 90
+[23-Oct-2025 14:40:58 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:41:01 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:41:30 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:41:34 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:44:44 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:51:20 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 14:58:32 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:09:33 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:11:09 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:22:31 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:22:35 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:22:39 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:23:53 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:29:06 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:35:15 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:35:25 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:35:45 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:35:57 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'request_token' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php:57
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php(57): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php on line 57
+[23-Oct-2025 15:36:04 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:36:10 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:36:17 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:42:45 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:42:50 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:46:41 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:57:01 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 15:57:26 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 16:06:11 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[23-Oct-2025 16:06:46 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[23-Oct-2025 16:07:15 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[23-Oct-2025 16:07:19 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[23-Oct-2025 16:08:05 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[23-Oct-2025 16:11:55 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 16:18:48 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 16:26:47 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 16:29:42 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 19:03:11 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 20:48:29 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 20:57:29 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 20:57:38 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 21:03:38 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 21:12:40 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 21:23:49 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 21:26:44 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 21:28:27 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[23-Oct-2025 22:34:04 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:54
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(54): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 54
+[24-Oct-2025 06:28:26 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 06:41:16 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 06:44:06 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 06:44:06 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 06:44:29 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:45:37 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:46:51 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:46:56 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:52:39 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:52:51 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:53:45 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:53:45 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:53:45 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:53:45 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:53:45 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 08:53:45 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:05:51 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 09:06:26 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'request_token' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php:57
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php(57): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php on line 57
+[24-Oct-2025 09:06:46 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'request_token' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php:57
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php(57): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php on line 57
+[24-Oct-2025 09:08:24 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:12:42 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:19:48 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 09:20:48 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:23:49 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:23:50 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:24:32 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:25:13 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'registration_token' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:36:02 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'password' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:36:21 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'password' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:36:40 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'password' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:36:46 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'password' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 09:37:11 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'password' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/send_invitation.php on line 58
+[24-Oct-2025 10:20:14 UTC] PHP Warning:  Undefined array key "email" in /home/fomaenter/mteja.fomaentertainment.com/api/set_password.php on line 63
+[24-Oct-2025 10:20:14 UTC] PHP Warning:  Undefined array key "role" in /home/fomaenter/mteja.fomaentertainment.com/api/set_password.php on line 64
+[24-Oct-2025 10:21:39 UTC] PHP Warning:  Undefined array key "email" in /home/fomaenter/mteja.fomaentertainment.com/api/set_password.php on line 63
+[24-Oct-2025 10:21:39 UTC] PHP Warning:  Undefined array key "role" in /home/fomaenter/mteja.fomaentertainment.com/api/set_password.php on line 64
+[24-Oct-2025 10:38:23 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:09:03 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:09:30 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:09:38 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:13:15 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:14:05 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:14:14 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:15:30 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'request_token' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php:57
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php(57): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php on line 57
+[24-Oct-2025 11:15:39 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'request_token' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php:57
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php(57): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php on line 57
+[24-Oct-2025 11:20:26 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:20:33 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:20:44 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:20:53 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:21:00 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:23:37 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:46:00 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 11:50:14 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function opcache_reset() in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:2
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 2
+[24-Oct-2025 11:52:08 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'request_token' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php:57
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php(57): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php on line 57
+[24-Oct-2025 11:52:17 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'request_token' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php:57
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php(57): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php on line 57
+[24-Oct-2025 12:04:31 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function opcache_reset() in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:2
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 2
+[24-Oct-2025 12:04:44 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function opcache_reset() in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:2
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 2
+[24-Oct-2025 12:06:50 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 12:07:00 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:92
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 92
+[24-Oct-2025 12:08:00 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function opcache_reset() in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:2
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 2
+[24-Oct-2025 12:08:14 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function opcache_reset() in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:2
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 2
+[24-Oct-2025 12:09:57 UTC] PHP Parse error:  syntax error, unexpected identifier " " in /home/fomaenter/mteja.fomaentertainment.com/api/reject_payout.php on line 17
+[24-Oct-2025 12:18:12 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function opcache_reset() in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:2
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 2
+[24-Oct-2025 12:18:20 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function opcache_reset() in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:2
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 2
+[24-Oct-2025 12:21:21 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 12:21:25 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 12:21:53 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 12:22:00 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 12:27:06 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 12:27:14 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 12:31:22 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 13:27:16 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 13:27:28 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 13:46:05 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 13:46:16 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 13:57:52 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 14:42:18 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 14:55:06 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php:97
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 97
+[24-Oct-2025 15:00:41 UTC] PHP Warning:  The use statement with non-compound name 'TCPDF' has no effect in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 9
+[24-Oct-2025 15:00:52 UTC] PHP Warning:  The use statement with non-compound name 'TCPDF' has no effect in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 9
+[24-Oct-2025 16:20:58 UTC] PHP Warning:  file_get_contents(/home/fomaenter/mteja.fomaentertainment.com/api/../app-assets/images/logo/foma_logo.png): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 114
+[24-Oct-2025 16:21:14 UTC] PHP Warning:  file_get_contents(/home/fomaenter/mteja.fomaentertainment.com/api/../app-assets/images/logo/foma_logo.png): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/approve_payout.php on line 114
+[24-Oct-2025 16:55:22 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[24-Oct-2025 16:55:28 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[24-Oct-2025 16:55:40 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[24-Oct-2025 16:59:15 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[24-Oct-2025 17:00:47 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[24-Oct-2025 17:19:04 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[24-Oct-2025 17:19:17 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[24-Oct-2025 17:19:47 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[24-Oct-2025 17:22:26 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[24-Oct-2025 17:24:31 UTC] Database error in get_vendor_details.php: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '// Added created_at for sorting fallback
+            invoice_url,
+         ...' at line 8
+[25-Oct-2025 21:17:07 UTC] PHP Warning:  Undefined variable $conn in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 44
+[25-Oct-2025 21:17:07 UTC] PHP Fatal error:  Uncaught Error: Call to a member function begin_transaction() on null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:44
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 44
+[25-Oct-2025 21:17:25 UTC] PHP Warning:  Undefined variable $conn in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 44
+[25-Oct-2025 21:17:25 UTC] PHP Fatal error:  Uncaught Error: Call to a member function begin_transaction() on null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:44
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 44
+[25-Oct-2025 21:17:41 UTC] PHP Warning:  Undefined variable $conn in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 44
+[25-Oct-2025 21:17:41 UTC] PHP Fatal error:  Uncaught Error: Call to a member function begin_transaction() on null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:44
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 44
+[25-Oct-2025 21:17:47 UTC] PHP Warning:  Undefined variable $conn in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 44
+[25-Oct-2025 21:17:47 UTC] PHP Fatal error:  Uncaught Error: Call to a member function begin_transaction() on null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:44
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 44
+[25-Oct-2025 21:22:40 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'invoice_date' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:33
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(33): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 33
+[25-Oct-2025 21:23:11 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'invoice_date' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:33
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(33): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 33
+[25-Oct-2025 21:23:20 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'invoice_date' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:33
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(33): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 33
+[25-Oct-2025 21:34:34 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'full_name' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:45
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(45): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 45
+[25-Oct-2025 21:34:34 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'full_name' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:45
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(45): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 45
+[25-Oct-2025 21:35:02 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'full_name' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:45
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(45): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 45
+[25-Oct-2025 21:35:11 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'full_name' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:45
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(45): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 45
+[25-Oct-2025 21:38:45 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'contact_id' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:49
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(49): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 49
+[25-Oct-2025 21:38:56 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'contact_id' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:49
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(49): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 49
+[25-Oct-2025 21:41:11 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_number' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 58
+[25-Oct-2025 21:41:17 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_number' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 58
+[25-Oct-2025 21:41:30 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'invoice_number' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:58
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(58): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 58
+[26-Oct-2025 08:39:26 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[26-Oct-2025 15:16:49 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[26-Oct-2025 15:19:51 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[26-Oct-2025 15:21:03 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[26-Oct-2025 15:43:15 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[26-Oct-2025 16:10:32 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[26-Oct-2025 16:10:38 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[26-Oct-2025 16:23:44 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[26-Oct-2025 19:12:55 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[26-Oct-2025 19:17:30 UTC] Database Error in get_customer_contacts: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'SELECT'
+[27-Oct-2025 10:19:53 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'amount' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:20:04 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'amount' in 'INSERT INTO' in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:25:38 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:26:02 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:26:09 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:26:16 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:27:11 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:40:57 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:41:06 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:41:42 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:41:57 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:42:00 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 10:42:39 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1364 Field 'amount_paid' doesn't have a default value in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:51
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(51): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 51
+[27-Oct-2025 14:56:17 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php:79
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 79
+[27-Oct-2025 15:08:14 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php:58
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 58
+[27-Oct-2025 15:46:25 UTC] PHP Fatal error:  Uncaught Error: Class "tecnickcom\TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php:71
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 71
+[27-Oct-2025 19:09:43 UTC] PHP Warning:  The use statement with non-compound name 'TCPDF' has no effect in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 4
+[27-Oct-2025 21:36:46 UTC] PHP Warning:  The use statement with non-compound name 'TCPDF' has no effect in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 8
+[28-Oct-2025 11:34:52 UTC] PHP Parse error:  syntax error, unexpected single-quoted string "Company", expecting ")" in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 96
+[28-Oct-2025 11:50:04 UTC] PHP Warning:  The use statement with non-compound name 'TCPDF' has no effect in /home/fomaenter/mteja.fomaentertainment.com/api/test_pdf.php on line 9
+[28-Oct-2025 12:20:28 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/auth_check.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_customers.php on line 3
+[28-Oct-2025 12:20:28 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/auth_check.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_customers.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_customers.php on line 3
+[28-Oct-2025 12:20:39 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/auth_check.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_customers.php on line 3
+[28-Oct-2025 12:20:39 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/auth_check.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_customers.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_customers.php on line 3
+[28-Oct-2025 12:20:52 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/auth_check.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_unassigned_contacts.php on line 3
+[28-Oct-2025 12:20:52 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/auth_check.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_unassigned_contacts.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_unassigned_contacts.php on line 3
+[28-Oct-2025 12:21:13 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/auth_check.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_customers.php on line 3
+[28-Oct-2025 12:21:13 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/auth_check.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_customers.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_customers.php on line 3
+[28-Oct-2025 12:27:23 UTC] Statement Error: Contact not found.
+[28-Oct-2025 12:27:33 UTC] Statement Error: Contact not found.
+[28-Oct-2025 12:28:12 UTC] Statement Error: Contact not found.
+[28-Oct-2025 12:28:42 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'contact_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:55
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(55): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 55
+[28-Oct-2025 12:28:51 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'contact_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:55
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(55): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 55
+[28-Oct-2025 12:30:08 UTC] Statement Error: Contact not found.
+[28-Oct-2025 12:41:33 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'status' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:239
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(239): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 239
+[28-Oct-2025 12:41:39 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'status' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:239
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(239): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 239
+[28-Oct-2025 12:41:48 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'status' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:239
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(239): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 239
+[28-Oct-2025 12:42:03 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'status' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:239
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(239): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 239
+[28-Oct-2025 12:42:18 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'status' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:239
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(239): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 239
+[28-Oct-2025 13:06:02 UTC] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in /home/fomaenter/mteja.fomaentertainment.com/api/auth_check.php on line 2
+[28-Oct-2025 13:09:06 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'status' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:239
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(239): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 239
+[28-Oct-2025 13:09:15 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'status' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:239
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(239): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 239
+[28-Oct-2025 13:29:31 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'status' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:239
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(239): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 239
+[28-Oct-2025 13:29:38 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'status' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:239
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(239): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 239
+[28-Oct-2025 13:48:48 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[22003]: Numeric value out of range: 1264 Out of range value for column 'unit_price' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:75
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(75): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 75
+[28-Oct-2025 13:48:58 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[22003]: Numeric value out of range: 1264 Out of range value for column 'unit_price' at row 1 in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:75
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(75): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 75
+[28-Oct-2025 14:31:23 UTC] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 78
+[28-Oct-2025 14:31:23 UTC] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 78
+[28-Oct-2025 14:33:23 UTC] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 78
+[28-Oct-2025 14:33:23 UTC] PHP Warning:  Trying to access array offset on value of type bool in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 78
+[03-Nov-2025 17:58:21 UTC] PHP Warning:  Undefined array key "smtp_choice" in /home/fomaenter/mteja.fomaentertainment.com/api/test_smtp.php on line 31
+[03-Nov-2025 17:58:38 UTC] PHP Warning:  Undefined array key "smtp_choice" in /home/fomaenter/mteja.fomaentertainment.com/api/test_smtp.php on line 31
+[03-Nov-2025 18:02:31 UTC] PHP Warning:  Undefined array key "smtp_choice" in /home/fomaenter/mteja.fomaentertainment.com/api/test_smtp.php on line 31
+[03-Nov-2025 18:02:49 UTC] PHP Warning:  Undefined array key "smtp_choice" in /home/fomaenter/mteja.fomaentertainment.com/api/test_smtp.php on line 31
+[03-Nov-2025 18:03:00 UTC] PHP Warning:  Undefined array key "smtp_choice" in /home/fomaenter/mteja.fomaentertainment.com/api/test_smtp.php on line 31
+[03-Nov-2025 19:15:15 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "K_PATH_MAIN" in /home/fomaenter/mteja.fomaentertainment.com/api/invoice_templates.php:71
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(132): get_default_template_html()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/invoice_templates.php on line 71
+[03-Nov-2025 19:15:25 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "K_PATH_MAIN" in /home/fomaenter/mteja.fomaentertainment.com/api/invoice_templates.php:71
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(132): get_default_template_html()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/invoice_templates.php on line 71
+[06-Nov-2025 21:24:59 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function get_pdo_connection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_users.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_users.php on line 17
+[06-Nov-2025 21:25:05 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function get_pdo_connection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_invoices.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_invoices.php on line 17
+[07-Nov-2025 08:05:34 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:05:34 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:09:00 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:09:00 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:09:11 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:09:11 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:11:44 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "DB_HOST" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 08:11:56 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "DB_HOST" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 08:12:18 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "DB_HOST" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 08:17:29 UTC] PHP Parse error:  syntax error, unexpected identifier "session_start" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 4
+[07-Nov-2025 08:17:36 UTC] PHP Parse error:  syntax error, unexpected identifier "session_start" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 4
+[07-Nov-2025 08:18:45 UTC] PHP Parse error:  syntax error, unexpected identifier "session_start" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 4
+[07-Nov-2025 08:20:19 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:20:19 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:31:31 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:31:31 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:41:42 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:41:42 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:41:50 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 08:41:50 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 09:06:01 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 09:06:01 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 09:06:15 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 09:06:15 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 10:22:24 UTC] PHP Warning:  require_once(db_config.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 10:22:24 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'db_config.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 3
+[07-Nov-2025 10:38:15 UTC] PHP Warning:  require(api/db.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 9
+[07-Nov-2025 10:38:15 UTC] PHP Warning:  require(api/db.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 9
+[07-Nov-2025 10:38:15 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'api/db.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 9
+[07-Nov-2025 10:38:19 UTC] PHP Warning:  require(api/db.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 9
+[07-Nov-2025 10:38:19 UTC] PHP Warning:  require(api/db.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 9
+[07-Nov-2025 10:38:19 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'api/db.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 9
+[07-Nov-2025 10:50:39 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 30
+[07-Nov-2025 10:50:39 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php:30
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 30
+[07-Nov-2025 10:51:07 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 30
+[07-Nov-2025 10:51:07 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php:30
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 30
+[07-Nov-2025 10:59:40 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 10:59:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 11:06:52 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 11:07:01 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 11:10:47 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 11:10:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 11:20:53 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_contacts.php on line 13
+[07-Nov-2025 11:20:53 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_contacts.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_contacts.php on line 13
+[07-Nov-2025 11:20:59 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php on line 16
+[07-Nov-2025 11:20:59 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php on line 16
+[07-Nov-2025 11:21:04 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_contacts.php on line 13
+[07-Nov-2025 11:21:04 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_contacts.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_contacts.php on line 13
+[07-Nov-2025 11:21:11 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 30
+[07-Nov-2025 11:21:11 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php:30
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 30
+[07-Nov-2025 11:22:23 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 11:22:31 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 11:27:35 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_expense_history.php on line 25
+[07-Nov-2025 11:27:35 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_expense_history.php:25
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_expense_history.php on line 25
+[07-Nov-2025 11:27:40 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_templates.php on line 14
+[07-Nov-2025 11:27:40 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_templates.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_templates.php on line 14
+[07-Nov-2025 11:27:46 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php on line 16
+[07-Nov-2025 11:27:46 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php on line 16
+[07-Nov-2025 11:27:49 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_contacts.php on line 13
+[07-Nov-2025 11:27:49 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_contacts.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_contacts.php on line 13
+[07-Nov-2025 11:27:52 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_conversations.php on line 15
+[07-Nov-2025 11:27:52 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_conversations.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_conversations.php on line 15
+[07-Nov-2025 11:27:57 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_settings.php on line 14
+[07-Nov-2025 11:27:57 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_settings.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_settings.php on line 14
+[07-Nov-2025 11:28:13 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_conversations.php on line 15
+[07-Nov-2025 11:28:13 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_conversations.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_conversations.php on line 15
+[07-Nov-2025 11:28:16 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php on line 16
+[07-Nov-2025 11:28:16 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php on line 16
+[07-Nov-2025 11:28:22 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php on line 16
+[07-Nov-2025 11:28:22 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_payout_requests.php on line 16
+[07-Nov-2025 11:28:36 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_expense_history.php on line 25
+[07-Nov-2025 11:28:36 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_expense_history.php:25
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_expense_history.php on line 25
+[07-Nov-2025 11:31:38 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/get_invoices.php on line 19
+[07-Nov-2025 11:31:38 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/get_invoices.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_invoices.php on line 19
+[07-Nov-2025 11:31:46 UTC] PHP Warning:  Undefined variable $pdo in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 30
+[07-Nov-2025 11:31:46 UTC] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php:30
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/login_process.php on line 30
+[07-Nov-2025 11:32:19 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 11:32:29 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 18
+[07-Nov-2025 11:42:44 UTC] PHP Parse error:  syntax error, unexpected identifier "status", expecting ")" in /home/fomaenter/mteja.fomaentertainment.com/api/get_expense_history.php on line 32
+[07-Nov-2025 11:42:54 UTC] PHP Parse error:  syntax error, unexpected identifier "status", expecting ")" in /home/fomaenter/mteja.fomaentertainment.com/api/get_expense_history.php on line 32
+[07-Nov-2025 14:48:33 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 14
+[07-Nov-2025 14:48:33 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'user_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 53
+[07-Nov-2025 14:48:33 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 14
+[07-Nov-2025 14:48:33 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'user_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 53
+[07-Nov-2025 14:48:41 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 14
+[07-Nov-2025 14:48:41 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'user_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 53
+[07-Nov-2025 14:48:41 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 14
+[07-Nov-2025 14:48:41 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'user_id' cannot be null in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php:53
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php(53): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_invoice.php on line 53
+[07-Nov-2025 15:35:51 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[07-Nov-2025 15:36:22 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[07-Nov-2025 15:37:07 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[07-Nov-2025 15:37:09 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[07-Nov-2025 15:37:22 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[07-Nov-2025 15:37:26 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[07-Nov-2025 15:37:29 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[07-Nov-2025 16:30:21 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/create_direct_expense.php:43
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_direct_expense.php on line 43
+[07-Nov-2025 16:30:33 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/create_direct_expense.php:43
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_direct_expense.php on line 43
+[07-Nov-2025 16:42:51 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/create_direct_expense.php:43
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_direct_expense.php on line 43
+[07-Nov-2025 16:42:58 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/create_direct_expense.php:43
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/create_direct_expense.php on line 43
+[07-Nov-2025 21:07:28 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:07:40 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:07:45 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:08:03 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:08:56 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:11:29 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:12:15 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:12:44 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:12:49 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:12:56 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:27:18 UTC] PHP Warning:  Undefined array key "user_role" in /home/fomaenter/mteja.fomaentertainment.com/api/get_direct_expenses.php on line 19
+[07-Nov-2025 21:37:05 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/forward_direct_expense.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/forward_direct_expense.php on line 24
+[07-Nov-2025 21:37:13 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/forward_direct_expense.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/forward_direct_expense.php on line 24
+[07-Nov-2025 21:39:18 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/forward_direct_expense.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/forward_direct_expense.php on line 24
+[07-Nov-2025 21:39:42 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/reject_direct_expense.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_direct_expense.php on line 23
+[07-Nov-2025 21:39:50 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/reject_direct_expense.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_direct_expense.php on line 23
+[07-Nov-2025 21:50:55 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/forward_direct_expense.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/forward_direct_expense.php on line 24
+[07-Nov-2025 21:52:04 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getDbConnection() in /home/fomaenter/mteja.fomaentertainment.com/api/reject_direct_expense.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/reject_direct_expense.php on line 23
+[08-Nov-2025 06:37:47 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[08-Nov-2025 06:38:07 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[08-Nov-2025 07:36:58 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[08-Nov-2025 07:38:13 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[08-Nov-2025 08:08:21 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[08-Nov-2025 08:13:52 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[08-Nov-2025 10:55:44 UTC] Database error in get_vendor_details.php: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Nov-2025 11:07:35 UTC] Database error in get_vendor_details.php: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Nov-2025 11:10:49 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[08-Nov-2025 11:30:38 UTC] Database error in get_vendor_details.php: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Nov-2025 11:31:09 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[08-Nov-2025 11:31:28 UTC] Database error in get_vendor_details.php: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Nov-2025 11:36:07 UTC] Database error in get_vendor_details.php: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Nov-2025 11:38:03 UTC] Database error in get_vendor_details.php: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Nov-2025 11:44:06 UTC] Database error in get_vendor_details.php: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined
+[08-Nov-2025 11:52:19 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[08-Nov-2025 12:53:37 UTC] PHP Warning:  Undefined variable $API_USER_ID in /home/fomaenter/mteja.fomaentertainment.com/api/get_customer_statement.php on line 18
+[11-Nov-2025 12:01:35 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ad.campaign_type' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:91
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(91): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 91
+[11-Nov-2025 12:01:44 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ad.campaign_type' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:91
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(91): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 91
+[11-Nov-2025 12:05:23 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ad.tenant_id' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:91
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(91): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 91
+[11-Nov-2025 12:27:06 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ad.tenant_id' in 'SELECT' in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php:91
+Stack trace:
+#0 /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php(91): PDOStatement->execute()
+#1 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/record_payment.php on line 91
+[12-Nov-2025 20:30:45 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Class "MYPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php:61
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php on line 61
+[12-Nov-2025 20:37:56 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Class "MYPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php:61
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php on line 61
+[12-Nov-2025 20:52:04 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Class "MYPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php:61
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php on line 61
+[12-Nov-2025 21:03:33 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php:56
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php on line 56
+[12-Nov-2025 21:11:03 Africa/Nairobi] PHP Fatal error:  Uncaught Error: Class "TCPDF" not found in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php:56
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/generate_report.php on line 56
+[13-Nov-2025 09:21:59 UTC] PHP Warning:  require_once(/home/fomaenter/mteja.fomaentertainment.com/api/../tcpdf/tcpdf.php): Failed to open stream: No such file or directory in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 6
+[13-Nov-2025 09:21:59 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/fomaenter/mteja.fomaentertainment.com/api/../tcpdf/tcpdf.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php:6
+Stack trace:
+#0 {main}
+  thrown in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 6
+[13-Nov-2025 09:46:24 UTC] PHP Warning:  Undefined array key "tenant_id" in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 15
+[13-Nov-2025 10:15:47 UTC] PHP Warning:  Undefined array key "tenant_id" in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 15
+[13-Nov-2025 10:15:48 UTC] PHP Warning:  Undefined array key "tenant_id" in /home/fomaenter/mteja.fomaentertainment.com/api/generate_statement_pdf.php on line 15
