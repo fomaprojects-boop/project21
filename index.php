@@ -2378,6 +2378,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 const viewContainer = document.getElementById('view-container');
                 viewContainer.innerHTML = ''; // Futa yaliyopita
                 viewContainer.innerHTML = viewTemplates[viewId] || `<div class="p-8"><h2>${viewId} not implemented</h2></div>`;
+
+                // Apply min-w-0 to main only for expenses to fix overflow issues without affecting other pages
+                const mainElement = document.querySelector('main');
+                if (viewId === 'expenses') {
+                    mainElement.classList.add('min-w-0');
+                } else {
+                    mainElement.classList.remove('min-w-0');
+                }
                 
                 document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
                 const activeLink = document.querySelector(`a[onclick*="${viewId}"]`);
