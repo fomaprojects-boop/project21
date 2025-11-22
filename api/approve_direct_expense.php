@@ -65,10 +65,16 @@ try {
     }
 
     $allowed_statuses_for_approval = ['Submitted', 'Forwarded', 'Pending'];
-    if (!in_array($currentStatus, $allowed_statuses_for_approval)) {
+    // Check status case-insensitively
+    $currentStatusNormalized = ucfirst(strtolower($currentStatus));
+
+    // Also allow 'Forwarded' if it starts with 'Forwarded' (e.g., 'Forwarded to John')
+    $isForwarded = strpos($currentStatusNormalized, 'Forwarded') === 0;
+
+    if (!in_array($currentStatusNormalized, $allowed_statuses_for_approval) && !$isForwarded) {
         $pdo->rollBack();
         http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'This expense cannot be approved from its current state.']);
+        echo json_encode(['status' => 'error', 'message' => 'This expense cannot be approved from its current state. Current status: ' . $currentStatus]);
         exit;
     }
 

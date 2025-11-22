@@ -137,6 +137,17 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .manual-pending-pulse {
             animation: pulse-bg 2s infinite;
         }
+        /* Sticky Actions Column */
+        .sticky-right {
+            position: sticky;
+            right: 0;
+            background-color: white;
+            z-index: 10;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+        }
+        thead th.sticky-right {
+            background-color: #f3f4f6; /* Match gray-100 */
+        }
     </style>
     <!-- Facebook SDK for JavaScript -->
     <script>
@@ -1295,7 +1306,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                     <th class="p-4 font-semibold">Type</th>
                                     <th class="p-4 font-semibold">Amount</th>
                                     <th class="p-4 font-semibold">Status</th>
-                                    <th class="p-4 font-semibold min-w-[160px]">Actions</th>
+                                    <th class="p-4 font-semibold min-w-[160px] sticky-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="approvals-table-body" class="divide-y">
@@ -5386,7 +5397,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             <td class="p-4 text-gray-600">${formatExpenseType(expense.expense_type)}</td>
                             <td class="p-4 font-bold text-gray-800">${DEFAULT_CURRENCY} ${number_format(expense.amount, 2)}</td>
                             <td class="p-4"><span class="text-xs font-bold px-2.5 py-1 rounded-full border ${statusClass} bg-opacity-20 border-opacity-20">${expense.status}</span></td>
-                            <td class="p-4 space-x-2 flex items-center">${actions}</td>
+                            <td class="p-4 space-x-2 flex items-center sticky-right">${actions}</td>
                         </tr>
                     `;
                 });
