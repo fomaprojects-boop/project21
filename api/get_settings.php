@@ -25,7 +25,7 @@ try {
     }
 
     // 2. Pata Mipangilio ya Mtumiaji (User-specific Settings)
-    $user_stmt = $pdo->prepare("SELECT flw_webhook_secret_hash, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_business_account_id, corporate_tax_rate, tin_number, vrn_number, vfd_enabled, vfd_frequency, vfd_is_verified FROM users WHERE id = ?");
+    $user_stmt = $pdo->prepare("SELECT flw_webhook_secret_hash, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_business_account_id, whatsapp_status, corporate_tax_rate, tin_number, vrn_number, vfd_enabled, vfd_frequency, vfd_is_verified FROM users WHERE id = ?");
     $user_stmt->execute([$user_id]);
     $user_settings = $user_stmt->fetch(PDO::FETCH_ASSOC);
 

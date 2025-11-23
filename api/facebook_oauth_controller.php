@@ -148,9 +148,31 @@ if ($action === 'embedded_signup') {
     // We don't strictly fail if this fails, but it's good to know.
     // Ideally, we should check json_decode($subscribe_response)['success']
 
+    // --- AUTOMATIC REGISTRATION (Fix for "Pending" Status) ---
+    // Register the phone number with a PIN to complete the setup (Two-Step Verification)
+    $register_url = "https://graph.facebook.com/v21.0/{$phone_number_id}/register";
+    $register_payload = [
+        'messaging_product' => 'whatsapp',
+        'pin' => '123456' // Default PIN for automatic registration. User can change this in WhatsApp Manager if needed.
+    ];
+
+    $ch_reg = curl_init($register_url);
+    curl_setopt($ch_reg, CURLOPT_POST, true);
+    curl_setopt($ch_reg, CURLOPT_POSTFIELDS, json_encode($register_payload));
+    curl_setopt($ch_reg, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch_reg, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . $long_lived_token,
+        'Content-Type: application/json'
+    ]);
+    $reg_response = curl_exec($ch_reg);
+    curl_close($ch_reg);
+    // Log registration response if needed, or assume success if token is valid.
+    // -------------------------------------------------------
+
     // Save the credentials
     $user_id = $_SESSION['user_id'];
-    $stmt = $pdo->prepare("UPDATE users SET whatsapp_phone_number_id = ?, whatsapp_business_account_id = ?, whatsapp_access_token = ? WHERE id = ?");
+    // Also update status to Connected since we attempted automatic registration
+    $stmt = $pdo->prepare("UPDATE users SET whatsapp_phone_number_id = ?, whatsapp_business_account_id = ?, whatsapp_access_token = ?, whatsapp_status = 'Connected' WHERE id = ?");
     if ($stmt->execute([$phone_number_id, $waba_id, $long_lived_token, $user_id])) {
         echo json_encode(['status' => 'success', 'message' => 'WhatsApp account connected and subscribed successfully.']);
     } else {

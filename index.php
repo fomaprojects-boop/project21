@@ -975,7 +975,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                             <p id="whatsapp-status" class="text-sm text-gray-500">Not Connected</p>
                                         </div>
                                     </div>
-                                    <button id="whatsapp-connect-btn" onclick="launchWhatsAppSignup()" class="bg-violet-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-violet-700">Connect with Facebook</button>
+                                    <div class="flex space-x-2">
+                                        <button id="whatsapp-connect-btn" onclick="launchWhatsAppSignup()" class="bg-violet-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-violet-700">Connect with Facebook</button>
+                                        <button id="whatsapp-register-btn" onclick="completeWhatsappRegistration()" class="hidden bg-green-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-green-700" title="Fix Pending Status">Complete Registration</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -4504,18 +4507,42 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 if(settings.profile_picture_url) { document.getElementById('profile-pic-preview').src = settings.profile_picture_url; }
                 const statusEl = document.getElementById('whatsapp-status');
                 const btnEl = document.getElementById('whatsapp-connect-btn');
+                const regBtn = document.getElementById('whatsapp-register-btn');
+
                 if (settings.whatsapp_phone_number_id) {
-                    statusEl.textContent = `Connected: ${settings.whatsapp_phone_number_id}`;
+                    // Check detailed status
+                    const isActuallyConnected = settings.whatsapp_status === 'Connected';
+
+                    statusEl.textContent = isActuallyConnected
+                        ? `Connected: ${settings.whatsapp_phone_number_id}`
+                        : `Pending Registration: ${settings.whatsapp_phone_number_id}`;
+
+                    if (!isActuallyConnected) {
+                        statusEl.classList.add('text-yellow-600', 'font-bold');
+                    } else {
+                        statusEl.classList.remove('text-yellow-600', 'font-bold');
+                        statusEl.classList.add('text-green-600');
+                    }
+
                     btnEl.textContent = 'Disconnect';
                     btnEl.classList.remove('bg-violet-600', 'hover:bg-violet-700');
                     btnEl.classList.add('bg-red-500', 'hover:bg-red-600');
                     btnEl.onclick = disconnectWhatsApp;
+
+                    // Show registration button ONLY if NOT connected yet
+                    if (!isActuallyConnected) {
+                        regBtn.classList.remove('hidden');
+                    } else {
+                        regBtn.classList.add('hidden');
+                    }
                 } else {
                     statusEl.textContent = 'Not Connected';
+                    statusEl.classList.remove('text-green-600', 'text-yellow-600');
                     btnEl.textContent = 'Connect with Facebook';
                     btnEl.classList.remove('bg-red-500', 'hover:bg-red-600');
                     btnEl.classList.add('bg-violet-600', 'hover:bg-violet-700');
                     btnEl.onclick = launchWhatsAppSignup;
+                    regBtn.classList.add('hidden');
                 }
             }
             document.getElementById('profile-pic-upload').addEventListener('change', uploadProfilePicture);
@@ -4651,6 +4678,27 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 console.error('Error loading contacts:', error);
                 alert('Could not load contacts for the selected customer.');
             }
+        }
+
+        async function completeWhatsappRegistration() {
+            if (!confirm("This will attempt to register your number with Meta to fix 'Pending' status. Proceed?")) return;
+
+            const btn = document.getElementById('whatsapp-register-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Processing...';
+            btn.disabled = true;
+
+            const result = await fetchApi('register_whatsapp.php', { method: 'POST', body: { pin: '123456' } });
+
+            if (result && result.status === 'success') {
+                alert(result.message);
+                loadSettings(); // Reload to hide the button
+            } else {
+                alert('Registration failed: ' + (result ? result.message : 'Unknown error'));
+            }
+
+            btn.textContent = originalText;
+            btn.disabled = false;
         }
 
         async function testSmtpSettings() {
