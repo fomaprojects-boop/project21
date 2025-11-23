@@ -188,8 +188,16 @@ try {
         }
 
         foreach ($recipients as $contact) {
+            // Sanitize phone number: Remove +, spaces, dashes, parentheses
+            $rawPhone = $contact['phone_number'];
+            $sanitizedPhone = preg_replace('/[^0-9]/', '', $rawPhone);
+
+            // Basic normalization (Optional: Adjust based on your country's logic if needed)
+            // e.g. If number is 0755... and country is TZ, replace 0 with 255.
+            // Ideally, contacts should be stored in E.164 format (e.g. 255755...).
+
             $sendRes = sendToWhatsApp(
-                $contact['phone_number'],
+                $sanitizedPhone,
                 $message_type,
                 ($message_type === 'custom') ? $message_body : $template_id,
                 $whatsappToken,
