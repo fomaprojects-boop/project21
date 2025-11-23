@@ -36,10 +36,16 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .sidebar-link:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #8b5cf6; } /* slate-800, slate-50, violet-500 */
         .sidebar-link.active { background: linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0) 100%); border-left-color: #8b5cf6; color: #fff; font-weight: 600; }
         .modal { transition: opacity 0.3s ease; }
-        .conversation-item.active { background-color: #eff6ff; }
-        .message-bubble { max-width: 75%; white-space: pre-wrap; word-wrap: break-word; }
-        .message-contact { background-color: #ffffff; border: 1px solid #e5e7eb; }
-        .message-agent { background-color: #e0e7ff; }
+        .conversation-item { transition: all 0.2s ease; cursor: pointer; border-left: 4px solid transparent; }
+        .conversation-item:hover { background-color: #f8fafc; }
+        .conversation-item.active { background-color: #f5f3ff; border-left-color: #7c3aed; }
+        .btn-soft { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-soft:active { transform: scale(0.95); }
+        .tab-pill { transition: all 0.3s ease; }
+        .tab-pill.active { background-color: #fff; color: #7c3aed; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
+        .message-bubble { max-width: 75%; white-space: pre-wrap; word-wrap: break-word; border-radius: 1rem; padding: 0.75rem 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .message-contact { background-color: #ffffff; border: 1px solid #f1f5f9; color: #334155; border-bottom-left-radius: 0; }
+        .message-agent { background-color: #7c3aed; color: white; border-bottom-right-radius: 0; }
         #page-loader {
             position: fixed;
             top: 0;
@@ -620,47 +626,120 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 </div>
             </div>
             `,
-            conversations: `<div class="flex-1 flex flex-col h-full">
-            <!-- Chat Layout -->
-            <div class="flex-1 flex overflow-hidden">
-                <!-- Conversations List -->
-                <div id="conversations-list" class="w-1/3 bg-white border-r overflow-y-auto">
-                    <div class="p-4 border-b">
-                        <h2 class="text-lg font-semibold">Conversations</h2>
-                    </div>
-                    <div id="conversations-container" class="p-2">
-                        <!-- Loader -->
-                        <div id="loader" class="flex justify-center items-center p-4">
-                            <div class="loader"></div>
+            conversations: `<div class="flex-1 flex flex-col h-full overflow-hidden">
+                <div class="flex-1 flex overflow-hidden">
+                    <!-- Conversations Sidebar -->
+                    <div class="w-1/3 flex flex-col bg-white border-r z-10">
+                        <div class="p-4 border-b space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h2 class="text-2xl font-bold text-gray-800">Inbox</h2>
+                                <button onclick="openNewChatModal()" class="bg-violet-600 hover:bg-violet-700 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md btn-soft transition-colors" title="Start New Chat">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="relative group">
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-violet-500 transition-colors"></i>
+                                <input type="text" id="conv-search" placeholder="Search conversations..." class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition-all text-sm shadow-sm" onkeyup="loadConversations()">
+                            </div>
+                            <!-- Tabs -->
+                            <div class="flex bg-gray-100 p-1.5 rounded-xl">
+                                <button onclick="filterConversations('open')" class="flex-1 py-1.5 text-sm font-medium rounded-lg tab-pill active text-gray-600 hover:text-gray-800" id="tab-open">Open</button>
+                                <button onclick="filterConversations('closed')" class="flex-1 py-1.5 text-sm font-medium rounded-lg tab-pill text-gray-500 hover:text-gray-800" id="tab-closed">Closed</button>
+                                <button onclick="filterConversations('all')" class="flex-1 py-1.5 text-sm font-medium rounded-lg tab-pill text-gray-500 hover:text-gray-800" id="tab-all">All</button>
+                            </div>
                         </div>
-                        <!-- Conversations will be loaded here -->
-                    </div>
-                </div>
 
-                <!-- Message View -->
-                <div class="flex-1 flex flex-col">
-                    <div id="message-view-placeholder" class="flex-1 flex items-center justify-center bg-gray-50">
-                        <div class="text-center">
-                            <i class="fas fa-comments fa-4x text-gray-300"></i>
-                            <p class="mt-2 text-gray-500">Select a conversation to start chatting</p>
+                        <div id="conversations-container" class="flex-1 overflow-y-auto divide-y divide-gray-50">
+                            <div class="flex justify-center items-center p-12 opacity-50"><div class="loader"></div></div>
                         </div>
                     </div>
-                     <div id="message-view-content" class="flex-1 flex flex-col hidden">
-                        <div id="message-view-header" class="p-4 border-b bg-white">
-                            <h3 class="font-semibold" id="chat-partner-name"></h3>
+
+                    <!-- Chat Area -->
+                    <div class="flex-1 flex flex-col bg-slate-50 relative">
+                        <!-- Placeholder -->
+                        <div id="message-view-placeholder" class="flex-1 flex flex-col items-center justify-center text-gray-400 p-8 text-center">
+                            <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100 animate-pulse">
+                                <i class="fas fa-comments text-5xl text-violet-200"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-700 mb-2">Your Inbox is Ready</h3>
+                            <p class="text-gray-500 max-w-sm">Select a conversation from the left to start chatting or resolve customer queries.</p>
                         </div>
-                        <div id="message-container" class="flex-1 p-4 overflow-y-auto bg-gray-50">
-                            <!-- Messages will be loaded here -->
-                        </div>
-                        <div class="p-4 bg-white border-t">
-                            <form id="sendMessageForm">
-                                <input id="messageInput" type="text" placeholder="Type your message..." class="w-full p-3 border rounded-lg" autocomplete="off">
-                            </form>
+
+                        <!-- Active Chat View -->
+                        <div id="message-view-content" class="hidden flex-1 flex flex-col h-full absolute inset-0 bg-slate-50">
+                            <!-- Header -->
+                            <div class="h-18 px-6 py-3 bg-white border-b flex justify-between items-center shadow-sm z-20">
+                                <div class="flex items-center">
+                                    <div class="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white flex items-center justify-center font-bold text-lg mr-4 shadow-md ring-2 ring-violet-50">
+                                        <span id="header-avatar">?</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-900 text-lg leading-tight" id="chat-partner-name">User Name</h3>
+                                        <div class="flex items-center text-xs text-gray-500">
+                                            <i class="fab fa-whatsapp text-green-500 mr-1"></i>
+                                            <span id="chat-partner-phone">+255 ...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <!-- Assign Dropdown -->
+                                    <div class="relative group">
+                                        <button class="flex items-center space-x-2 text-sm text-gray-600 hover:text-violet-700 bg-gray-50 hover:bg-violet-50 px-4 py-2 rounded-xl border border-gray-200 hover:border-violet-200 transition-all btn-soft">
+                                            <i class="fas fa-user-tag"></i>
+                                            <span id="assignee-name" class="font-medium">Unassigned</span>
+                                            <i class="fas fa-chevron-down text-xs ml-1 opacity-50"></i>
+                                        </button>
+                                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 hidden group-hover:block z-50 overflow-hidden transform transition-all">
+                                            <div class="p-2">
+                                                <div class="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Assign To</div>
+                                                <button onclick="assignChat('auto')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 rounded-lg transition-colors mb-1">
+                                                    <i class="fas fa-robot mr-2 text-violet-400"></i> Auto Assign
+                                                </button>
+                                                <div class="border-t my-1"></div>
+                                                <div id="assign-users-list" class="max-h-48 overflow-y-auto custom-scrollbar">
+                                                    <!-- Users injected via JS -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Resolve Button -->
+                                    <button id="btn-resolve" onclick="toggleChatStatus()" class="btn-soft text-sm border border-gray-200 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:border-green-200 px-4 py-2 rounded-xl transition-all flex items-center shadow-sm font-medium bg-white">
+                                        <i class="fas fa-check mr-2"></i> <span>Resolve</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Messages Body -->
+                            <div id="message-container" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50" style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px;">
+                                <!-- Messages -->
+                            </div>
+
+                            <!-- Footer / Input -->
+                            <div class="p-4 bg-white border-t z-20">
+                                <form id="sendMessageForm" class="flex flex-col gap-2 max-w-5xl mx-auto">
+                                    <div class="flex items-end gap-3 bg-white p-2 rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-violet-200 focus-within:border-violet-400 transition-all">
+                                        <button type="button" onclick="openTemplateSelector()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Quick Replies & Templates">
+                                            <i class="fas fa-bolt text-lg"></i>
+                                        </button>
+                                        <button type="button" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Attach File">
+                                            <i class="fas fa-paperclip text-lg"></i>
+                                        </button>
+                                        <textarea id="messageInput" rows="1" class="flex-1 bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400 resize-none py-3 max-h-32 text-base" placeholder="Type a message to customer..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                                        <button type="submit" class="p-3 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-all btn-soft shadow-md hover:shadow-lg">
+                                            <i class="fas fa-paper-plane text-lg"></i>
+                                        </button>
+                                    </div>
+                                    <div class="flex justify-between px-2 items-center">
+                                        <p class="text-xs text-gray-400"><strong>Shift + Enter</strong> for new line</p>
+                                        <p id="typing-indicator" class="text-xs text-violet-600 font-semibold hidden animate-pulse"><i class="fas fa-circle-notch fa-spin mr-1"></i> Sending...</p>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>`,
+            </div>`,
             contacts: `<div class="p-8"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-gray-800">Contacts</h2><button onclick="openModal('addContactModal')" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-user-plus mr-2"></i>Add Contact</button></div><div class="bg-white rounded-lg shadow-md overflow-hidden border"><table class="w-full text-left"><thead class="bg-gray-100"><tr><th class="p-4 font-semibold">Name</th><th class="p-4 font-semibold">Phone Number</th><th class="p-4 font-semibold">Actions</th></tr></thead><tbody id="contacts-table-body" class="divide-y"></tbody></table></div></div>`,
             create_invoice: `<div class="p-8">
                     <div class="flex items-center mb-6">
@@ -2072,6 +2151,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </div>
                 </div>
             </div>`,
+            newChatModal: `<div id="newChatModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white"><div class="mt-3"><div class="flex justify-between items-center mb-4"><h3 class="text-lg text-center leading-6 font-medium text-gray-900">Start New Chat</h3><button onclick="closeModal('newChatModal')" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div><div class="relative mb-4"><i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i><input type="text" id="new-chat-search" placeholder="Search contact..." class="w-full pl-10 pr-4 py-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-violet-200 transition-all" onkeyup="searchNewChatContacts()"></div><div id="new-chat-contacts-list" class="max-h-60 overflow-y-auto divide-y divide-gray-100"></div></div></div></div>`,
+            templateSelectorModal: `<div id="templateSelectorModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white"><div class="mt-3"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium text-gray-900">Select Template</h3><button onclick="closeModal('templateSelectorModal')" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div><div id="template-selector-list" class="max-h-96 overflow-y-auto space-y-2"></div></div></div></div>`,
             newJobOrderModal: `<div id="newJobOrderModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
                 <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
                     <div class="mt-3">
@@ -2402,6 +2483,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         const LOGGED_IN_USER_ID = parseInt(document.querySelector('meta[name="user-id"]').getAttribute('content'));
         let DEFAULT_CURRENCY = 'TZS';
         let currentConversationId = null;
+        let currentConversationStatus = 'open';
+        let conversationFilter = 'all';
         let myChart = null;
         let currentWorkflow = { id: null, name: 'Untitled Workflow', workflow_data: { nodes: [] } };
         let configuringNodeId = null;
@@ -3860,51 +3943,262 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         async function deleteContact(id) { if (!confirm('Are you sure?')) return; const result = await fetchApi('delete_contact.php', { method: 'POST', body: { id: id } }); if (result && result.status === 'success') loadContacts(); }
 
         async function loadConversations() {
-            const conversationsContainer = document.getElementById('conversations-container');
-            const loader = document.getElementById('loader');
+            const container = document.getElementById('conversations-container');
+            const search = document.getElementById('conv-search') ? document.getElementById('conv-search').value : '';
 
-            if (!conversationsContainer || !loader) return;
+            if (!container) return;
 
-            loader.style.display = 'flex';
-            conversationsContainer.innerHTML = '';
+            const url = `get_conversations.php?status=${conversationFilter}&search=${encodeURIComponent(search)}`;
+            const data = await fetchApi(url);
 
-            const data = await fetchApi('get_conversations.php');
+            if (data && data.success) {
+                container.innerHTML = '';
+                if (data.conversations.length === 0) {
+                    container.innerHTML = `<div class="text-center p-8 text-gray-400 flex flex-col items-center"><i class="fas fa-inbox text-4xl mb-2"></i><p>No conversations found.</p></div>`;
+                    return;
+                }
 
-            loader.style.display = 'none';
+                data.conversations.forEach(c => {
+                    const isActive = c.conversation_id == currentConversationId ? 'bg-violet-50 border-l-4 border-violet-600' : 'hover:bg-gray-50 border-l-4 border-transparent';
+                    const time = new Date(c.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const unreadBadge = c.unread_count > 0 ? `<span class="bg-violet-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">${c.unread_count}</span>` : '';
+                    const assigneeHtml = c.assignee_name ? `<span class="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded mr-2"><i class="fas fa-user-tag text-[10px]"></i> ${c.assignee_name.split(' ')[0]}</span>` : '';
+                    const avatarChar = c.contact_name.charAt(0).toUpperCase();
 
-            if (data && data.success && data.conversations.length > 0) {
-                data.conversations.forEach(convo => {
-                    const convoElement = document.createElement('div');
-                    convoElement.className = 'p-4 border-b hover:bg-gray-50 cursor-pointer conversation-item';
-                    convoElement.dataset.conversationId = convo.conversation_id;
-                    convoElement.dataset.contactName = convo.contact_name;
-                    convoElement.innerHTML = `
-                        <div class="flex justify-between">
-                            <h3 class="font-semibold">${convo.contact_name}</h3>
-                            <span class="text-xs text-gray-500">${new Date(convo.updated_at).toLocaleTimeString()}</span>
+                    container.innerHTML += `
+                        <div onclick="selectConversation(${c.conversation_id}, '${c.contact_name.replace(/'/g, "\\'")}', '${c.phone_number}', '${c.status}', '${c.assignee_name || ''}')" class="p-4 cursor-pointer border-b transition-all ${isActive}">
+                            <div class="flex justify-between items-start mb-1">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-white flex items-center justify-center font-bold shadow-sm mr-3">${avatarChar}</div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800 text-sm">${c.contact_name}</h4>
+                                        <p class="text-xs text-gray-500">${c.phone_number}</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-xs text-gray-400 font-mono">${time}</span>
+                                    ${unreadBadge}
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center mt-2">
+                                <p class="text-sm text-gray-600 truncate max-w-[180px]">${c.last_message_preview || 'No messages'}</p>
+                                <div class="flex items-center">
+                                    ${assigneeHtml}
+                                    ${c.status === 'closed' ? '<i class="fas fa-check-circle text-green-500 text-xs" title="Resolved"></i>' : ''}
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-sm text-gray-600 truncate">${convo.last_message_preview}</p>
                     `;
-                    convoElement.addEventListener('click', () => {
-                        selectConversation(convo.conversation_id, convo.contact_name);
-                    });
-                    conversationsContainer.appendChild(convoElement);
                 });
-            } else if (data && data.success) {
-                conversationsContainer.innerHTML = '<p class="text-center text-gray-500 p-4">No conversations yet.</p>';
-            } else {
-                conversationsContainer.innerHTML = `<p class="text-center text-red-500 p-4">Error: ${data ? data.message : 'Failed to fetch'}</p>`;
             }
         }
 
-        function selectConversation(conversationId, contactName) {
-            currentConversationId = conversationId;
-            document.querySelectorAll('.conversation-item').forEach(el => el.classList.remove('active'));
-            const selectedElement = document.querySelector(`.conversation-item[data-conversation-id='${conversationId}']`);
-            if (selectedElement) {
-                selectedElement.classList.add('active');
+        function filterConversations(filter) {
+            conversationFilter = filter;
+            // Update tab styles
+            ['open', 'closed', 'all'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (filter === t) {
+                    btn.classList.add('active', 'bg-white', 'text-violet-700', 'shadow-sm');
+                    btn.classList.remove('text-gray-500');
+                } else {
+                    btn.classList.remove('active', 'bg-white', 'text-violet-700', 'shadow-sm');
+                    btn.classList.add('text-gray-500');
+                }
+            });
+            loadConversations();
+        }
+
+        async function openNewChatModal() {
+            console.log('Opening New Chat Modal...');
+            openModal('newChatModal');
+            const list = document.getElementById('new-chat-contacts-list');
+            if(list) {
+                list.innerHTML = '<div class="p-8 text-center text-violet-500"><i class="fas fa-circle-notch fa-spin text-2xl"></i><p class="mt-2 text-sm">Loading contacts...</p></div>';
+
+                const contacts = await fetchApi('get_contacts.php');
+                if (contacts && Array.isArray(contacts)) {
+                    window.allContacts = contacts; // Cache for search
+                    renderNewChatContacts(contacts);
+                } else {
+                    list.innerHTML = '<div class="text-center text-gray-500 p-8 flex flex-col items-center"><i class="fas fa-address-book text-3xl mb-2 text-gray-300"></i><p>No contacts found.</p></div>';
+                }
             }
-            loadMessages(conversationId, contactName);
+        }
+
+        function renderNewChatContacts(contacts) {
+            const list = document.getElementById('new-chat-contacts-list');
+            list.innerHTML = '';
+            if (contacts.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500 p-4">No matching contacts.</p>';
+                return;
+            }
+            contacts.forEach(c => {
+                list.innerHTML += `
+                    <div onclick="startNewChat(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.phone_number}')" class="p-3 hover:bg-violet-50 cursor-pointer flex items-center transition-colors rounded-lg">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold mr-3">${c.name.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-800">${c.name}</h4>
+                            <p class="text-xs text-gray-500">${c.phone_number}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function searchNewChatContacts() {
+            const query = document.getElementById('new-chat-search').value.toLowerCase();
+            if (!window.allContacts) return;
+            const filtered = window.allContacts.filter(c => c.name.toLowerCase().includes(query) || c.phone_number.includes(query));
+            renderNewChatContacts(filtered);
+        }
+
+        async function startNewChat(contactId, name, phone) {
+            // Check if conversation exists or create new (backend handles this logic usually in get_conversations or we simulate selection)
+            // For now, we can try to find it in the list or just force load messages.
+            // Better: ensure conversation exists via API then select it.
+            // But 'get_messages' creates one if missing in webhook logic? No, logic was in webhook.
+            // Let's use a dedicated endpoint or reuse logic.
+            // Wait, 'get_messages' requires conversation_id. We need to find conversation_id by contact_id.
+            // We'll assume we just select it if it appears in list, else we might need 'create_conversation' endpoint.
+            // For simplicity, let's assume 'get_conversations' returns it.
+            // ACTUALLY: We should just close modal and call selectConversation if we can find the ID.
+
+            closeModal('newChatModal');
+
+            // Quick hack: Reload conversations and find the one with this contact_id
+            // Ideally we'd have an API 'get_conversation_by_contact'
+            // Let's implement a quick check
+            const data = await fetchApi(`get_conversations.php?search=${encodeURIComponent(phone)}`);
+            if (data && data.success && data.conversations.length > 0) {
+                const conv = data.conversations[0]; // Assuming first match
+                selectConversation(conv.conversation_id, conv.contact_name, conv.phone_number, conv.status, conv.assignee_name);
+            } else {
+                // If really new and not in DB yet (no messages), UI might struggle.
+                // But webhook creates it on inbound. Outbound?
+                // Send message will create it. So we can "fake" a conversation view.
+                // Let's set a temporary state.
+                currentConversationId = 'new_' + contactId;
+                currentConversationStatus = 'open';
+                document.getElementById('message-view-placeholder').classList.add('hidden');
+                document.getElementById('message-view-content').classList.remove('hidden');
+                document.getElementById('chat-partner-name').textContent = name;
+                document.getElementById('chat-partner-phone').textContent = phone;
+                document.getElementById('header-avatar').textContent = name.charAt(0).toUpperCase();
+                document.getElementById('message-container').innerHTML = '<div class="text-center text-gray-400 mt-4">Start a new conversation</div>';
+            }
+        }
+
+        async function openTemplateSelector() {
+            openModal('templateSelectorModal');
+            const list = document.getElementById('template-selector-list');
+            list.innerHTML = '<div class="text-center"><div class="loader"></div></div>';
+
+            const templates = await fetchApi('get_templates.php');
+            if (templates && Array.isArray(templates)) {
+                list.innerHTML = templates.map(t => `
+                    <div onclick="selectTemplateContent('${t.body.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')" class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
+                        <div class="flex justify-between mb-1">
+                            <span class="font-semibold text-sm text-gray-800 group-hover:text-violet-700">${t.name}</span>
+                            <span class="text-xs bg-gray-100 px-2 rounded text-gray-500">${t.status}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 line-clamp-2">${t.body}</p>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<p class="text-center text-gray-500">No templates found.</p>';
+            }
+        }
+
+        function selectTemplateContent(body) {
+            const input = document.getElementById('messageInput');
+            input.value = body;
+            closeModal('templateSelectorModal');
+            input.focus();
+            // Trigger resize
+            input.style.height = 'auto';
+            input.style.height = input.scrollHeight + 'px';
+        }
+
+        function selectConversation(id, name, phone, status, assignee) {
+            currentConversationId = id;
+            currentConversationStatus = status;
+
+            document.getElementById('message-view-placeholder').classList.add('hidden');
+            document.getElementById('message-view-content').classList.remove('hidden');
+
+            document.getElementById('chat-partner-name').textContent = name;
+            document.getElementById('chat-partner-phone').textContent = phone;
+            document.getElementById('header-avatar').textContent = name.charAt(0).toUpperCase();
+
+            const resolveBtn = document.getElementById('btn-resolve');
+            if (status === 'closed') {
+                resolveBtn.innerHTML = '<i class="fas fa-undo mr-2"></i> Reopen';
+                resolveBtn.className = 'text-sm border border-gray-300 text-gray-600 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300 px-3 py-1.5 rounded-lg transition-all flex items-center';
+            } else {
+                resolveBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Resolve';
+                resolveBtn.className = 'text-sm border border-gray-300 text-gray-600 hover:bg-green-50 hover:text-green-600 hover:border-green-300 px-3 py-1.5 rounded-lg transition-all flex items-center';
+            }
+
+            document.getElementById('assignee-name').textContent = assignee || 'Unassigned';
+
+            loadMessages(id, name);
+            loadConversations(); // Refresh list highlight
+            loadAssignUsers(); // Load users for dropdown
+        }
+
+        async function loadAssignUsers() {
+            const list = document.getElementById('assign-users-list');
+            if (!list || list.children.length > 0) return; // Load once
+
+            const users = await fetchApi('get_users.php');
+            if (users && Array.isArray(users)) {
+                list.innerHTML = users.map(u => `
+                    <button onclick="assignChat(${u.id})" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center">
+                        <img src="https://placehold.co/20x20/violet/white?text=${u.avatar_char}" class="w-5 h-5 rounded-full mr-2">
+                        ${u.full_name}
+                    </button>
+                `).join('');
+            }
+        }
+
+        async function assignChat(userId) {
+            if (!currentConversationId) return;
+            const result = await fetchApi('assign_conversation.php', {
+                method: 'POST',
+                body: { conversation_id: currentConversationId, assign_to: userId }
+            });
+
+            if (result && result.success) {
+                document.getElementById('assignee-name').textContent = result.assignee_name || 'Assigned';
+                loadConversations(); // Update sidebar
+            } else {
+                alert(result.message || 'Assignment failed');
+            }
+        }
+
+        async function toggleChatStatus() {
+            if (!currentConversationId) return;
+            const newStatus = currentConversationStatus === 'open' ? 'closed' : 'open';
+
+            const result = await fetchApi('update_conversation_status.php', {
+                method: 'POST',
+                body: { conversation_id: currentConversationId, status: newStatus }
+            });
+
+            if (result && result.success) {
+                currentConversationStatus = newStatus;
+                // Refresh UI manually to be snappy
+                const resolveBtn = document.getElementById('btn-resolve');
+                if (newStatus === 'closed') {
+                    resolveBtn.innerHTML = '<i class="fas fa-undo mr-2"></i> Reopen';
+                    resolveBtn.className = 'text-sm border border-gray-300 text-gray-600 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300 px-3 py-1.5 rounded-lg transition-all flex items-center';
+                } else {
+                    resolveBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Resolve';
+                    resolveBtn.className = 'text-sm border border-gray-300 text-gray-600 hover:bg-green-50 hover:text-green-600 hover:border-green-300 px-3 py-1.5 rounded-lg transition-all flex items-center';
+                }
+                loadConversations();
+            }
         }
 
         async function loadMessages(conversationId, contactName) {
