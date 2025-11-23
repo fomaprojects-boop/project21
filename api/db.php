@@ -6,7 +6,8 @@ $password = 'chatme2025@';
 
 try {
     // Anzisha muunganisho kwa kutumia PDO (njia ya kisasa na salama)
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $password);
+    // Updated to utf8mb4 to support Emojis in WhatsApp messages
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $password);
 
     // Weka PDO itoe errors kama zikitokea
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

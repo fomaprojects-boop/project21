@@ -1,20 +1,37 @@
 <?php
+// check_schema.php
+// Diagnostic tool to check DB tables
+
+header('Content-Type: text/plain');
 require_once 'api/db.php';
 
-function getTableSchema($pdo, $table) {
+function checkTable($pdo, $table) {
+    echo "--- Table: $table ---\n";
     try {
         $stmt = $pdo->query("DESCRIBE $table");
-        echo "--- $table ---\n";
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            echo $row['Field'] . " | " . $row['Type'] . "\n";
+        $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($columns as $col) {
+            echo $col['Field'] . " (" . $col['Type'] . ") " . ($col['Null'] == 'YES' ? 'NULL' : 'NOT NULL') . "\n";
         }
-        echo "\n";
     } catch (Exception $e) {
         echo "Error describing $table: " . $e->getMessage() . "\n";
     }
+    echo "\n";
 }
 
-getTableSchema($pdo, 'conversations');
-getTableSchema($pdo, 'users');
-getTableSchema($pdo, 'contacts');
+try {
+    echo "Checking Database Schema...\n";
+    checkTable($pdo, 'users');
+    checkTable($pdo, 'contacts');
+    checkTable($pdo, 'conversations');
+    checkTable($pdo, 'messages');
+
+    // Check strict mode
+    $stmt = $pdo->query("SELECT @@sql_mode");
+    $mode = $stmt->fetchColumn();
+    echo "SQL Mode: $mode\n";
+
+} catch (Exception $e) {
+    echo "DB Connection Error: " . $e->getMessage();
+}
 ?>
