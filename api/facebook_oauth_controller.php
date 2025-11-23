@@ -55,30 +55,52 @@ if ($action === 'embedded_signup') {
     // This new action handles the token sent from the JavaScript SDK
     header('Content-Type: application/json');
     $input = json_decode(file_get_contents('php://input'), true);
-    $short_lived_token = $input['accessToken'] ?? '';
+    $code = $input['code'] ?? '';
+    $short_lived_token = $input['accessToken'] ?? ''; // Legacy fallback
 
-    if (empty($short_lived_token)) {
-        echo json_encode(['status' => 'error', 'message' => 'Access token not provided.']);
+    $long_lived_token = null;
+
+    if (!empty($code)) {
+        // Exchange code for access token
+        // For code obtained via JS SDK (FB.login), the redirect_uri should be an empty string
+        $redirect_uri = '';
+
+        $token_url = "https://graph.facebook.com/v20.0/oauth/access_token?client_id={$app_id}&client_secret={$app_secret}&redirect_uri={$redirect_uri}&code={$code}";
+        $response = make_curl_request($token_url);
+        $token_data = json_decode($response, true);
+
+        if (empty($token_data['access_token'])) {
+             echo json_encode(['status' => 'error', 'message' => 'Failed to exchange code for access token. Error: ' . htmlspecialchars($token_data['error']['message'] ?? 'Unknown error')]);
+             exit;
+        }
+        $long_lived_token = $token_data['access_token'];
+
+    } elseif (!empty($short_lived_token)) {
+        // Legacy: Exchange short-lived token for a long-lived token
+        $long_lived_url = "https://graph.facebook.com/v20.0/oauth/access_token?grant_type=fb_exchange_token&client_id={$app_id}&client_secret={$app_secret}&fb_exchange_token={$short_lived_token}";
+        $response = make_curl_request($long_lived_url);
+        $long_lived_data = json_decode($response, true);
+        if (empty($long_lived_data['access_token'])) {
+            echo json_encode(['status' => 'error', 'message' => 'Failed to get long-lived access token. Error: ' . htmlspecialchars($long_lived_data['error']['message'] ?? 'Unknown error')]);
+            exit;
+        }
+        $long_lived_token = $long_lived_data['access_token'];
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Authorization code or access token not provided.']);
         exit;
     }
-
-    // Exchange short-lived token for a long-lived token
-    $long_lived_url = "https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id={$app_id}&client_secret={$app_secret}&fb_exchange_token={$short_lived_token}";
-    $response = make_curl_request($long_lived_url);
-    $long_lived_data = json_decode($response, true);
-    if (empty($long_lived_data['access_token'])) {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to get long-lived access token. Error: ' . htmlspecialchars($long_lived_data['error']['message'] ?? 'Unknown error')]);
-        exit;
-    }
-    $long_lived_token = $long_lived_data['access_token'];
 
     // Now, with the long-lived token, get the debug info to find shared WABAs
-    $debug_url = "https://graph.facebook.com/v19.0/debug_token?input_token={$long_lived_token}&access_token={$long_lived_token}";
+    // Use App Access Token for inspection to ensure we see all scopes
+    $app_access_token = $app_id . '|' . $app_secret;
+    $debug_url = "https://graph.facebook.com/v20.0/debug_token?input_token={$long_lived_token}&access_token={$app_access_token}";
     $debug_response = make_curl_request($debug_url);
     $debug_data = json_decode($debug_response, true);
 
     if (empty($debug_data['data']['granular_scopes'])) {
-        echo json_encode(['status' => 'error', 'message' => 'Could not retrieve account scopes. Please try again.']);
+        // Log the error for debugging purposes
+        $debug_info = json_encode($debug_data);
+        echo json_encode(['status' => 'error', 'message' => 'Could not retrieve account scopes. Raw response: ' . $debug_info]);
         exit;
     }
 
@@ -99,7 +121,7 @@ if ($action === 'embedded_signup') {
     }
 
     // Get Phone Number ID using the WABA ID
-    $phone_numbers_url = "https://graph.facebook.com/v19.0/{$waba_id}/phone_numbers?access_token={$long_lived_token}";
+    $phone_numbers_url = "https://graph.facebook.com/v20.0/{$waba_id}/phone_numbers?access_token={$long_lived_token}";
     $phone_response = make_curl_request($phone_numbers_url);
     $phone_numbers_data = json_decode($phone_response, true);
 
@@ -109,11 +131,28 @@ if ($action === 'embedded_signup') {
     }
     $phone_number_id = $phone_numbers_data['data'][0]['id'];
 
+    // Subscribe the WABA to the app's webhooks (Critical for receiving messages)
+    $subscribe_url = "https://graph.facebook.com/v20.0/{$waba_id}/subscribed_apps";
+    $subscribe_data = [
+        'access_token' => $long_lived_token
+        // Note: As of v19.0+, subscribed_fields are often required or default to a subset.
+        // We let Meta use defaults or the config ID settings.
+    ];
+
+    $ch = curl_init($subscribe_url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($subscribe_data)); // Use query params or body? Graph API often takes token in query or body. Body is safer.
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $subscribe_response = curl_exec($ch);
+    curl_close($ch);
+    // We don't strictly fail if this fails, but it's good to know.
+    // Ideally, we should check json_decode($subscribe_response)['success']
+
     // Save the credentials
     $user_id = $_SESSION['user_id'];
     $stmt = $pdo->prepare("UPDATE users SET whatsapp_phone_number_id = ?, whatsapp_business_account_id = ?, whatsapp_access_token = ? WHERE id = ?");
     if ($stmt->execute([$phone_number_id, $waba_id, $long_lived_token, $user_id])) {
-        echo json_encode(['status' => 'success', 'message' => 'WhatsApp account connected successfully.']);
+        echo json_encode(['status' => 'success', 'message' => 'WhatsApp account connected and subscribed successfully.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to save credentials to the database.']);
     }

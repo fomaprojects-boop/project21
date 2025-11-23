@@ -154,15 +154,46 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
     <!-- Facebook SDK for JavaScript -->
     <script>
         window.fbAsyncInit = function() {
+            // Debugging: Log App ID to console
+            console.log('Initializing Facebook SDK with App ID:', '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>');
+
             FB.init({
             appId            : '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>',
             autoLogAppEvents : true,
             xfbml            : true,
-            version          : 'v19.0'
+            version          : 'v20.0'
             });
         };
+
+        // Session logging message event listener (Captures WABA/Phone IDs directly)
+        window.addEventListener('message', (event) => {
+            if (!event.origin.endsWith('facebook.com')) return;
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'WA_EMBEDDED_SIGNUP') {
+                    console.log('message event (WA_EMBEDDED_SIGNUP): ', data);
+
+                    // Optional: Send this direct data to backend if needed,
+                    // though usually we exchange the auth code for a permanent token.
+                    // This is useful for debugging or immediate UI feedback.
+                    if (data.event === 'FINISH' && data.data) {
+                        console.log('Signup Finished. Phone ID:', data.data.phone_number_id, 'WABA ID:', data.data.waba_id);
+                    }
+                }
+            } catch (e) {
+                console.log('message event (error parsing): ', event.data);
+            }
+        });
+
+        // Load the JavaScript SDK asynchronously
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
     </script>
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
     <div id="page-loader" style="display: none;">
@@ -2707,11 +2738,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 alert('Facebook SDK could not be loaded. Please check your connection or ad blocker and refresh the page.');
                 return;
             }
-            FB.login(function(response) {
-                if (response.authResponse && response.authResponse.grantedScopes && response.authResponse.grantedScopes.includes('whatsapp_business_management,whatsapp_business_messaging')) {
-                    // User finished the login flow
-                    // We now call our backend with the short-lived token
-                    const accessToken = response.authResponse.accessToken;
+
+            // Response callback
+            const fbLoginCallback = (response) => {
+                if (response.authResponse) {
+                    const code = response.authResponse.code;
+                    console.log('response code: ', code);
 
                     // Display a loading/processing message to the user
                     const statusEl = document.getElementById('whatsapp-status');
@@ -2720,36 +2752,38 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         statusEl.classList.add('text-yellow-600');
                     }
 
-                    // Send the token to the backend for processing
+                    // Send the code to the backend for exchange
+                    // We must pass the current page URL as redirect_uri for the code exchange to work with JS SDK flow
+                    const redirectUri = window.location.origin + window.location.pathname;
+
                     fetchApi('facebook_oauth_controller.php?action=embedded_signup', {
                         method: 'POST',
-                        body: JSON.stringify({ accessToken: accessToken })
+                        body: { code: code, redirect_uri: redirectUri }
                     }).then(result => {
                         if (result && result.status === 'success') {
-                            // Reload the settings to show the connected state
-                            alert('WhatsApp connected successfully!');
-                            loadSettings();
+                            alert('WhatsApp connected successfully! The page will now refresh.');
+                            window.location.reload();
                         } else {
-                            // The fetchApi function will already show an alert with the error from the backend
-                            // Reset the status message
                             if (statusEl) {
                                 statusEl.textContent = 'Not Connected';
                                 statusEl.classList.remove('text-yellow-600');
                             }
+                            // Show the actual error message from backend
+                            alert('Connection Failed: ' + (result ? result.message : 'Unknown error occurred on the server.'));
                         }
                     });
-
                 } else {
-                    // User cancelled login or did not grant full permission
-                    alert('The connection process was cancelled or required permissions were not granted. Please try again.');
+                    console.log('response: ', response);
+                    alert('Login failed or cancelled.');
                 }
-            }, {
+            }
+
+            FB.login(fbLoginCallback, {
                 config_id: '<?php echo defined('FACEBOOK_CONFIG_ID') ? FACEBOOK_CONFIG_ID : ''; ?>',
                 response_type: 'code',
                 override_default_response_type: true,
                 extras: {
-                    feature: 'whatsapp_embedded_signup',
-                    session_info_version: 2
+                    setup: {}
                 }
             });
         }

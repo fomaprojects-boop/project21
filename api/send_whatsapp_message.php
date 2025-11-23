@@ -19,13 +19,44 @@ $content = $input['content'];
 $userId = $_SESSION['user_id']; // The agent/user sending the message
 
 try {
-    // 1. Fetch settings for WhatsApp API
-    $stmt = $pdo->prepare("SELECT whatsapp_token, whatsapp_phone_id FROM settings LIMIT 1");
-    $stmt->execute();
-    $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+    // 1. Fetch settings for WhatsApp API (Priority: User settings > Global settings fallback)
+    $whatsappToken = null;
+    $whatsappPhoneId = null;
 
-    if (!$settings || empty($settings['whatsapp_token']) || empty($settings['whatsapp_phone_id'])) {
-        throw new Exception('WhatsApp API settings are not configured.');
+    // Try to get credentials from the current user (as set by Embedded Signup)
+    try {
+        $stmt = $pdo->prepare("SELECT whatsapp_access_token, whatsapp_phone_number_id FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $userSettings = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($userSettings) {
+            $whatsappToken = $userSettings['whatsapp_access_token'] ?? null;
+            $whatsappPhoneId = $userSettings['whatsapp_phone_number_id'] ?? null;
+        }
+    } catch (PDOException $e) {
+        // If 'users' table doesn't have the columns yet, ignore and fallback
+        // Log error if possible: error_log("User specific WhatsApp settings fetch failed: " . $e->getMessage());
+    }
+
+    // If not found in users (or query failed), try the legacy 'settings' table (fallback)
+    if (empty($whatsappToken) || empty($whatsappPhoneId)) {
+        try {
+            $stmt = $pdo->prepare("SELECT whatsapp_token, whatsapp_phone_id FROM settings LIMIT 1");
+            $stmt->execute();
+            $globalSettings = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($globalSettings) {
+                $whatsappToken = $globalSettings['whatsapp_token'] ?? null;
+                $whatsappPhoneId = $globalSettings['whatsapp_phone_id'] ?? null;
+            }
+        } catch (PDOException $e) {
+            // If global settings also fail, we have a bigger problem
+            throw new Exception('Database error retrieving settings: ' . $e->getMessage());
+        }
+    }
+
+    if (empty($whatsappToken) || empty($whatsappPhoneId)) {
+        throw new Exception('WhatsApp API settings are not configured. Please connect your WhatsApp account in Settings.');
     }
 
     // 2. Get the recipient's phone number from the conversation
@@ -38,8 +69,16 @@ try {
     }
     $recipientPhoneNumber = $contact['phone_number'];
 
+    // Sanitize and Normalize Phone Number
+    $recipientPhoneNumber = preg_replace('/[^0-9]/', '', $recipientPhoneNumber);
+    if (substr($recipientPhoneNumber, 0, 1) === '0') {
+        $recipientPhoneNumber = '255' . substr($recipientPhoneNumber, 1);
+    } elseif (strlen($recipientPhoneNumber) === 9) {
+        $recipientPhoneNumber = '255' . $recipientPhoneNumber;
+    }
+
     // 3. Send the message via WhatsApp API
-    $apiUrl = "https://graph.facebook.com/v15.0/{$settings['whatsapp_phone_id']}/messages";
+    $apiUrl = "https://graph.facebook.com/v20.0/{$whatsappPhoneId}/messages";
     $postData = [
         'messaging_product' => 'whatsapp',
         'to' => $recipientPhoneNumber,
@@ -53,7 +92,7 @@ try {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
-        'Authorization: Bearer ' . $settings['whatsapp_token']
+        'Authorization: Bearer ' . $whatsappToken
     ]);
 
     $response = curl_exec($ch);
@@ -71,7 +110,7 @@ try {
 
     $stmt = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, user_id, content) VALUES (?, 'agent', ?, ?)");
     $stmt->execute([$conversationId, $userId, $content]);
-    
+
     // Update last message preview
     $stmt = $pdo->prepare("UPDATE conversations SET last_message_preview = ? WHERE id = ?");
     $stmt->execute([$content, $conversationId]);
