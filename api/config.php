@@ -4,8 +4,8 @@
 // # SECURITY WARNING: DO NOT COMMIT SECRETS TO VERSION CONTROL
 // #####################################################################
 // #
-// # The credentials below (DB_PASSWORD, ENCRYPTION_KEY, GOOGLE_CLIENT_SECRET, 
-// # FACEBOOK_APP_SECRET) are sensitive. Storing them directly in the code 
+// # The credentials below (DB_PASSWORD, ENCRYPTION_KEY, GOOGLE_CLIENT_SECRET,
+// # FACEBOOK_APP_SECRET) are sensitive. Storing them directly in the code
 // # is a major security risk and is not recommended for production.
 // #
 // # RECOMMENDED PRACTICE: Use environment variables.
@@ -60,6 +60,7 @@ define('GOOGLE_REDIRECT_URI', 'https://app.chatme.co.tz/api/modules/youtube_ads/
 define('FACEBOOK_APP_ID', '1258543722970850');
 define('FACEBOOK_APP_SECRET', 'd9319c0e290c1939fc6bee01e037bc3a');
 define('FACEBOOK_CONFIG_ID', '1115420997471710');
+define('WEBHOOK_VERIFY_TOKEN', 'ChatMeToken2025');
 // -----------------------------------------
 
 // --- DEFAULT SMTP FALLBACK SETTINGS ---

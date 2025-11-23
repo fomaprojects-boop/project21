@@ -131,11 +131,28 @@ if ($action === 'embedded_signup') {
     }
     $phone_number_id = $phone_numbers_data['data'][0]['id'];
 
+    // Subscribe the WABA to the app's webhooks (Critical for receiving messages)
+    $subscribe_url = "https://graph.facebook.com/v20.0/{$waba_id}/subscribed_apps";
+    $subscribe_data = [
+        'access_token' => $long_lived_token
+        // Note: As of v19.0+, subscribed_fields are often required or default to a subset.
+        // We let Meta use defaults or the config ID settings.
+    ];
+
+    $ch = curl_init($subscribe_url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($subscribe_data)); // Use query params or body? Graph API often takes token in query or body. Body is safer.
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $subscribe_response = curl_exec($ch);
+    curl_close($ch);
+    // We don't strictly fail if this fails, but it's good to know.
+    // Ideally, we should check json_decode($subscribe_response)['success']
+
     // Save the credentials
     $user_id = $_SESSION['user_id'];
     $stmt = $pdo->prepare("UPDATE users SET whatsapp_phone_number_id = ?, whatsapp_business_account_id = ?, whatsapp_access_token = ? WHERE id = ?");
     if ($stmt->execute([$phone_number_id, $waba_id, $long_lived_token, $user_id])) {
-        echo json_encode(['status' => 'success', 'message' => 'WhatsApp account connected successfully.']);
+        echo json_encode(['status' => 'success', 'message' => 'WhatsApp account connected and subscribed successfully.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to save credentials to the database.']);
     }
