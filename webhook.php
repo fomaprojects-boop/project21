@@ -1,6 +1,7 @@
 <?php
 // webhook.php (Root Directory)
-// Ensure getallheaders exists (Polyfill for Nginx/FPM)
+
+// 1. Polyfill for getallheaders() if missing
 if (!function_exists('getallheaders')) {
     function getallheaders() {
         $headers = [];
@@ -13,27 +14,35 @@ if (!function_exists('getallheaders')) {
     }
 }
 
-// Wrap includes in try-catch to safely handle DB errors
+// 2. Logging Configuration
+$log_file = __DIR__ . '/webhook_log.txt';
+$debug_log_file = __DIR__ . '/webhook_debug.log';
+
+function log_debug($message) {
+    global $debug_log_file;
+    file_put_contents($debug_log_file, "[" . date('Y-m-d H:i:s') . "] " . $message . "\n", FILE_APPEND);
+}
+
+// 3. Database Connection
 try {
     require_once __DIR__ . '/api/db.php';
     require_once __DIR__ . '/api/config.php';
 } catch (Throwable $e) {
-    // If DB fails, log it but continue to return 200 to Meta
-    file_put_contents(__DIR__ . '/webhook_debug.log', "Critical Error: DB/Config load failed: " . $e->getMessage() . "\n", FILE_APPEND);
+    log_debug("CRITICAL: DB/Config load failed: " . $e->getMessage());
+    // Return 200 to Meta even if we fail, to stop retries
+    http_response_code(200);
+    // We might want to exit if DB is critical, but let's see if we can proceed or just stop.
+    // Without DB, we can't do much.
+    exit;
 }
 
-// For logging webhook requests
-$log_file = __DIR__ . '/webhook_log.txt';
-$debug_log_file = __DIR__ . '/webhook_debug.log';
-
 // Log ANY Request immediately to debug connectivity
-file_put_contents($debug_log_file, "Hit at " . date('Y-m-d H:i:s') . " | Method: " . $_SERVER['REQUEST_METHOD'] . "\n", FILE_APPEND);
+file_put_contents($debug_log_file, "Hit webhook.php at " . date('Y-m-d H:i:s') . " | Method: " . $_SERVER['REQUEST_METHOD'] . "\n", FILE_APPEND);
 
-// Log Headers to debug 1-tick issue
 $headers = getallheaders();
 file_put_contents($debug_log_file, "Headers: " . print_r($headers, true) . "\n", FILE_APPEND);
 
-// --- 1. WHATSAPP VERIFICATION (GET) ---
+// --- 4. WHATSAPP VERIFICATION (GET) ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['hub_mode']) && $_GET['hub_mode'] === 'subscribe') {
     $verify_token = $_GET['hub_verify_token'] ?? '';
     $challenge = $_GET['hub_challenge'] ?? '';
@@ -41,130 +50,163 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['hub_mode']) && $_GET['h
     if (defined('WEBHOOK_VERIFY_TOKEN') && $verify_token === WEBHOOK_VERIFY_TOKEN) {
         http_response_code(200);
         echo $challenge;
-        file_put_contents($log_file, "WhatsApp Webhook Verified at: " . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
+        log_debug("WhatsApp Webhook Verified.");
         exit();
     } else {
         http_response_code(403);
-        file_put_contents($log_file, "WhatsApp Webhook Verification Failed. Token mismatch.\n", FILE_APPEND);
+        log_debug("WhatsApp Verification Failed. Token mismatch.");
         exit();
     }
 }
 
-// --- 2. INBOUND MESSAGES (POST) ---
+// --- 5. INBOUND MESSAGES (POST) ---
 $body = file_get_contents('php://input');
+if (empty($body)) {
+    exit;
+}
 
 // Log raw payload
-file_put_contents($debug_log_file, "Received POST: " . date('Y-m-d H:i:s') . "\n" . $body . "\n----------------\n", FILE_APPEND);
+file_put_contents($debug_log_file, "Received POST: " . date('Y-m-d H:i:s') . "\n" . substr($body, 0, 1000) . "\n----------------\n", FILE_APPEND);
 
 $payload = json_decode($body, true);
 
-// Quick Check: Is it WhatsApp?
-// If so, prioritize it and return 200 immediately to satisfy Meta's timeout requirements
+// Respond 200 OK immediately for WhatsApp to acknowledge receipt
+// This prevents "1-tick" issues where Meta retries if we take too long.
+// We do this conditionally if we detect it's likely a WhatsApp payload, or just generally if we handle it.
+// Meta requires 200 OK. Flutterwave also expects 200 OK.
+
+// Check if it's a WhatsApp payload
 if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_account') {
     http_response_code(200);
 
-    // Process WhatsApp Logic
     try {
-        if (!isset($pdo)) { throw new Exception("Database connection not available."); }
+        log_debug("Processing WhatsApp Payload...");
+
+        if (!isset($pdo)) {
+            throw new Exception("PDO Database connection is not set.");
+        }
 
         foreach ($payload['entry'] as $entry) {
             foreach ($entry['changes'] as $change) {
-                if ($change['value']['messages'] ?? false) {
-                    $metadata = $change['value']['metadata'];
-                    $phone_number_id = $metadata['phone_number_id'];
+                $value = $change['value'];
 
-                    // 1. Identify Tenant
-                    $stmt = $pdo->prepare("SELECT id FROM users WHERE whatsapp_phone_number_id = ? LIMIT 1");
-                    $stmt->execute([$phone_number_id]);
-                    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                // Get Phone Number ID to identify the Tenant
+                $metadata = $value['metadata'] ?? null;
+                $phone_number_id = $metadata['phone_number_id'] ?? null;
 
-                    if (!$user) {
-                        file_put_contents($log_file, "Error: Unknown Phone ID: $phone_number_id\n", FILE_APPEND);
-                        continue;
-                    }
-                    $user_id = $user['id'];
+                if (!$phone_number_id) {
+                    log_debug("Skipping: No phone_number_id in metadata.");
+                    continue;
+                }
 
-                    $messages = $change['value']['messages'];
-                    $contacts = $change['value']['contacts'] ?? [];
+                // Identify Tenant (User)
+                $stmt = $pdo->prepare("SELECT id, whatsapp_phone_number_id FROM users WHERE whatsapp_phone_number_id = ? LIMIT 1");
+                $stmt->execute([$phone_number_id]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$user) {
+                    log_debug("Error: No tenant found for Phone ID: $phone_number_id");
+                    continue;
+                }
+
+                $user_id = $user['id'];
+                log_debug("Tenant Identified: User ID $user_id for Phone ID $phone_number_id");
+
+                // Process Messages
+                if (isset($value['messages'])) {
+                    $messages = $value['messages'];
+                    $contacts_data = $value['contacts'] ?? [];
 
                     foreach ($messages as $message) {
-                        $from = $message['from'];
-                        $msg_body = '';
-                        $msg_type = $message['type'];
+                        $wa_id = $message['from']; // The sender's raw ID
 
-                        if ($msg_type == 'text') {
+                        // Determine Message Content and Type
+                        $msg_type = $message['type'];
+                        $msg_body = '';
+
+                        if ($msg_type === 'text') {
                             $msg_body = $message['text']['body'];
-                        } elseif ($msg_type == 'button') {
+                        } elseif ($msg_type === 'button') {
                             $msg_body = $message['button']['text'];
+                        } elseif ($msg_type === 'image') {
+                            $msg_body = "[Image]";
+                        } elseif ($msg_type === 'document') {
+                            $msg_body = "[Document] " . ($message['document']['filename'] ?? '');
                         } else {
-                            $msg_body = "[$msg_type message]";
+                            $msg_body = "[" . ucfirst($msg_type) . "]";
                         }
 
-                        // 2. Handle Contact
-                        $contact_name = $from;
-                        foreach ($contacts as $c) {
-                            if ($c['wa_id'] === $from) {
-                                $contact_name = $c['profile']['name'] ?? $from;
+                        // 1. Find or Create Contact
+                        // Normalize phone number for storage
+                        $normalized_phone = '+' . ltrim($wa_id, '+');
+
+                        // Get Contact Name from payload or default to phone
+                        $contact_name = $normalized_phone;
+                        foreach ($contacts_data as $c) {
+                            if ($c['wa_id'] === $wa_id) {
+                                $contact_name = $c['profile']['name'] ?? $normalized_phone;
                                 break;
                             }
                         }
 
-                        $normalized_from = '+' . $from;
-
-                        $stmt_contact = $pdo->prepare("SELECT id FROM contacts WHERE phone_number = ?");
-                        $stmt_contact->execute([$normalized_from]);
-                        $contact_exist = $stmt_contact->fetch(PDO::FETCH_ASSOC);
+                        $stmt_contact = $pdo->prepare("SELECT id FROM contacts WHERE phone_number = ? LIMIT 1");
+                        $stmt_contact->execute([$normalized_phone]);
+                        $contact = $stmt_contact->fetch(PDO::FETCH_ASSOC);
 
                         $contact_id = null;
-                        if ($contact_exist) {
-                            $contact_id = $contact_exist['id'];
+                        if ($contact) {
+                            $contact_id = $contact['id'];
                         } else {
-                            $stmt_new_contact = $pdo->prepare("INSERT INTO contacts (name, phone_number) VALUES (?, ?)");
-                            $stmt_new_contact->execute([$contact_name, $normalized_from]);
+                            $stmt_new_contact = $pdo->prepare("INSERT INTO contacts (name, phone_number, created_at) VALUES (?, ?, NOW())");
+                            $stmt_new_contact->execute([$contact_name, $normalized_phone]);
                             $contact_id = $pdo->lastInsertId();
+                            log_debug("Created new contact ID: $contact_id");
                         }
 
-                        // 3. Handle Conversation
-                        $stmt_conv = $pdo->prepare("SELECT id FROM conversations WHERE contact_id = ?");
+                        // 2. Find or Create Conversation
+                        $stmt_conv = $pdo->prepare("SELECT id FROM conversations WHERE contact_id = ? LIMIT 1");
                         $stmt_conv->execute([$contact_id]);
-                        $conv = $stmt_conv->fetch(PDO::FETCH_ASSOC);
+                        $conversation = $stmt_conv->fetch(PDO::FETCH_ASSOC);
 
                         $conversation_id = null;
-                        if ($conv) {
-                            $conversation_id = $conv['id'];
-                            $stmt_update_conv = $pdo->prepare("UPDATE conversations SET updated_at = NOW(), last_message_preview = ? WHERE id = ?");
-                            $stmt_update_conv->execute([$msg_body, $conversation_id]);
+                        if ($conversation) {
+                            $conversation_id = $conversation['id'];
+                            // Update last message preview and timestamp
+                            $stmt_update = $pdo->prepare("UPDATE conversations SET updated_at = NOW(), last_message_preview = ? WHERE id = ?");
+                            $stmt_update->execute([$msg_body, $conversation_id]);
                         } else {
-                            $stmt_new_conv = $pdo->prepare("INSERT INTO conversations (contact_id, last_message_preview, updated_at) VALUES (?, ?, NOW())");
+                            $stmt_new_conv = $pdo->prepare("INSERT INTO conversations (contact_id, last_message_preview, status, updated_at, created_at) VALUES (?, ?, 'open', NOW(), NOW())");
                             $stmt_new_conv->execute([$contact_id, $msg_body]);
                             $conversation_id = $pdo->lastInsertId();
+                            log_debug("Created new conversation ID: $conversation_id");
                         }
 
-                        // 4. Insert Message
-                        $stmt_msg = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, content, created_at) VALUES (?, 'contact', ?, NOW())");
-                        $stmt_msg->execute([$conversation_id, $msg_body]);
-
-                        file_put_contents($log_file, "Saved message from $normalized_from for Tenant $user_id\n", FILE_APPEND);
+                        // 3. Insert Message
+                        $stmt_msg = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, content, created_at, status) VALUES (?, 'contact', ?, NOW(), 'received')");
+                        if ($stmt_msg->execute([$conversation_id, $msg_body])) {
+                            log_debug("Message inserted successfully for Conversation ID: $conversation_id");
+                        } else {
+                            log_debug("Failed to insert message: " . implode(" ", $stmt_msg->errorInfo()));
+                        }
                     }
-                } elseif ($change['value']['statuses'] ?? false) {
-                    // --- HANDLE STATUS UPDATES ---
-                    // Just logging for now, but returning 200 OK above ensures Meta gets the ACK
-                    $statuses = $change['value']['statuses'];
-                    foreach ($statuses as $status) {
-                        $wamid = $status['id'];
-                        $state = $status['status'];
-                        file_put_contents($log_file, "Status Update: $wamid -> $state\n", FILE_APPEND);
+                }
+                // Handle Status Updates
+                elseif (isset($value['statuses'])) {
+                    foreach ($value['statuses'] as $status) {
+                        log_debug("Message Status Update: " . $status['status'] . " for ID " . $status['id']);
                     }
                 }
             }
         }
+
     } catch (Exception $e) {
-        file_put_contents($log_file, "Error processing WhatsApp payload: " . $e->getMessage() . "\n", FILE_APPEND);
+        log_debug("EXCEPTION processing WhatsApp: " . $e->getMessage() . "\n" . $e->getTraceAsString());
     }
+
     exit(); // Stop here, we are done with WhatsApp
 }
 
-// --- 3. FLUTTERWAVE LOGIC (Legacy) ---
+// --- 6. FLUTTERWAVE LOGIC (Legacy) ---
 // Only run if NOT WhatsApp
 $is_flutterwave = isset($headers['Verif-Hash']);
 
