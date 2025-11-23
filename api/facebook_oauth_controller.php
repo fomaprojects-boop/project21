@@ -55,30 +55,52 @@ if ($action === 'embedded_signup') {
     // This new action handles the token sent from the JavaScript SDK
     header('Content-Type: application/json');
     $input = json_decode(file_get_contents('php://input'), true);
-    $short_lived_token = $input['accessToken'] ?? '';
+    $code = $input['code'] ?? '';
+    $short_lived_token = $input['accessToken'] ?? ''; // Legacy fallback
 
-    if (empty($short_lived_token)) {
-        echo json_encode(['status' => 'error', 'message' => 'Access token not provided.']);
+    $long_lived_token = null;
+
+    if (!empty($code)) {
+        // Exchange code for access token
+        // For code obtained via JS SDK (FB.login), the redirect_uri should be an empty string
+        $redirect_uri = '';
+
+        $token_url = "https://graph.facebook.com/v20.0/oauth/access_token?client_id={$app_id}&client_secret={$app_secret}&redirect_uri={$redirect_uri}&code={$code}";
+        $response = make_curl_request($token_url);
+        $token_data = json_decode($response, true);
+
+        if (empty($token_data['access_token'])) {
+             echo json_encode(['status' => 'error', 'message' => 'Failed to exchange code for access token. Error: ' . htmlspecialchars($token_data['error']['message'] ?? 'Unknown error')]);
+             exit;
+        }
+        $long_lived_token = $token_data['access_token'];
+
+    } elseif (!empty($short_lived_token)) {
+        // Legacy: Exchange short-lived token for a long-lived token
+        $long_lived_url = "https://graph.facebook.com/v20.0/oauth/access_token?grant_type=fb_exchange_token&client_id={$app_id}&client_secret={$app_secret}&fb_exchange_token={$short_lived_token}";
+        $response = make_curl_request($long_lived_url);
+        $long_lived_data = json_decode($response, true);
+        if (empty($long_lived_data['access_token'])) {
+            echo json_encode(['status' => 'error', 'message' => 'Failed to get long-lived access token. Error: ' . htmlspecialchars($long_lived_data['error']['message'] ?? 'Unknown error')]);
+            exit;
+        }
+        $long_lived_token = $long_lived_data['access_token'];
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Authorization code or access token not provided.']);
         exit;
     }
-
-    // Exchange short-lived token for a long-lived token
-    $long_lived_url = "https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id={$app_id}&client_secret={$app_secret}&fb_exchange_token={$short_lived_token}";
-    $response = make_curl_request($long_lived_url);
-    $long_lived_data = json_decode($response, true);
-    if (empty($long_lived_data['access_token'])) {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to get long-lived access token. Error: ' . htmlspecialchars($long_lived_data['error']['message'] ?? 'Unknown error')]);
-        exit;
-    }
-    $long_lived_token = $long_lived_data['access_token'];
 
     // Now, with the long-lived token, get the debug info to find shared WABAs
-    $debug_url = "https://graph.facebook.com/v19.0/debug_token?input_token={$long_lived_token}&access_token={$long_lived_token}";
+    // Use App Access Token for inspection to ensure we see all scopes
+    $app_access_token = $app_id . '|' . $app_secret;
+    $debug_url = "https://graph.facebook.com/v20.0/debug_token?input_token={$long_lived_token}&access_token={$app_access_token}";
     $debug_response = make_curl_request($debug_url);
     $debug_data = json_decode($debug_response, true);
 
     if (empty($debug_data['data']['granular_scopes'])) {
-        echo json_encode(['status' => 'error', 'message' => 'Could not retrieve account scopes. Please try again.']);
+        // Log the error for debugging purposes
+        $debug_info = json_encode($debug_data);
+        echo json_encode(['status' => 'error', 'message' => 'Could not retrieve account scopes. Raw response: ' . $debug_info]);
         exit;
     }
 
@@ -99,7 +121,7 @@ if ($action === 'embedded_signup') {
     }
 
     // Get Phone Number ID using the WABA ID
-    $phone_numbers_url = "https://graph.facebook.com/v19.0/{$waba_id}/phone_numbers?access_token={$long_lived_token}";
+    $phone_numbers_url = "https://graph.facebook.com/v20.0/{$waba_id}/phone_numbers?access_token={$long_lived_token}";
     $phone_response = make_curl_request($phone_numbers_url);
     $phone_numbers_data = json_decode($phone_response, true);
 

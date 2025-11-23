@@ -59,7 +59,7 @@ define('GOOGLE_REDIRECT_URI', 'https://app.chatme.co.tz/api/modules/youtube_ads/
 // Muhimu: Badilisha 'YOUR_FACEBOOK_APP_ID' na 'YOUR_FACEBOOK_APP_SECRET' na credentials zako halisi.
 define('FACEBOOK_APP_ID', '1258543722970850');
 define('FACEBOOK_APP_SECRET', 'd9319c0e290c1939fc6bee01e037bc3a');
-define('FACEBOOK_CONFIG_ID', '1977097963067331');
+define('FACEBOOK_CONFIG_ID', '1115420997471710');
 // -----------------------------------------
 
 // --- DEFAULT SMTP FALLBACK SETTINGS ---
