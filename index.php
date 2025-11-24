@@ -4334,7 +4334,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         function createMessageElement(msg) {
-            const isAgent = (msg.sender_type === 'agent' || msg.sender_type === 'user');
+            const type = String(msg.sender_type || '').toLowerCase();
+            const isAgent = (type === 'agent' || type === 'user');
             const bubbleWrapper = document.createElement('div');
             bubbleWrapper.className = 'flex ' + (isAgent ? 'justify-end' : 'justify-start');
             bubbleWrapper.id = `msg-${msg.id}`;
@@ -4378,6 +4379,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             // Temporarily add the message to the UI for instant feedback (Optimistic UI)
             const messageContainer = document.getElementById('message-container');
             const bubbleWrapper = document.createElement('div');
+            const tempId = 'temp-msg-' + Date.now();
+            bubbleWrapper.id = tempId;
             bubbleWrapper.className = 'flex justify-end';
             // Render with "clock" icon initially or 1 check
             bubbleWrapper.innerHTML = `
@@ -4406,13 +4409,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 });
 
                 if (result && result.success) {
-                    // Update the icon to checkmark
-                    const icon = bubbleWrapper.querySelector('#temp-status-icon');
-                    if(icon) {
-                        icon.classList.remove('fa-clock');
-                        icon.classList.add('fa-check');
-                    }
-                    // Refresh conversation list silently to update preview
+                    // Remove temporary message and refresh to get the real one (prevents duplicates)
+                    const tempMsg = document.getElementById(tempId);
+                    if (tempMsg) tempMsg.remove();
+
+                    loadMessages(currentConversationId, document.getElementById('chat-partner-name').textContent, 1, false);
                     loadConversations();
                 } else {
                     // If sending failed
