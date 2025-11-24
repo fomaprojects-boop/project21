@@ -1,0 +1,26 @@
+HATUA ZA KUTATUA TATIZO LA "ENTRY: []" (Jumbe Tupu)
+
+Tatizo:
+Kwenye logs zako, unaona:
+Payload: {"object":"whatsapp_business_account","entry":[]}
+
+Hii ina maana kwamba "Bahasha" inafika kwenye server yako (System imeunganishwa), LAKINI "Bahasha" hiyo haina ujumbe ndani yake (`entry` ni tupu).
+
+Sababu:
+Hii inatokea pale ambapo umeweka Webhook URL sahihi, lakini HUJACHAGUA (Subscribe) taarifa unazotaka kupokea. WhatsApp inakutumia "ping" kukuambia kuna tukio, lakini haileti ujumbe kwa sababu hujairuhusu.
+
+Suluhisho (Lazima ufanye hivi kwenye Meta Dashboard):
+
+1. Nenda kwenye: https://developers.facebook.com/apps/
+2. Chagua App yako ya ChatMe/WhatsApp.
+3. Kwenye menyu ya kushoto, bonyeza **WhatsApp** > **Configuration**.
+4. Tafuta sehemu ya **Webhooks**.
+5. Bonyeza **Edit** (Au "Manage").
+6. Utaona orodha ya vitu (fields) kama `account_update`, `message_template_status_update`, nk.
+7. Tafuta **`messages`** na **`messages_read`** (muhimu sana).
+8. Hakikisha umeweka **TICK (Subscribe)** kwenye `messages`.
+9. Bonyeza **Save** au **Subscribe**.
+
+Baada ya kufanya hivi, tuma ujumbe mpya. Logs zako zinapaswa kubadilika kutoka `entry: []` na kuwa na taarifa za ujumbe (`entry: [{ changes: ... }]`).
+
+Kumbuka: System yako ya ChatMe iko sawa (Code ni nzuri), tatizo ni "Settings" za Facebook.
