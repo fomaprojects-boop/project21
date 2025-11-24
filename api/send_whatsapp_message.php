@@ -35,15 +35,44 @@ try {
 
     $input = json_decode(file_get_contents('php://input'), true);
 
-    if (!$input || !isset($input['conversation_id']) || !isset($input['content'])) {
-        throw new Exception('Invalid input. Missing conversation_id or content.');
+    if (!$input || !isset($input['conversation_id'])) {
+        throw new Exception('Invalid input. Missing conversation_id.');
     }
 
     $conversationId = $input['conversation_id'];
-    $content = $input['content'];
+    $content = $input['content'] ?? '';
     $userId = $_SESSION['user_id'];
+    $scheduledAt = $input['scheduled_at'] ?? null;
+    $messageType = $input['type'] ?? 'text'; // 'text', 'button', 'list', 'note' (handled via is_internal usually, but let's support explicit type)
+    $interactiveData = $input['interactive_data'] ?? null;
 
-    log_send_debug("Attempting to send message. User: $userId, Conv: $conversationId");
+    log_send_debug("Attempting to process message. User: $userId, Conv: $conversationId, Type: $messageType, Scheduled: " . ($scheduledAt ?: 'No'));
+
+    // Check if it's a scheduled message
+    if ($scheduledAt) {
+        $pdo->beginTransaction();
+
+        $stmt = $pdo->prepare("
+            INSERT INTO messages
+            (conversation_id, sender_type, user_id, content, message_type, interactive_data, scheduled_at, status, created_at, sent_at)
+            VALUES
+            (:conv_id, 'user', :user_id, :content, :msg_type, :int_data, :scheduled, 'scheduled', NOW(), NOW())
+        ");
+
+        $stmt->execute([
+            ':conv_id' => $conversationId,
+            ':user_id' => $userId,
+            ':content' => $content, // Content acts as fallback or description
+            ':msg_type' => $messageType,
+            ':int_data' => is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData,
+            ':scheduled' => $scheduledAt
+        ]);
+
+        $pdo->commit();
+        ob_clean();
+        echo json_encode(['success' => true, 'message' => 'Message scheduled successfully.']);
+        exit;
+    }
 
     // 1. Fetch settings for WhatsApp API
     $whatsappToken = null;
@@ -107,9 +136,18 @@ try {
         'messaging_product' => 'whatsapp',
         'recipient_type' => 'individual',
         'to' => $recipientPhoneNumber,
-        'type' => 'text',
-        'text' => ['body' => $content]
     ];
+
+    if ($messageType === 'text') {
+        $postData['type'] = 'text';
+        $postData['text'] = ['body' => $content];
+    } elseif ($messageType === 'interactive') {
+        $postData['type'] = 'interactive';
+        $postData['interactive'] = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
+    } elseif ($messageType === 'template') {
+        $postData['type'] = 'template';
+        $postData['template'] = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
+    }
 
     $ch = curl_init($apiUrl);
     curl_setopt($ch, CURLOPT_POST, true);
@@ -160,9 +198,9 @@ try {
     $senderType = 'user';
 
     // Dynamic Insert Logic
-    $columns = "conversation_id, sender_type, user_id, content, created_at, sent_at, status";
-    $values = "?, ?, ?, ?, NOW(), NOW(), 'sent'";
-    $params = [$conversationId, $senderType, $userId, $content];
+    $columns = "conversation_id, sender_type, user_id, content, message_type, created_at, sent_at, status";
+    $values = "?, ?, ?, ?, ?, NOW(), NOW(), 'sent'";
+    $params = [$conversationId, $senderType, $userId, $content, $messageType];
 
     if ($hasTenantId) {
         $columns .= ", tenant_id";
@@ -178,11 +216,24 @@ try {
         log_send_debug("Saving Provider ID: $providerMessageId");
     }
 
+    if (!empty($interactiveData)) {
+        // Note: You might need to ensure `interactive_data` column exists via migration script if running first time
+        try {
+            $pdo->query("SELECT interactive_data FROM messages LIMIT 1"); // Cheap check
+            $columns .= ", interactive_data";
+            $values .= ", ?";
+            $params[] = is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData;
+        } catch (Exception $e) {
+            // Ignore if column missing, just text content saved
+        }
+    }
+
     $stmt = $pdo->prepare("INSERT INTO messages ($columns) VALUES ($values)");
     $stmt->execute($params);
 
+    $previewText = ($messageType === 'text') ? "You: " . $content : "You sent a " . $messageType;
     $stmt = $pdo->prepare("UPDATE conversations SET last_message_preview = ?, updated_at = NOW() WHERE id = ?");
-    $stmt->execute(["You: " . $content, $conversationId]);
+    $stmt->execute([$previewText, $conversationId]);
 
     $pdo->commit();
 
