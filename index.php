@@ -43,11 +43,56 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .btn-soft:active { transform: scale(0.95); }
         .tab-pill { transition: all 0.3s ease; }
         .tab-pill.active { background-color: #fff; color: #7c3aed; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
-        /* Refined message bubble styles: fit-content prevents full width, normal word break prevents cutting */
-        .message-bubble { max-width: 75%; width: fit-content; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; border-radius: 1rem; padding: 0.5rem 0.75rem; }
-        /* Removed shadow completely for flat look */
-        .message-contact { background-color: #ffffff; color: #1e293b; border-bottom-left-radius: 0; }
-        .message-agent { background-color: #7c3aed; color: white; border-bottom-right-radius: 0; }
+        /* Modern Message Bubbles with Tails */
+        .message-bubble {
+            max-width: 75%;
+            width: fit-content;
+            min-width: 40px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: normal; /* FIX: Prevent aggressive breaking of short words */
+            border-radius: 18px;
+            padding: 10px 14px;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }
+
+        .message-contact {
+            background-color: #ffffff;
+            color: #1e293b;
+            border-bottom-left-radius: 4px;
+            margin-left: 0; /* Avatar handles spacing */
+        }
+        /* Ensure tail color matches bubble background */
+        .message-contact::before {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: -8px;
+            width: 0;
+            height: 0;
+            border-right: 12px solid #ffffff;
+            border-top: 12px solid transparent;
+        }
+
+        .message-agent {
+            background-color: #7c3aed;
+            color: white;
+            border-bottom-right-radius: 4px;
+            margin-right: 6px;
+        }
+        .message-agent::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            right: -8px;
+            width: 0;
+            height: 0;
+            border-left: 12px solid #7c3aed;
+            border-top: 12px solid transparent;
+        }
         #page-loader {
             position: fixed;
             top: 0;
@@ -3980,8 +4025,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     const safeContactName = c.contact_name || c.phone_number || 'Unknown';
                     const avatarChar = safeContactName.charAt(0).toUpperCase();
 
+                    // Note: Passing null for profileImage as it is not yet in API
                     container.innerHTML += `
-                        <div onclick="selectConversation(${c.conversation_id}, '${c.contact_name.replace(/'/g, "\\'")}', '${c.phone_number}', '${c.status}', '${c.assignee_name || ''}')" class="p-4 cursor-pointer border-b transition-all ${isActive}">
+                        <div onclick="selectConversation(${c.conversation_id}, '${c.contact_name.replace(/'/g, "\\'")}', '${c.phone_number}', '${c.status}', '${c.assignee_name || ''}', null)" class="p-4 cursor-pointer border-b transition-all ${isActive}">
                             <div class="flex justify-between items-start mb-1">
                                 <div class="flex items-center">
                                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-white flex items-center justify-center font-bold shadow-sm mr-3">${avatarChar}</div>
@@ -4087,7 +4133,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const data = await fetchApi(`get_conversations.php?search=${encodeURIComponent(phone)}`);
             if (data && data.success && data.conversations.length > 0) {
                 const conv = data.conversations[0]; // Assuming first match
-                selectConversation(conv.conversation_id, conv.contact_name, conv.phone_number, conv.status, conv.assignee_name);
+                selectConversation(conv.conversation_id, conv.contact_name, conv.phone_number, conv.status, conv.assignee_name, null);
             } else {
                 // If really new and not in DB yet (no messages), UI might struggle.
                 // But webhook creates it on inbound. Outbound?
@@ -4135,11 +4181,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             input.style.height = input.scrollHeight + 'px';
         }
 
-        function selectConversation(id, name, phone, status, assignee) {
+        function selectConversation(id, name, phone, status, assignee, profileImage = null) {
             if (activeChatInterval) clearInterval(activeChatInterval);
             currentConversationId = id;
             currentConversationStatus = status;
             currentChatPage = 1;
+            // Store current contact avatar for message rendering
+            window.currentContactAvatar = profileImage;
 
             document.getElementById('message-view-placeholder').classList.add('hidden');
             document.getElementById('message-view-content').classList.remove('hidden');
@@ -4337,7 +4385,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const type = String(msg.sender_type || '').toLowerCase();
             const isAgent = (type === 'agent' || type === 'user');
             const bubbleWrapper = document.createElement('div');
-            bubbleWrapper.className = 'flex ' + (isAgent ? 'justify-end' : 'justify-start');
+            // Add items-end to align bubble bottom with avatar
+            bubbleWrapper.className = 'flex ' + (isAgent ? 'justify-end' : 'justify-start') + ' items-end gap-2 mb-4';
             bubbleWrapper.id = `msg-${msg.id}`;
 
             let statusIcon = '';
@@ -4351,17 +4400,40 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 }
             }
 
-            bubbleWrapper.innerHTML = `
-                <div class="flex flex-col ${isAgent ? 'items-end' : 'items-start'} max-w-[75%] w-fit">
-                    <div class="p-3 rounded-lg message-bubble ${isAgent ? 'message-agent' : 'message-contact'}">
-                        ${msg.content}
-                    </div>
-                    <div class="flex items-center mt-1 mr-1">
-                        <span class="text-[10px] text-gray-400">${safeDate(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        <span class="status-icon-container">${statusIcon}</span>
-                    </div>
-                </div>
-            `;
+            // Avatar Logic for incoming messages
+            let avatarHtml = '';
+            if (!isAgent) {
+                const contactName = document.getElementById('chat-partner-name').textContent || 'User';
+                const initial = contactName.charAt(0).toUpperCase();
+                // Use window.currentContactAvatar if available (set in selectConversation)
+                const profileImg = window.currentContactAvatar;
+
+                if (profileImg) {
+                    avatarHtml = `<img src="${profileImg}" class="flex-shrink-0 w-8 h-8 rounded-full object-cover border border-gray-200 shadow-sm" alt="${initial}">`;
+                } else {
+                    avatarHtml = `<div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 text-white flex items-center justify-center text-xs font-bold border border-gray-200 shadow-sm cursor-default" title="${contactName}">${initial}</div>`;
+                }
+            }
+
+            if (isAgent) {
+                bubbleWrapper.innerHTML = `
+                    <div class="flex flex-col items-end max-w-[75%] w-fit">
+                        <div class="message-bubble message-agent shadow-sm">${msg.content}</div>
+                        <div class="flex items-center mt-1 mr-1 space-x-1">
+                            <span class="text-[10px] text-gray-400">${safeDate(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            <span class="status-icon-container">${statusIcon}</span>
+                        </div>
+                    </div>`;
+            } else {
+                bubbleWrapper.innerHTML = `
+                    ${avatarHtml}
+                    <div class="flex flex-col items-start max-w-[75%] w-fit">
+                        <div class="message-bubble message-contact shadow-sm">${msg.content}</div>
+                        <div class="flex items-center mt-1 ml-1">
+                            <span class="text-[10px] text-gray-400">${safeDate(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                    </div>`;
+            }
             return bubbleWrapper;
         }
 
@@ -4385,7 +4457,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             // Render with "clock" icon initially or 1 check
             bubbleWrapper.innerHTML = `
                 <div class="flex flex-col items-end max-w-[75%]">
-                    <div class="p-3 rounded-lg message-bubble message-agent">${content}</div>
+                    <div class="message-bubble message-agent">${content}</div>
                     <div class="flex items-center mt-1 mr-1">
                         <span class="text-[10px] text-gray-400">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         <i class="fas fa-clock text-gray-300 text-xs ml-1" id="temp-status-icon"></i>
