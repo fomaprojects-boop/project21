@@ -245,10 +245,10 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                             // This means 'conversations' likely only has: id, contact_id, assigned_to, last_message_preview, status, created_at, updated_at
                             
                             try {
-                                // Attempt 1: Standard (Unassigned)
-                                log_debug("Conv Attempt 1 (Standard)...");
-                                $stmt_new_conv = $pdo->prepare("INSERT INTO conversations (contact_id, assigned_to, last_message_preview, status, updated_at, created_at) VALUES (?, NULL, ?, 'open', NOW(), NOW())");
-                                $stmt_new_conv->execute([$contact_id, $msg_body]);
+                                // Attempt 1: Standard (Auto-assign to Tenant Owner)
+                                log_debug("Conv Attempt 1 (Standard - Assigned to Owner)...");
+                                $stmt_new_conv = $pdo->prepare("INSERT INTO conversations (contact_id, assigned_to, last_message_preview, status, updated_at, created_at) VALUES (?, ?, ?, 'open', NOW(), NOW())");
+                                $stmt_new_conv->execute([$contact_id, $user_id, $msg_body]);
                                 $conversation_id = $pdo->lastInsertId();
                             } catch (PDOException $e1) {
                                 log_debug("Conv Attempt 1 Failed: " . $e1->getMessage());
