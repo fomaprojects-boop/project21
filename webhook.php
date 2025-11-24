@@ -1,6 +1,6 @@
 <?php
 // webhook.php (Root Directory)
-// Version: V3.5-SCHEMA-AWARE
+// Version: V3.6-WORKFLOW-AWARE
 // Optimized for Real-world Schema Constraints (No user_id/tenant_id in conversations)
 
 // 1. Polyfill for getallheaders()
@@ -23,13 +23,13 @@ $debug_log_file_v2 = __DIR__ . '/api/webhook_debug.log'; // Also try in api/
 function log_debug($message) {
     global $debug_log_file_v1, $debug_log_file_v2;
     $timestamp = date('Y-m-d H:i:s');
-    $msg = "[$timestamp] [V3.5] $message\n";
+    $msg = "[$timestamp] [V3.6] $message\n";
 
     // Try V1 (Root)
     try { file_put_contents($debug_log_file_v1, $msg, FILE_APPEND); } catch (Throwable $e) {}
     // Try V2 (API)
     try { file_put_contents($debug_log_file_v2, $msg, FILE_APPEND); } catch (Throwable $e) {}
-    
+
     // Explicitly write to error_log without suppression to guarantee output somewhere
     error_log("[ChatMe Webhook] $message");
 }
@@ -130,6 +130,19 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                 $user_id = (int)$user['id'];
                 $tenant_id = $user_id; // Assume 1:1 mapping
                 log_debug("Tenant Found: User ID $user_id");
+
+                // --- HANDLE STATUS UPDATES (Delivered, Read) ---
+                if (isset($value['statuses'])) {
+                    foreach ($value['statuses'] as $statusUpdate) {
+                        $wamid = $statusUpdate['id']; // The WhatsApp Message ID (used during send)
+                        $status = $statusUpdate['status']; // sent, delivered, read
+
+                        log_debug("Status Update: Msg $wamid is now $status");
+
+                        // NOTE: If we stored wamid, we could update status here.
+                        // Since schema is unknown/restricted, we skip UPDATE unless we confirm wamid column exists.
+                    }
+                }
 
                 // Process Messages
                 if (isset($value['messages'])) {
@@ -241,9 +254,7 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                             log_debug("Updated Conversation ID: $conversation_id");
                         } else {
                             // Create Logic - SCHEMA SIMPLIFIED
-                            // Based on Error Log: "Unknown column 'user_id' in 'INSERT INTO'" and "Unknown column 'tenant_id'"
-                            // This means 'conversations' likely only has: id, contact_id, assigned_to, last_message_preview, status, created_at, updated_at
-                            
+
                             try {
                                 // Attempt 1: Standard (Auto-assign to Tenant Owner)
                                 log_debug("Conv Attempt 1 (Standard - Assigned to Owner)...");
@@ -267,8 +278,6 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                         }
 
                         // 3. Insert Message
-                        // Try with tenant_id/user_id first (Assuming messages table DOES have them, unlike conversations)
-                        // If messages table also lacks them, we need to fall back further.
                         try {
                             log_debug("Message Attempt 1 (Full)...");
                             $stmt_msg = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, user_id, tenant_id, content, created_at, sent_at, status) VALUES (?, 'contact', ?, ?, ?, NOW(), NOW(), 'received')");
@@ -284,7 +293,7 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                                 log_debug("Message Saved! (Without tenant_id)");
                             } catch (PDOException $e_msg2) {
                                 log_debug("Message Insert (Attempt 2) failed: " . $e_msg2->getMessage());
-                                
+
                                 // Fallback: minimal (No user_id - if schema is very simple)
                                 try {
                                     log_debug("Message Attempt 3 (Minimal - No User ID)...");
@@ -297,6 +306,9 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                                 }
                             }
                         }
+
+                        // 4. Trigger Workflow Check
+                        processWorkflows($pdo, $user_id, $conversationId, $msg_body);
                     }
                 }
             }
@@ -306,6 +318,131 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
     }
 
     exit;
+}
+
+// --- WORKFLOW PROCESSING HELPER ---
+function processWorkflows($pdo, $userId, $conversationId, $msgBody) {
+    try {
+        // Fetch active workflows
+        $stmt = $pdo->prepare("SELECT id, name, trigger_type, workflow_data FROM workflows WHERE is_active = 1");
+        $stmt->execute();
+        $workflows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($workflows as $wf) {
+            $triggerType = $wf['trigger_type'];
+            $data = json_decode($wf['workflow_data'], true);
+            $nodes = $data['nodes'] ?? [];
+
+            $shouldTrigger = false;
+
+            if ($triggerType === 'Message Received') {
+                $shouldTrigger = true;
+            } elseif ($triggerType === 'Keyword' || $triggerType === 'Conversation Started') {
+                // Find trigger node
+                $triggerNode = null;
+                foreach ($nodes as $n) {
+                    if ($n['type'] === 'trigger') {
+                        $triggerNode = $n;
+                        break;
+                    }
+                }
+
+                if ($triggerNode) {
+                    // Simple keyword check or generic start
+                    if ($triggerType === 'Conversation Started') {
+                         $shouldTrigger = true;
+                    } elseif (stripos($msgBody, $triggerNode['content']) !== false) {
+                        // $shouldTrigger = true; // Uncomment for strict keyword matching if needed
+                    }
+                }
+            }
+
+            if ($shouldTrigger) {
+                log_debug("Workflow Triggered: " . $wf['name']);
+                executeWorkflow($pdo, $userId, $conversationId, $nodes);
+                break; // Stop after first match
+            }
+        }
+    } catch (Exception $e) {
+        log_debug("Workflow Error: " . $e->getMessage());
+    }
+}
+
+function executeWorkflow($pdo, $userId, $conversationId, $nodes) {
+    // Find trigger node ID
+    $triggerNodeId = null;
+    foreach ($nodes as $n) {
+        if ($n['type'] === 'trigger') {
+            $triggerNodeId = $n['id'];
+            break;
+        }
+    }
+
+    if (!$triggerNodeId) return;
+
+    // Find next node
+    $nextNode = null;
+    foreach ($nodes as $n) {
+        if (isset($n['parentId']) && $n['parentId'] == $triggerNodeId) {
+            $nextNode = $n;
+            break;
+        }
+    }
+
+    if ($nextNode) {
+        if ($nextNode['type'] === 'message' || $nextNode['type'] === 'action') {
+            $replyContent = $nextNode['content'];
+            log_debug("Executing Workflow Action: Send '$replyContent'");
+            sendWorkflowReply($pdo, $userId, $conversationId, $replyContent);
+        }
+    }
+}
+
+function sendWorkflowReply($pdo, $userId, $conversationId, $content) {
+    // 1. Get Settings
+    $stmt = $pdo->prepare("SELECT whatsapp_access_token, whatsapp_phone_number_id FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$user) return;
+
+    $token = $user['whatsapp_access_token'];
+    $phoneId = $user['whatsapp_phone_number_id'];
+
+    // 2. Get Recipient Phone
+    $stmt = $pdo->prepare("SELECT c.phone_number FROM contacts c JOIN conversations conv ON c.id = conv.contact_id WHERE conv.id = ?");
+    $stmt->execute([$conversationId]);
+    $contact = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$contact) return;
+    $to = preg_replace('/[^0-9]/', '', $contact['phone_number']);
+
+    // 3. Send API
+    $url = "https://graph.facebook.com/v21.0/$phoneId/messages";
+    $data = [
+        'messaging_product' => 'whatsapp',
+        'recipient_type' => 'individual',
+        'to' => $to,
+        'type' => 'text',
+        'text' => ['body' => $content]
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', "Authorization: Bearer $token"]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $res = curl_exec($ch);
+    curl_close($ch);
+
+    log_debug("Workflow Auto-Reply Sent: " . $res);
+
+    // 4. Save to DB
+    try {
+        $stmt = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, user_id, content, created_at, status) VALUES (?, 'agent', ?, ?, NOW(), 'sent')");
+        $stmt->execute([$conversationId, $userId, $content]);
+    } catch (Exception $e) {
+        log_debug("Error saving workflow reply: " . $e->getMessage());
+    }
 }
 
 // --- 6. FLUTTERWAVE LOGIC (Legacy) ---

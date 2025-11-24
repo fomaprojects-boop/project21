@@ -44,7 +44,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .tab-pill { transition: all 0.3s ease; }
         .tab-pill.active { background-color: #fff; color: #7c3aed; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
         .message-bubble { max-width: 75%; white-space: pre-wrap; word-wrap: break-word; border-radius: 1rem; padding: 0.75rem 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-        .message-contact { background-color: #ffffff; border: 1px solid #f1f5f9; color: #334155; border-bottom-left-radius: 0; }
+        /* Removed border and adjusted background for cleaner "non-boxy" look */
+        .message-contact { background-color: #ffffff; color: #1e293b; border-bottom-left-radius: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .message-agent { background-color: #7c3aed; color: white; border-bottom-right-radius: 0; }
         #page-loader {
             position: fixed;
@@ -2753,6 +2754,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         // --- UTILITY FUNCTIONS ---
+        function safeDate(dateStr) {
+            if (!dateStr) return new Date();
+            // Replace space with T for ISO format compatibility (Safari/older browsers)
+            // MySQL: "2023-11-24 13:06:16" -> "2023-11-24T13:06:16"
+            return new Date(dateStr.replace(' ', 'T'));
+        }
+
         function number_format(number, decimals, dec_point, thousands_sep) {
             number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
             var n = !isFinite(+number) ? 0 : +number,
@@ -4227,7 +4235,31 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 data.messages.forEach(msg => {
                     const bubbleWrapper = document.createElement('div');
                     bubbleWrapper.className = 'flex ' + (msg.sender_type === 'agent' ? 'justify-end' : 'justify-start');
-                    bubbleWrapper.innerHTML = `<div class="p-3 rounded-lg message-bubble ${msg.sender_type === 'agent' ? 'message-agent' : 'message-contact'}">${msg.content}</div>`;
+
+                    let statusIcon = '';
+                    // Match 'agent' OR 'user' since backend now uses 'user' to fix truncation
+                    if (msg.sender_type === 'agent' || msg.sender_type === 'user') {
+                        if (msg.status === 'read') {
+                            // User requested clearer blue tick
+                            statusIcon = '<i class="fas fa-check-double text-blue-500 text-xs ml-1"></i>';
+                        } else if (msg.status === 'delivered') {
+                            statusIcon = '<i class="fas fa-check-double text-gray-400 text-xs ml-1"></i>';
+                        } else {
+                            statusIcon = '<i class="fas fa-check text-gray-300 text-xs ml-1"></i>'; // sent
+                        }
+                    }
+
+                    bubbleWrapper.innerHTML = `
+                        <div class="flex flex-col ${msg.sender_type === 'agent' ? 'items-end' : 'items-start'} max-w-[75%]">
+                            <div class="p-3 rounded-lg message-bubble ${msg.sender_type === 'agent' ? 'message-agent' : 'message-contact'}">
+                                ${msg.content}
+                            </div>
+                            <div class="flex items-center mt-1 mr-1">
+                                <span class="text-[10px] text-gray-400">${safeDate(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                ${statusIcon}
+                            </div>
+                        </div>
+                    `;
                     messageContainer.appendChild(bubbleWrapper);
                 });
                 messageContainer.scrollTop = messageContainer.scrollHeight;
@@ -4241,31 +4273,53 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const content = messageInput.value.trim();
             if (!content || !currentConversationId) return;
 
-            // Temporarily add the message to the UI for instant feedback
+            // Temporarily add the message to the UI for instant feedback (Optimistic UI)
             const messageContainer = document.getElementById('message-container');
             const bubbleWrapper = document.createElement('div');
             bubbleWrapper.className = 'flex justify-end';
-            bubbleWrapper.innerHTML = `<div class="p-3 rounded-lg message-bubble message-agent">${content}</div>`;
+            // Render with "clock" icon initially or 1 check
+            bubbleWrapper.innerHTML = `
+                <div class="flex flex-col items-end max-w-[75%]">
+                    <div class="p-3 rounded-lg message-bubble message-agent">${content}</div>
+                    <div class="flex items-center mt-1 mr-1">
+                        <span class="text-[10px] text-gray-400">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <i class="fas fa-clock text-gray-300 text-xs ml-1" id="temp-status-icon"></i>
+                    </div>
+                </div>
+            `;
             messageContainer.appendChild(bubbleWrapper);
             messageContainer.scrollTop = messageContainer.scrollHeight;
 
             messageInput.value = '';
+            // Resize textarea back to normal
+            messageInput.style.height = 'auto';
 
-            const result = await fetchApi('send_whatsapp_message.php', {
-                method: 'POST',
-                body: {
-                    conversation_id: currentConversationId,
-                    content: content
+            try {
+                const result = await fetchApi('send_whatsapp_message.php', {
+                    method: 'POST',
+                    body: {
+                        conversation_id: currentConversationId,
+                        content: content
+                    }
+                });
+
+                if (result && result.success) {
+                    // Update the icon to checkmark
+                    const icon = bubbleWrapper.querySelector('#temp-status-icon');
+                    if(icon) {
+                        icon.classList.remove('fa-clock');
+                        icon.classList.add('fa-check');
+                    }
+                    // Refresh conversation list silently to update preview
+                    loadConversations();
+                } else {
+                    // If sending failed
+                    bubbleWrapper.remove();
+                    alert('Failed to send message: ' + (result ? result.message : 'Unknown error'));
                 }
-            });
-
-            if (result && result.success) {
-                // Message sent successfully, refresh conversations to show new preview
-                loadConversations();
-            } else {
-                // If sending failed, remove the temporary message and show an error
+            } catch (e) {
                 bubbleWrapper.remove();
-                alert('Failed to send message: ' + (result ? result.message : 'Unknown error'));
+                alert('Network error sending message.');
             }
         }
 
@@ -6527,6 +6581,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                 // Check if it matches one of our managed forms
                 const managedForms = [
+                    'sendMessageForm', // Added to fix page reload on reply
                     'editInvestmentForm', 'newJobOrderForm', 'addAdvertiserForm', 'verifyEmailForm',
                     'payRequisitionForm', 'expenseActionForm', 'trackProgressModal', 'addUserForm',
                     'addContactForm', 'addCustomerForm', 'addTemplateForm', 'newBroadcastForm',
@@ -6542,6 +6597,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 e.preventDefault();
                 let result;
                 switch(form.id) {
+                    case 'sendMessageForm':
+                        await sendMessage(e);
+                        break;
                     case 'editInvestmentForm':
                         await handleEditInvestmentSubmit(e);
                         break;

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frontend Verification</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        #message-container { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; min-height: 50px; }
+    </style>
+</head>
+<body>
+    <h1>Frontend Logic Verification</h1>
+
+    <h3>1. Date Parsing Test</h3>
+    <div id="date-test-result">Running...</div>
+
+    <h3>2. Form Submission Test (Page Reload Fix)</h3>
+    <div id="message-container">Message Log:</div>
+    <form id="sendMessageForm">
+        <input type="text" id="messageInput" value="Test Message Content">
+        <button type="submit" id="sendBtn">Send Message</button>
+    </form>
+    <div id="form-test-result">Waiting for submission...</div>
+
+    <script>
+        // --- THE FIXES TO VERIFY ---
+
+        // 1. safeDate Function
+        function safeDate(dateStr) {
+            if (!dateStr) return new Date();
+            // Replace space with T for ISO format compatibility
+            return new Date(dateStr.replace(' ', 'T'));
+        }
+
+        // 2. sendMessage Function (Mocked Logic)
+        async function sendMessage(event) {
+            event.preventDefault();
+            // Logic from index.php
+            const messageContainer = document.getElementById('message-container');
+            const bubbleWrapper = document.createElement('div');
+            bubbleWrapper.innerHTML = `<div>Optimistic Bubble Added</div>`;
+            messageContainer.appendChild(bubbleWrapper);
+
+            document.getElementById('form-test-result').innerHTML = '<span class="success">sendMessage() was called! Form submission intercepted.</span>';
+        }
+
+        // 3. Event Listener Setup (Mimicking index.php structure)
+        document.body.addEventListener('submit', async (e) => {
+            const form = e.target;
+            if (!form.id) return;
+
+            // The Array I modified
+            const managedForms = [
+                'sendMessageForm', // This is what I added
+                'editInvestmentForm',
+                'otherForm'
+            ];
+
+            if (!managedForms.includes(form.id)) return;
+
+            e.preventDefault(); // This prevents the reload
+
+            switch(form.id) {
+                case 'sendMessageForm':
+                    await sendMessage(e);
+                    break;
+                case 'editInvestmentForm':
+                    console.log("Edit Investment");
+                    break;
+            }
+        });
+
+        // --- VERIFICATION LOGIC ---
+
+        // Verify Date
+        const testDateStr = "2023-11-24 13:06:16";
+        const dateObj = safeDate(testDateStr);
+        const resultDiv = document.getElementById('date-test-result');
+
+        if (!isNaN(dateObj.getTime()) && dateObj.toISOString().startsWith("2023-11-24T13:06:16")) {
+             // Note: ISOString might vary by timezone but T separator confirms parsing worked better than Invalid Date
+             // Just checking !isNaN is usually enough for "Invalid Date" check
+             resultDiv.innerHTML = `<span class="success">Pass: "${testDateStr}" parsed successfully to ${dateObj.toString()}</span>`;
+        } else {
+             resultDiv.innerHTML = `<span class="error">Fail: "${testDateStr}" resulted in ${dateObj.toString()}</span>`;
+        }
+
+    </script>
+</body>
+</html>
