@@ -28,16 +28,29 @@ if ($conversationId === false) {
 }
 
 try {
-    // Pata ujumbe wote wa mazungumzo haya
+    // Pagination parameters
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+    $offset = ($page - 1) * $limit;
+
+    // Get messages with pagination (latest first, then reversed)
     $stmt = $pdo->prepare("
-        SELECT sender_type, content, sent_at, status
+        SELECT id, sender_type, content, sent_at, created_at, status
         FROM messages
-        WHERE conversation_id = ?
-        ORDER BY sent_at ASC
+        WHERE conversation_id = :conversation_id
+        ORDER BY sent_at DESC
+        LIMIT :limit OFFSET :offset
     ");
-    $stmt->execute([$conversationId]);
+
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->bindValue(':conversation_id', $conversationId, PDO::PARAM_INT);
+    $stmt->execute();
 
     $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Reverse to show chronological order (oldest at top)
+    $messages = array_reverse($messages);
 
     echo json_encode(['success' => true, 'messages' => $messages]);
 

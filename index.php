@@ -2489,6 +2489,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         let DEFAULT_CURRENCY = 'TZS';
         let currentConversationId = null;
         let currentConversationStatus = 'open';
+        let activeChatInterval = null;
+        let currentChatPage = 1;
         let conversationFilter = 'all';
         let myChart = null;
         let currentWorkflow = { id: null, name: 'Untitled Workflow', workflow_data: { nodes: [] } };
@@ -4134,8 +4136,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         function selectConversation(id, name, phone, status, assignee) {
+            if (activeChatInterval) clearInterval(activeChatInterval);
             currentConversationId = id;
             currentConversationStatus = status;
+            currentChatPage = 1;
 
             document.getElementById('message-view-placeholder').classList.add('hidden');
             document.getElementById('message-view-content').classList.remove('hidden');
@@ -4155,9 +4159,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             document.getElementById('assignee-name').textContent = assignee || 'Unassigned';
 
-            loadMessages(id, name);
+            loadMessages(id, name, 1, true);
             loadConversations(); // Refresh list highlight
             loadAssignUsers(); // Load users for dropdown
+
+            activeChatInterval = setInterval(() => {
+                if (currentConversationId === id) {
+                    loadMessages(id, name, 1, false);
+                }
+            }, 3000);
         }
 
         async function loadAssignUsers() {
@@ -4214,7 +4224,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
-        async function loadMessages(conversationId, contactName) {
+        async function loadMessages(conversationId, contactName, page = 1, isInitialLoad = true) {
             const placeholder = document.getElementById('message-view-placeholder');
             const contentView = document.getElementById('message-view-content');
             const headerName = document.getElementById('chat-partner-name');
@@ -4223,51 +4233,141 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             placeholder.style.display = 'none';
             contentView.classList.remove('hidden');
             headerName.textContent = contactName;
-            messageContainer.innerHTML = '<div class="text-center text-gray-500">Loading messages...</div>';
 
-            const data = await fetchApi(`get_messages.php?conversation_id=${conversationId}`);
+            if (isInitialLoad && page === 1) {
+                messageContainer.innerHTML = '<div class="text-center text-gray-500">Loading messages...</div>';
+            }
 
-            messageContainer.innerHTML = '';
+            const data = await fetchApi(`get_messages.php?conversation_id=${conversationId}&page=${page}`);
+
+            if (isInitialLoad && page === 1) messageContainer.innerHTML = '';
+
             if (data && data.success) {
                 if (data.messages.length === 0) {
-                    messageContainer.innerHTML = '<div class="text-center text-gray-500">No messages in this conversation yet.</div>';
+                    if (page === 1 && isInitialLoad) messageContainer.innerHTML = '<div class="text-center text-gray-500">No messages in this conversation yet.</div>';
                     return;
                 }
-                data.messages.forEach(msg => {
-                    const isAgent = (msg.sender_type === 'agent' || msg.sender_type === 'user');
-                    const bubbleWrapper = document.createElement('div');
-                    bubbleWrapper.className = 'flex ' + (isAgent ? 'justify-end' : 'justify-start');
 
-                    let statusIcon = '';
-                    // Match 'agent' OR 'user' since backend now uses 'user' to fix truncation
-                    if (isAgent) {
-                        if (msg.status === 'read') {
-                            // User requested clearer blue tick
-                            statusIcon = '<i class="fas fa-check-double text-blue-500 text-xs ml-1"></i>';
-                        } else if (msg.status === 'delivered') {
-                            statusIcon = '<i class="fas fa-check-double text-gray-400 text-xs ml-1"></i>';
+                // Create a temporary container for new messages if prepending
+                const fragment = document.createDocumentFragment();
+
+                // Add "Load Older" button if page 1 and results are full (implying more)
+                // Or if page > 1 and we got results.
+                // Simple logic: If we are on page 1, prepend button.
+                // If we are polling (page 1, !isInitialLoad), we replace content.
+
+                // If this is an automated poll (page 1, not initial), perform a smart update
+                if (!isInitialLoad && page === 1) {
+                    // 1. Update statuses of existing messages
+                    data.messages.forEach(msg => {
+                        const existingMsg = document.getElementById(`msg-${msg.id}`);
+                        if (existingMsg) {
+                            const statusIconContainer = existingMsg.querySelector('.status-icon-container');
+                            if (statusIconContainer) {
+                                let newIcon = '';
+                                if (msg.sender_type === 'agent' || msg.sender_type === 'user') {
+                                    if (msg.status === 'read') {
+                                        newIcon = '<i class="fas fa-check-double text-blue-500 text-xs ml-1"></i>';
+                                    } else if (msg.status === 'delivered') {
+                                        newIcon = '<i class="fas fa-check-double text-gray-400 text-xs ml-1"></i>';
+                                    } else {
+                                        newIcon = '<i class="fas fa-check text-gray-300 text-xs ml-1"></i>';
+                                    }
+                                }
+                                // Only update if different to avoid unnecessary reflows
+                                if (statusIconContainer.innerHTML !== newIcon) {
+                                    statusIconContainer.innerHTML = newIcon;
+                                }
+                            }
                         } else {
-                            statusIcon = '<i class="fas fa-check text-gray-300 text-xs ml-1"></i>'; // sent
-                        }
-                    }
+                            // 2. Append new messages if they don't exist
+                            // Only if the user is scrolled near the bottom to avoid disruption
+                            // Or we can append but user won't see it until scroll
 
-                    bubbleWrapper.innerHTML = `
-                        <div class="flex flex-col ${isAgent ? 'items-end' : 'items-start'} max-w-[75%]">
-                            <div class="p-3 rounded-lg message-bubble ${isAgent ? 'message-agent' : 'message-contact'}">
-                                ${msg.content}
-                            </div>
-                            <div class="flex items-center mt-1 mr-1">
-                                <span class="text-[10px] text-gray-400">${safeDate(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                ${statusIcon}
-                            </div>
-                        </div>
-                    `;
-                    messageContainer.appendChild(bubbleWrapper);
+                            // Check if we already have this message (to prevent dupes)
+                            if (!document.getElementById(`msg-${msg.id}`)) {
+                                const newNode = createMessageElement(msg);
+                                messageContainer.appendChild(newNode);
+                                // Auto-scroll if user was at bottom
+                                if (messageContainer.scrollHeight - messageContainer.scrollTop - messageContainer.clientHeight < 100) {
+                                    messageContainer.scrollTop = messageContainer.scrollHeight;
+                                }
+                            }
+                        }
+                    });
+                    return; // Stop here for polling
+                }
+
+                // Standard Logic for Initial Load or Pagination
+                data.messages.forEach(msg => {
+                    fragment.appendChild(createMessageElement(msg));
                 });
-                messageContainer.scrollTop = messageContainer.scrollHeight;
+
+                if (page === 1) {
+                    messageContainer.innerHTML = '';
+                    if (data.messages.length >= 50) {
+                        const btn = document.createElement('div');
+                        btn.className = 'text-center py-2';
+                        btn.innerHTML = `<button onclick="loadOlderMessages()" class="text-xs text-violet-600 hover:underline">Load Older Messages</button>`;
+                        messageContainer.appendChild(btn);
+                    }
+                    messageContainer.appendChild(fragment);
+                    if (isInitialLoad) messageContainer.scrollTop = messageContainer.scrollHeight;
+                } else {
+                    const oldBtn = messageContainer.querySelector('button[onclick="loadOlderMessages()"]')?.parentNode;
+                    if(oldBtn) oldBtn.remove();
+                    const oldHeight = messageContainer.scrollHeight;
+                    messageContainer.prepend(fragment);
+                    if (data.messages.length >= 50) {
+                         const btn = document.createElement('div');
+                        btn.className = 'text-center py-2';
+                        btn.innerHTML = `<button onclick="loadOlderMessages()" class="text-xs text-violet-600 hover:underline">Load Older Messages</button>`;
+                        messageContainer.prepend(btn);
+                    }
+                    const newHeight = messageContainer.scrollHeight;
+                    messageContainer.scrollTop = newHeight - oldHeight;
+                }
+
             } else {
-                messageContainer.innerHTML = `<div class="text-center text-red-500">Error: ${data ? data.message : 'Failed to load messages'}</div>`;
+                if(isInitialLoad) messageContainer.innerHTML = `<div class="text-center text-red-500">Error: ${data ? data.message : 'Failed to load messages'}</div>`;
             }
+        }
+
+        function createMessageElement(msg) {
+            const isAgent = (msg.sender_type === 'agent' || msg.sender_type === 'user');
+            const bubbleWrapper = document.createElement('div');
+            bubbleWrapper.className = 'flex ' + (isAgent ? 'justify-end' : 'justify-start');
+            bubbleWrapper.id = `msg-${msg.id}`;
+
+            let statusIcon = '';
+            if (isAgent) {
+                if (msg.status === 'read') {
+                    statusIcon = '<i class="fas fa-check-double text-blue-500 text-xs ml-1"></i>';
+                } else if (msg.status === 'delivered') {
+                    statusIcon = '<i class="fas fa-check-double text-gray-400 text-xs ml-1"></i>';
+                } else {
+                    statusIcon = '<i class="fas fa-check text-gray-300 text-xs ml-1"></i>';
+                }
+            }
+
+            bubbleWrapper.innerHTML = `
+                <div class="flex flex-col ${isAgent ? 'items-end' : 'items-start'} max-w-[75%] w-fit">
+                    <div class="p-3 rounded-lg message-bubble ${isAgent ? 'message-agent' : 'message-contact'}">
+                        ${msg.content}
+                    </div>
+                    <div class="flex items-center mt-1 mr-1">
+                        <span class="text-[10px] text-gray-400">${safeDate(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <span class="status-icon-container">${statusIcon}</span>
+                    </div>
+                </div>
+            `;
+            return bubbleWrapper;
+        }
+
+        function loadOlderMessages() {
+            currentChatPage++;
+            const name = document.getElementById('chat-partner-name').textContent;
+            loadMessages(currentConversationId, name, currentChatPage, true); // Treat as "initial" to avoid polling logic taking over, but page > 1 logic handles it.
         }
         async function sendMessage(event) {
             event.preventDefault();
