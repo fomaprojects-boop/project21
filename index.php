@@ -4234,12 +4234,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     return;
                 }
                 data.messages.forEach(msg => {
+                    const isAgent = (msg.sender_type === 'agent' || msg.sender_type === 'user');
                     const bubbleWrapper = document.createElement('div');
-                    bubbleWrapper.className = 'flex ' + (msg.sender_type === 'agent' ? 'justify-end' : 'justify-start');
+                    bubbleWrapper.className = 'flex ' + (isAgent ? 'justify-end' : 'justify-start');
 
                     let statusIcon = '';
                     // Match 'agent' OR 'user' since backend now uses 'user' to fix truncation
-                    if (msg.sender_type === 'agent' || msg.sender_type === 'user') {
+                    if (isAgent) {
                         if (msg.status === 'read') {
                             // User requested clearer blue tick
                             statusIcon = '<i class="fas fa-check-double text-blue-500 text-xs ml-1"></i>';
@@ -4251,8 +4252,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     }
 
                     bubbleWrapper.innerHTML = `
-                        <div class="flex flex-col ${msg.sender_type === 'agent' ? 'items-end' : 'items-start'} max-w-[75%]">
-                            <div class="p-3 rounded-lg message-bubble ${msg.sender_type === 'agent' ? 'message-agent' : 'message-contact'}">
+                        <div class="flex flex-col ${isAgent ? 'items-end' : 'items-start'} max-w-[75%]">
+                            <div class="p-3 rounded-lg message-bubble ${isAgent ? 'message-agent' : 'message-contact'}">
                                 ${msg.content}
                             </div>
                             <div class="flex items-center mt-1 mr-1">

@@ -30,7 +30,7 @@ if ($conversationId === false) {
 try {
     // Pata ujumbe wote wa mazungumzo haya
     $stmt = $pdo->prepare("
-        SELECT sender_type, content, sent_at
+        SELECT sender_type, content, sent_at, status
         FROM messages
         WHERE conversation_id = ?
         ORDER BY sent_at ASC
