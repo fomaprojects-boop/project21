@@ -1,7 +1,7 @@
 <?php
 // webhook.php (Root Directory)
-// Version: V3.6-SCHEMA-MINIMAL
-// Optimized for Simplified Schema (No created_at, user_id, tenant_id)
+// Version: V3.5-SCHEMA-AWARE
+// Optimized for Real-world Schema Constraints (No user_id/tenant_id in conversations)
 
 // 1. Polyfill for getallheaders()
 if (!function_exists('getallheaders')) {
@@ -23,13 +23,13 @@ $debug_log_file_v2 = __DIR__ . '/api/webhook_debug.log'; // Also try in api/
 function log_debug($message) {
     global $debug_log_file_v1, $debug_log_file_v2;
     $timestamp = date('Y-m-d H:i:s');
-    $msg = "[$timestamp] [V3.6] $message\n";
+    $msg = "[$timestamp] [V3.5] $message\n";
 
     // Try V1 (Root)
     try { file_put_contents($debug_log_file_v1, $msg, FILE_APPEND); } catch (Throwable $e) {}
     // Try V2 (API)
     try { file_put_contents($debug_log_file_v2, $msg, FILE_APPEND); } catch (Throwable $e) {}
-
+    
     // Explicitly write to error_log without suppression to guarantee output somewhere
     error_log("[ChatMe Webhook] $message");
 }
@@ -240,20 +240,22 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                             $stmt_update->execute([$msg_body, $conversation_id]);
                             log_debug("Updated Conversation ID: $conversation_id");
                         } else {
-                            // Create Logic - SCHEMA MINIMALIZED (No created_at, user_id, tenant_id)
-
+                            // Create Logic - SCHEMA SIMPLIFIED
+                            // Based on Error Log: "Unknown column 'user_id' in 'INSERT INTO'" and "Unknown column 'tenant_id'"
+                            // This means 'conversations' likely only has: id, contact_id, assigned_to, last_message_preview, status, created_at, updated_at
+                            
                             try {
-                                // Attempt 1: Standard (Unassigned, No created_at)
-                                log_debug("Conv Attempt 1 (Standard, No created_at)...");
-                                $stmt_new_conv = $pdo->prepare("INSERT INTO conversations (contact_id, assigned_to, last_message_preview, status, updated_at) VALUES (?, NULL, ?, 'open', NOW())");
+                                // Attempt 1: Standard (Unassigned)
+                                log_debug("Conv Attempt 1 (Standard)...");
+                                $stmt_new_conv = $pdo->prepare("INSERT INTO conversations (contact_id, assigned_to, last_message_preview, status, updated_at, created_at) VALUES (?, NULL, ?, 'open', NOW(), NOW())");
                                 $stmt_new_conv->execute([$contact_id, $msg_body]);
                                 $conversation_id = $pdo->lastInsertId();
                             } catch (PDOException $e1) {
                                 log_debug("Conv Attempt 1 Failed: " . $e1->getMessage());
                                 try {
-                                    // Attempt 2: Minimal (No assigned_to, No created_at)
-                                    log_debug("Conv Attempt 2 (Minimal, No created_at)...");
-                                    $stmt_new_conv = $pdo->prepare("INSERT INTO conversations (contact_id, last_message_preview, status, updated_at) VALUES (?, ?, 'open', NOW())");
+                                    // Attempt 2: Minimal (No assigned_to)
+                                    log_debug("Conv Attempt 2 (Minimal)...");
+                                    $stmt_new_conv = $pdo->prepare("INSERT INTO conversations (contact_id, last_message_preview, status, updated_at, created_at) VALUES (?, ?, 'open', NOW(), NOW())");
                                     $stmt_new_conv->execute([$contact_id, $msg_body]);
                                     $conversation_id = $pdo->lastInsertId();
                                 } catch (PDOException $e2) {
@@ -265,8 +267,9 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                         }
 
                         // 3. Insert Message
+                        // Try with tenant_id/user_id first (Assuming messages table DOES have them, unlike conversations)
+                        // If messages table also lacks them, we need to fall back further.
                         try {
-                            // Attempt 1: Full (Assuming messages DOES have created_at/user_id/tenant_id - try normal)
                             log_debug("Message Attempt 1 (Full)...");
                             $stmt_msg = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, user_id, tenant_id, content, created_at, sent_at, status) VALUES (?, 'contact', ?, ?, ?, NOW(), NOW(), 'received')");
                             $stmt_msg->execute([$conversation_id, $user_id, $tenant_id, $msg_body]);
@@ -274,22 +277,23 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                         } catch (PDOException $e_msg) {
                             log_debug("Message Insert (Attempt 1) failed: " . $e_msg->getMessage());
                             try {
-                                // Fallback: No Tenant, No User (in case they don't exist)
-                                log_debug("Message Attempt 2 (No tenant/user)...");
-                                $stmt_msg = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, content, created_at, sent_at, status) VALUES (?, 'contact', ?, NOW(), NOW(), 'received')");
-                                $stmt_msg->execute([$conversation_id, $msg_body]);
-                                log_debug("Message Saved! (Without tenant/user)");
+                                // Fallback: user_id only
+                                log_debug("Message Attempt 2 (No tenant_id)...");
+                                $stmt_msg = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, user_id, content, created_at, sent_at, status) VALUES (?, 'contact', ?, ?, NOW(), NOW(), 'received')");
+                                $stmt_msg->execute([$conversation_id, $user_id, $msg_body]);
+                                log_debug("Message Saved! (Without tenant_id)");
                             } catch (PDOException $e_msg2) {
                                 log_debug("Message Insert (Attempt 2) failed: " . $e_msg2->getMessage());
-
-                                // Fallback: Minimal (No created_at)
+                                
+                                // Fallback: minimal (No user_id - if schema is very simple)
                                 try {
-                                    log_debug("Message Attempt 3 (Minimal - No created_at)...");
-                                    $stmt_msg = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, content, sent_at, status) VALUES (?, 'contact', ?, NOW(), 'received')");
+                                    log_debug("Message Attempt 3 (Minimal - No User ID)...");
+                                    $stmt_msg = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, content, created_at, sent_at, status) VALUES (?, 'contact', ?, NOW(), NOW(), 'received')");
                                     $stmt_msg->execute([$conversation_id, $msg_body]);
-                                    log_debug("Message Saved! (Minimal - No created_at)");
+                                    log_debug("Message Saved! (Minimal - No User ID)");
                                 } catch (PDOException $e_msg3) {
                                     log_debug("Message Save Failed (All Attempts): " . $e_msg3->getMessage());
+                                    log_debug("Debug Info: UserID=$user_id ConvID=$conversation_id");
                                 }
                             }
                         }
