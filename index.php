@@ -43,11 +43,55 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .btn-soft:active { transform: scale(0.95); }
         .tab-pill { transition: all 0.3s ease; }
         .tab-pill.active { background-color: #fff; color: #7c3aed; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
-        /* Refined message bubble styles: fit-content prevents full width, normal word break prevents cutting */
-        .message-bubble { max-width: 75%; width: fit-content; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; border-radius: 1rem; padding: 0.5rem 0.75rem; }
-        /* Removed shadow completely for flat look */
-        .message-contact { background-color: #ffffff; color: #1e293b; border-bottom-left-radius: 0; }
-        .message-agent { background-color: #7c3aed; color: white; border-bottom-right-radius: 0; }
+        /* Modern Message Bubbles with Tails */
+        .message-bubble {
+            max-width: 75%;
+            width: fit-content;
+            min-width: 30px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            border-radius: 18px;
+            padding: 10px 14px;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }
+
+        .message-contact {
+            background-color: #ffffff;
+            color: #1e293b;
+            border-bottom-left-radius: 4px;
+            margin-left: 6px;
+        }
+        .message-contact::before {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: -8px;
+            width: 0;
+            height: 0;
+            border-right: 12px solid #ffffff;
+            border-top: 12px solid transparent;
+        }
+
+        .message-agent {
+            background-color: #7c3aed;
+            color: white;
+            border-bottom-right-radius: 4px;
+            margin-right: 6px;
+        }
+        .message-agent::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            right: -8px;
+            width: 0;
+            height: 0;
+            border-left: 12px solid #7c3aed;
+            border-top: 12px solid transparent;
+        }
         #page-loader {
             position: fixed;
             top: 0;
@@ -4353,9 +4397,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             bubbleWrapper.innerHTML = `
                 <div class="flex flex-col ${isAgent ? 'items-end' : 'items-start'} max-w-[75%] w-fit">
-                    <div class="p-3 rounded-lg message-bubble ${isAgent ? 'message-agent' : 'message-contact'}">
-                        ${msg.content}
-                    </div>
+                    <div class="message-bubble ${isAgent ? 'message-agent' : 'message-contact'}">${msg.content}</div>
                     <div class="flex items-center mt-1 mr-1">
                         <span class="text-[10px] text-gray-400">${safeDate(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         <span class="status-icon-container">${statusIcon}</span>
@@ -4385,7 +4427,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             // Render with "clock" icon initially or 1 check
             bubbleWrapper.innerHTML = `
                 <div class="flex flex-col items-end max-w-[75%]">
-                    <div class="p-3 rounded-lg message-bubble message-agent">${content}</div>
+                    <div class="message-bubble message-agent">${content}</div>
                     <div class="flex items-center mt-1 mr-1">
                         <span class="text-[10px] text-gray-400">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         <i class="fas fa-clock text-gray-300 text-xs ml-1" id="temp-status-icon"></i>
