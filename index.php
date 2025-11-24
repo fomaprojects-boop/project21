@@ -43,9 +43,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .btn-soft:active { transform: scale(0.95); }
         .tab-pill { transition: all 0.3s ease; }
         .tab-pill.active { background-color: #fff; color: #7c3aed; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
-        .message-bubble { max-width: 75%; white-space: pre-wrap; word-wrap: break-word; border-radius: 1rem; padding: 0.75rem 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-        /* Removed border and adjusted background for cleaner "non-boxy" look */
-        .message-contact { background-color: #ffffff; color: #1e293b; border-bottom-left-radius: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* Refined message bubble styles: fit-content prevents full width, normal word break prevents cutting */
+        .message-bubble { max-width: 75%; width: fit-content; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; border-radius: 1rem; padding: 0.5rem 0.75rem; }
+        /* Removed shadow completely for flat look */
+        .message-contact { background-color: #ffffff; color: #1e293b; border-bottom-left-radius: 0; }
         .message-agent { background-color: #7c3aed; color: white; border-bottom-right-radius: 0; }
         #page-loader {
             position: fixed;

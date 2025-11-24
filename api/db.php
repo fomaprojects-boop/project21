@@ -35,6 +35,23 @@ try {
             }
         }
     }
+
+    // --- Schema Auto-Fix: Ensure provider_message_id exists for Status Ticks ---
+    $schema_lock_ticks = __DIR__ . '/schema_provider_msg_id.lock';
+    if (!file_exists($schema_lock_ticks)) {
+        try {
+            // Add column if not exists
+            // Using VARCHAR(255) for Meta WAMID and INDEX for fast lookups during webhook updates
+            $pdo->exec("ALTER TABLE messages ADD COLUMN provider_message_id VARCHAR(255) DEFAULT NULL, ADD INDEX (provider_message_id)");
+            file_put_contents($schema_lock_ticks, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1060) { // Duplicate column
+                file_put_contents($schema_lock_ticks, date('Y-m-d H:i:s'));
+            } else {
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - MsgID Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
     // -----------------------------------------------------------
 
 } catch (PDOException $e) {

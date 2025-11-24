@@ -140,6 +140,9 @@ try {
         throw new Exception('WhatsApp API Error: ' . $errorMsg);
     }
 
+    // Extract Provider Message ID (WAMID)
+    $providerMessageId = $responseData['messages'][0]['id'] ?? null;
+
     // 4. Save to DB
     // Check for tenant_id column
     $hasTenantId = false;
@@ -156,13 +159,27 @@ try {
     // The error "Data truncated for column 'sender_type'" suggests 'agent' (5 chars) might be invalid if ENUM is strict.
     $senderType = 'user';
 
+    // Dynamic Insert Logic
+    $columns = "conversation_id, sender_type, user_id, content, created_at, sent_at, status";
+    $values = "?, ?, ?, ?, NOW(), NOW(), 'sent'";
+    $params = [$conversationId, $senderType, $userId, $content];
+
     if ($hasTenantId) {
-        $stmt = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, user_id, tenant_id, content, created_at, sent_at, status) VALUES (?, ?, ?, ?, ?, NOW(), NOW(), 'sent')");
-        $stmt->execute([$conversationId, $senderType, $userId, $userId, $content]); // Assume user_id is tenant_id
-    } else {
-        $stmt = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, user_id, content, created_at, sent_at, status) VALUES (?, ?, ?, ?, ?, NOW(), NOW(), 'sent')");
-        $stmt->execute([$conversationId, $senderType, $userId, $content]);
+        $columns .= ", tenant_id";
+        $values .= ", ?";
+        $params[] = $userId;
     }
+
+    // Always try to insert provider_message_id if we have it (db.php handles schema migration)
+    if ($providerMessageId) {
+        $columns .= ", provider_message_id";
+        $values .= ", ?";
+        $params[] = $providerMessageId;
+        log_send_debug("Saving Provider ID: $providerMessageId");
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO messages ($columns) VALUES ($values)");
+    $stmt->execute($params);
 
     $stmt = $pdo->prepare("UPDATE conversations SET last_message_preview = ?, updated_at = NOW() WHERE id = ?");
     $stmt->execute(["You: " . $content, $conversationId]);

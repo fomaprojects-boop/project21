@@ -134,13 +134,25 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                 // --- HANDLE STATUS UPDATES (Delivered, Read) ---
                 if (isset($value['statuses'])) {
                     foreach ($value['statuses'] as $statusUpdate) {
-                        $wamid = $statusUpdate['id']; // The WhatsApp Message ID (used during send)
+                        $wamid = $statusUpdate['id']; // The WhatsApp Message ID
                         $status = $statusUpdate['status']; // sent, delivered, read
 
                         log_debug("Status Update: Msg $wamid is now $status");
 
-                        // NOTE: If we stored wamid, we could update status here.
-                        // Since schema is unknown/restricted, we skip UPDATE unless we confirm wamid column exists.
+                        try {
+                            // Attempt to update status based on provider_message_id
+                            // Schema migration in db.php ensures this column exists
+                            $stmt_status = $pdo->prepare("UPDATE messages SET status = ? WHERE provider_message_id = ?");
+                            $stmt_status->execute([$status, $wamid]);
+
+                            if ($stmt_status->rowCount() > 0) {
+                                log_debug("Updated DB status for Msg $wamid to $status");
+                            } else {
+                                log_debug("WARNING: Status update for $wamid to $status failed. No matching row found. (Rows: " . $stmt_status->rowCount() . ")");
+                            }
+                        } catch (PDOException $ex) {
+                            log_debug("Status Update Failed: " . $ex->getMessage());
+                        }
                     }
                 }
 
