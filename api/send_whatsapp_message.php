@@ -121,6 +121,18 @@ try {
     $recipientPhoneNumber = $contact['phone_number'];
     log_send_debug("Original Phone: $recipientPhoneNumber");
 
+    // Check if it's a new conversation and handle template logic
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE conversation_id = ?");
+    $stmt->execute([$conversationId]);
+    $messageCount = $stmt->fetchColumn();
+
+    if ($messageCount == 0) {
+        // Business Initiated Conversation: Must use a template
+        if ($messageType !== 'template') {
+            throw new Exception('New conversations must be initiated with a message template.');
+        }
+    }
+
     // Normalize Phone
     $recipientPhoneNumber = preg_replace('/[^0-9]/', '', $recipientPhoneNumber);
     if (substr($recipientPhoneNumber, 0, 1) === '0') {
@@ -131,7 +143,7 @@ try {
     log_send_debug("Normalized Phone: $recipientPhoneNumber");
 
     // 3. Send via Graph API
-    $apiUrl = "https://graph.facebook.com/v21.0/{$whatsappPhoneId}/messages";
+    $apiUrl = "https://graph.facebook.com/v20.0/{$whatsappPhoneId}/messages";
     $postData = [
         'messaging_product' => 'whatsapp',
         'recipient_type' => 'individual',
@@ -193,9 +205,7 @@ try {
 
     $pdo->beginTransaction();
 
-    // Determine safe sender_type (likely 'user' based on common ENUM('user','contact') schemas)
-    // The error "Data truncated for column 'sender_type'" suggests 'agent' (5 chars) might be invalid if ENUM is strict.
-    $senderType = 'user';
+    $senderType = 'agent';
 
     // Dynamic Insert Logic
     $columns = "conversation_id, sender_type, user_id, content, message_type, created_at, sent_at, status";
