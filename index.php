@@ -407,6 +407,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             transform: scale(1.05);
         }
 
+        /* Custom style to make the template modal smaller */
+        #addTemplateModal .w-full.max-w-2xl {
+            max-width: 40rem; /* equivalent to max-w-xl in Tailwind */
+        }
+
     </style>
     <!-- Facebook SDK for JavaScript -->
     <script>
@@ -5393,8 +5398,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 ${buttonsHtml}
                             </div>
                             <div class="mt-auto flex justify-end space-x-2 pt-2 border-t border-gray-500/20">
-                                <button onclick='openTemplateModal(${JSON.stringify(template)})' class="text-gray-500 hover:text-violet-600"><i class="fas fa-pencil-alt"></i></button>
-                                <button onclick='deleteTemplate(${template.id}, "${template.name.replace(/'/g, "\\'")}")' class="text-gray-500 hover:text-red-600"><i class="fas fa-trash-alt"></i></button>
+                                ${template.status !== 'APPROVED' ? `<button onclick='openTemplateModal(${JSON.stringify(template)})' class="text-gray-500 hover:text-violet-600" title="Edit"><i class="fas fa-pencil-alt"></i></button>` : `<button class="text-gray-300 cursor-not-allowed" title="Cannot edit approved templates"><i class="fas fa-pencil-alt"></i></button>`}
+                                <button onclick='deleteTemplate(${template.id}, "${template.name.replace(/'/g, "\\'")}")' class="text-gray-500 hover:text-red-600" title="Delete"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         </div>
                     `;
