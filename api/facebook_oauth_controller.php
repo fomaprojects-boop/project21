@@ -65,7 +65,7 @@ if ($action === 'embedded_signup') {
         // For code obtained via JS SDK (FB.login), the redirect_uri should be an empty string
         $redirect_uri = '';
 
-        $token_url = "https://graph.facebook.com/v20.0/oauth/access_token?client_id={$app_id}&client_secret={$app_secret}&redirect_uri={$redirect_uri}&code={$code}";
+        $token_url = "https://graph.facebook.com/v21.0/oauth/access_token?client_id={$app_id}&client_secret={$app_secret}&redirect_uri={$redirect_uri}&code={$code}";
         $response = make_curl_request($token_url);
         $token_data = json_decode($response, true);
 
@@ -77,7 +77,7 @@ if ($action === 'embedded_signup') {
 
     } elseif (!empty($short_lived_token)) {
         // Legacy: Exchange short-lived token for a long-lived token
-        $long_lived_url = "https://graph.facebook.com/v20.0/oauth/access_token?grant_type=fb_exchange_token&client_id={$app_id}&client_secret={$app_secret}&fb_exchange_token={$short_lived_token}";
+        $long_lived_url = "https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id={$app_id}&client_secret={$app_secret}&fb_exchange_token={$short_lived_token}";
         $response = make_curl_request($long_lived_url);
         $long_lived_data = json_decode($response, true);
         if (empty($long_lived_data['access_token'])) {
@@ -93,7 +93,7 @@ if ($action === 'embedded_signup') {
     // Now, with the long-lived token, get the debug info to find shared WABAs
     // Use App Access Token for inspection to ensure we see all scopes
     $app_access_token = $app_id . '|' . $app_secret;
-    $debug_url = "https://graph.facebook.com/v20.0/debug_token?input_token={$long_lived_token}&access_token={$app_access_token}";
+    $debug_url = "https://graph.facebook.com/v21.0/debug_token?input_token={$long_lived_token}&access_token={$app_access_token}";
     $debug_response = make_curl_request($debug_url);
     $debug_data = json_decode($debug_response, true);
 
@@ -121,7 +121,7 @@ if ($action === 'embedded_signup') {
     }
 
     // Get Phone Number ID using the WABA ID
-    $phone_numbers_url = "https://graph.facebook.com/v20.0/{$waba_id}/phone_numbers?access_token={$long_lived_token}";
+    $phone_numbers_url = "https://graph.facebook.com/v21.0/{$waba_id}/phone_numbers?access_token={$long_lived_token}";
     $phone_response = make_curl_request($phone_numbers_url);
     $phone_numbers_data = json_decode($phone_response, true);
 
@@ -132,7 +132,7 @@ if ($action === 'embedded_signup') {
     $phone_number_id = $phone_numbers_data['data'][0]['id'];
 
     // Subscribe the WABA to the app's webhooks (Critical for receiving messages)
-    $subscribe_url = "https://graph.facebook.com/v20.0/{$waba_id}/subscribed_apps";
+    $subscribe_url = "https://graph.facebook.com/v21.0/{$waba_id}/subscribed_apps";
     $subscribe_data = [
         'access_token' => $long_lived_token
         // Note: As of v19.0+, subscribed_fields are often required or default to a subset.
@@ -148,33 +148,49 @@ if ($action === 'embedded_signup') {
     // We don't strictly fail if this fails, but it's good to know.
     // Ideally, we should check json_decode($subscribe_response)['success']
 
-    // --- AUTOMATIC REGISTRATION (Fix for "Pending" Status) ---
-    // Register the phone number with a PIN to complete the setup (Two-Step Verification)
-    $register_url = "https://graph.facebook.com/v21.0/{$phone_number_id}/register";
-    $register_payload = [
-        'messaging_product' => 'whatsapp',
-        'pin' => '123456' // Default PIN for automatic registration. User can change this in WhatsApp Manager if needed.
-    ];
+    // --- SMART CHECK & AUTOMATIC REGISTRATION ---
+    // Before trying to register, let's check the number's status first.
+    $status_check_url = "https://graph.facebook.com/v21.0/{$phone_number_id}?access_token={$long_lived_token}";
+    $status_response = make_curl_request($status_check_url);
+    $status_data = json_decode($status_response, true);
 
-    $ch_reg = curl_init($register_url);
-    curl_setopt($ch_reg, CURLOPT_POST, true);
-    curl_setopt($ch_reg, CURLOPT_POSTFIELDS, json_encode($register_payload));
-    curl_setopt($ch_reg, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch_reg, CURLOPT_HTTPHEADER, [
-        'Authorization: Bearer ' . $long_lived_token,
-        'Content-Type: application/json'
-    ]);
-    $reg_response = curl_exec($ch_reg);
-    curl_close($ch_reg);
+    // We only proceed if the status is NOT 'CONNECTED'.
+    // Statuses can be: UNCONNECTED, UNREGISTERED, CONNECTED, etc.
+    if (isset($status_data['registration_status']) && $status_data['registration_status'] !== 'CONNECTED') {
+        // Register the phone number with a PIN to complete the setup (Two-Step Verification)
+        $register_url = "https://graph.facebook.com/v21.0/{$phone_number_id}/register";
+        $register_payload = [
+            'messaging_product' => 'whatsapp',
+            'pin' => '123456' // Default PIN for automatic registration. User can change this in WhatsApp Manager if needed.
+        ];
+
+        $ch_reg = curl_init($register_url);
+        curl_setopt($ch_reg, CURLOPT_POST, true);
+        curl_setopt($ch_reg, CURLOPT_POSTFIELDS, json_encode($register_payload));
+        curl_setopt($ch_reg, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch_reg, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $long_lived_token,
+            'Content-Type: application/json'
+        ]);
+        $reg_response = curl_exec($ch_reg);
+        curl_close($ch_reg);
+        // We can log $reg_response if needed for debugging, but for now we assume it works if the token is valid.
+    }
     // Log registration response if needed, or assume success if token is valid.
     // -------------------------------------------------------
 
-    // Save the credentials
+    // Save the credentials and update the session
     $user_id = $_SESSION['user_id'];
-    // Also update status to Connected since we attempted automatic registration
     $stmt = $pdo->prepare("UPDATE users SET whatsapp_phone_number_id = ?, whatsapp_business_account_id = ?, whatsapp_access_token = ?, whatsapp_status = 'Connected' WHERE id = ?");
+
     if ($stmt->execute([$phone_number_id, $waba_id, $long_lived_token, $user_id])) {
-        echo json_encode(['status' => 'success', 'message' => 'WhatsApp account connected and subscribed successfully.']);
+        // IMPORTANT: Update the session to prevent using stale credentials
+        $_SESSION['whatsapp_phone_number_id'] = $phone_number_id;
+        $_SESSION['whatsapp_access_token'] = $long_lived_token;
+        $_SESSION['whatsapp_business_account_id'] = $waba_id;
+        $_SESSION['whatsapp_status'] = 'Connected';
+
+        echo json_encode(['status' => 'success', 'message' => 'WhatsApp account connected and subscribed successfully. Your settings have been updated in real-time.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to save credentials to the database.']);
     }

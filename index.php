@@ -108,22 +108,21 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .message-agent .message-timestamp { color: rgba(255, 255, 255, 0.7); }
         .message-note .message-timestamp { color: #ca8a04; }
         .message-note {
-            background-color: #fef08a; /* yellow-200 */
-            color: #854d0e; /* yellow-800 */
-            border: 1px solid #fde047;
-            font-style: italic;
+            background-color: #fff3cd; /* pale-orange */
+            color: #664d03; /* dark text */
+            border: 1px solid #ffeeba;
             margin-left: auto;
             margin-right: 6px;
             border-radius: 12px;
             border-bottom-right-radius: 4px;
         }
         .message-note::before {
-            content: "PRIVATE NOTE";
+            content: "INTERNAL NOTE";
             display: block;
-            font-size: 0.6rem;
-            font-weight: 800;
+            font-size: 0.7rem;
+            font-weight: 700;
             margin-bottom: 4px;
-            opacity: 0.7;
+            color: #664d03;
         }
 
         .message-scheduled {
@@ -253,7 +252,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             appId            : '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>',
             autoLogAppEvents : true,
             xfbml            : true,
-            version          : 'v20.0'
+            version          : 'v21.0'
             });
         };
 
@@ -785,21 +784,26 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                             </div>
                                         </div>
 
-                                        <!-- Assign Dropdown -->
-                                        <div class="relative group">
-                                            <button class="flex items-center space-x-2 text-sm text-gray-600 hover:text-violet-700 bg-gray-50 hover:bg-violet-50 px-4 py-2 rounded-xl border border-gray-200 hover:border-violet-200 transition-all btn-soft">
+                                        <!-- Assign Pop-over Menu -->
+                                        <div class="relative">
+                                            <button onclick="toggleAssignMenu(true)" class="flex items-center space-x-2 text-sm text-gray-600 hover:text-violet-700 bg-gray-50 hover:bg-violet-50 px-4 py-2 rounded-xl border border-gray-200 hover:border-violet-200 transition-all btn-soft">
                                                 <i class="fas fa-user-tag"></i>
                                                 <span id="assignee-name" class="font-medium hidden md:inline">Unassigned</span>
                                                 <i class="fas fa-chevron-down text-xs ml-1 opacity-50"></i>
                                             </button>
-                                            <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 hidden group-hover:block z-50 overflow-hidden transform transition-all">
+                                            <div id="assign-menu" class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 hidden z-50 transform transition-all origin-top-right">
                                                 <div class="p-2">
-                                                    <div class="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Assign To</div>
-                                                    <button onclick="assignChat('auto')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 rounded-lg transition-colors mb-1">
-                                                        <i class="fas fa-robot mr-2 text-violet-400"></i> Auto Assign
-                                                    </button>
-                                                    <div class="border-t my-1"></div>
+                                                    <div class="px-2 pt-1 pb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Assign To</div>
+                                                    <div class="relative mb-2">
+                                                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                                        <input type="text" id="assign-search" onkeyup="filterAssignees()" placeholder="Search agents..." class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-1 focus:ring-violet-300">
+                                                    </div>
                                                     <div id="assign-users-list" class="max-h-48 overflow-y-auto custom-scrollbar">
+                                                        <button onclick="assignChat('auto')" class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 rounded-lg transition-colors flex items-center mb-1">
+                                                            <i class="fas fa-robot w-5 text-center mr-2 text-violet-400"></i>
+                                                            <span>Auto Assign</span>
+                                                        </button>
+                                                        <div class="border-t my-1"></div>
                                                         <!-- Users injected via JS -->
                                                     </div>
                                                 </div>
@@ -836,12 +840,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                             <button type="button" onclick="openTemplateSelector()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Quick Replies & Templates (Type /)">
                                                 <i class="fas fa-bolt text-lg"></i>
                                             </button>
-                                            <button type="button" onclick="openInteractiveTool()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Interactive Messages">
-                                                <i class="fas fa-list-ul text-lg"></i>
+                                            <button type="button" onclick="openInteractiveMessageModal()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Interactive Messages">
+                                                <i class="fas fa-magic text-lg"></i>
                                             </button>
-                                            <button type="button" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Attach File">
+                                            <button type="button" id="attachment-btn" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Attach File">
                                                 <i class="fas fa-paperclip text-lg"></i>
                                             </button>
+                                            <input type="file" id="file-input" class="hidden" />
                                             <textarea id="messageInput" rows="1" class="flex-1 bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400 resize-none py-3 max-h-32 text-base" placeholder="Type a message..." oninput="handleInputType(this)"></textarea>
 
                                             <!-- Schedule Button -->
@@ -2630,6 +2635,41 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </div>
                 </div>
             </div>`,
+            interactiveMessageModal: `<div id="interactiveMessageModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
+                <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">Create Interactive Message</h3>
+                            <button onclick="closeModal('interactiveMessageModal')" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                <button onclick="showInteractiveTab('quick_reply')" class="interactive-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-violet-500 text-violet-600">Quick Reply</button>
+                                <button onclick="showInteractiveTab('list_message')" class="interactive-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">List Message</button>
+                            </nav>
+                        </div>
+                        <div id="interactive-quick_reply" class="interactive-tab-content mt-4">
+                            <form id="quickReplyForm" class="space-y-4">
+                                <div><label class="block text-sm font-medium">Body Text</label><textarea name="body" class="w-full p-2 border rounded-md" rows="3" required></textarea></div>
+                                <div><label class="block text-sm font-medium">Button 1</label><input type="text" name="button1" class="w-full p-2 border rounded-md" required></div>
+                                <div><label class="block text-sm font-medium">Button 2 (Optional)</label><input type="text" name="button2" class="w-full p-2 border rounded-md"></div>
+                                <div><label class="block text-sm font-medium">Button 3 (Optional)</label><input type="text" name="button3" class="w-full p-2 border rounded-md"></div>
+                                <div class="text-right"><button type="submit" class="bg-violet-600 text-white px-4 py-2 rounded-md">Send</button></div>
+                            </form>
+                        </div>
+                        <div id="interactive-list_message" class="interactive-tab-content mt-4 hidden">
+                            <form id="listMessageForm" class="space-y-4">
+                                <div><label class="block text-sm font-medium">Header Text</label><input type="text" name="header" class="w-full p-2 border rounded-md" required></div>
+                                <div><label class="block text-sm font-medium">Body Text</label><textarea name="body" class="w-full p-2 border rounded-md" rows="2" required></textarea></div>
+                                <div><label class="block text-sm font-medium">Button Text</label><input type="text" name="button" class="w-full p-2 border rounded-md" required></div>
+                                <div id="list-sections-container"></div>
+                                <button type="button" onclick="addListSection()" class="text-sm text-violet-600">Add Section</button>
+                                <div class="text-right"><button type="submit" class="bg-violet-600 text-white px-4 py-2 rounded-md">Send</button></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>`,
             convertDocumentModal: `<div id="convertDocumentModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
                 <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
                     <div class="mt-3">
@@ -4367,23 +4407,55 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }, 3000);
         }
 
+        // --- ASSIGN MENU LOGIC ---
+        function toggleAssignMenu(show) {
+            const menu = document.getElementById('assign-menu');
+            if (show) {
+                menu.classList.remove('hidden');
+                setTimeout(() => menu.classList.add('scale-100', 'opacity-100'), 10);
+                document.getElementById('assign-search').focus();
+            } else {
+                menu.classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => menu.classList.add('hidden'), 200);
+            }
+        }
+
+        function filterAssignees() {
+            const searchTerm = document.getElementById('assign-search').value.toLowerCase();
+            const userButtons = document.querySelectorAll('#assign-users-list button');
+            userButtons.forEach(button => {
+                const userName = button.querySelector('span')?.textContent.toLowerCase();
+                if (userName && userName.includes(searchTerm)) {
+                    button.style.display = 'flex';
+                } else if(userName) { // Keep auto-assign visible
+                    button.style.display = 'none';
+                }
+            });
+        }
+
         async function loadAssignUsers() {
             const list = document.getElementById('assign-users-list');
-            if (!list || list.children.length > 0) return; // Load once
+            if (!list || list.children.length > 2) return; // Load once (accounting for auto-assign and divider)
 
             const users = await fetchApi('get_users.php');
             if (users && Array.isArray(users)) {
-                list.innerHTML = users.map(u => `
-                    <button onclick="assignChat(${u.id})" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center">
-                        <img src="https://placehold.co/20x20/violet/white?text=${u.avatar_char}" class="w-5 h-5 rounded-full mr-2">
-                        ${u.full_name}
+                const usersHtml = users.map(u => `
+                    <button onclick="assignChat(${u.id})" class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 rounded-lg transition-colors flex items-center">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name)}&background=8b5cf6&color=fff&size=24" class="w-6 h-6 rounded-full mr-2">
+                        <span>${u.full_name}</span>
                     </button>
                 `).join('');
+                // Append after the divider
+                list.innerHTML += usersHtml;
             }
         }
 
         async function assignChat(userId) {
             if (!currentConversationId) return;
+
+            // Close the menu immediately for better UX
+            toggleAssignMenu(false);
+
             const result = await fetchApi('assign_conversation.php', {
                 method: 'POST',
                 body: { conversation_id: currentConversationId, assign_to: userId }
@@ -4579,9 +4651,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const timestampHtml = `<span class="message-timestamp select-none">${timeString}${statusIcon}</span>`;
 
             let bubbleClass = 'message-agent';
-            if (!isAgent) bubbleClass = 'message-contact';
-            if (isInternal) bubbleClass = 'message-note';
-            if (isScheduled) bubbleClass = 'message-scheduled';
+            if (!isAgent) {
+                bubbleClass = 'message-contact';
+            }
+            if (isInternal) {
+                bubbleClass = 'message-note';
+            } else if (isScheduled) {
+                bubbleClass = 'message-scheduled';
+            }
 
             let content = msg.content;
             if (msg.message_type === 'interactive') {
@@ -4742,10 +4819,45 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
         async function saveCrmField(field) {
             const value = document.getElementById(`crm-${field}`).value;
-            // We need contact_id. We can get it if we stored it.
-            // For this implementation, I'll skip the actual save if I don't have ID,
-            // but the UI logic is ready.
-            alert(`Saving ${field}: ${value} (Backend implementation pending contact_id retrieval)`);
+
+            // Assuming currentConversationId is set globally and correctly
+            if (!currentConversationId) {
+                showToast('No active conversation selected.', 'error');
+                return;
+            }
+
+            // The backend will derive contact_id from conversation_id
+            const result = await fetchApi('update_contact_details.php', {
+                method: 'POST',
+                body: {
+                    conversation_id: currentConversationId,
+                    field: field,
+                    value: value
+                }
+            });
+
+            if (result && result.success) {
+                showToast('Contact details saved!');
+            } else {
+                showToast(result ? result.message : 'Failed to save.', 'error');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            toast.className = `fixed bottom-5 right-5 text-white px-6 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 ${bgColor}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-20', 'opacity-0');
+            }, 100);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         // SNOOZE LOGIC
@@ -4824,38 +4936,100 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
-        // INTERACTIVE & TEMPLATE LOGIC
-        // (Existing openTemplateSelector is fine, we need to support slash command)
-        function handleInputType(textarea) {
-            textarea.style.height = '';
-            textarea.style.height = textarea.scrollHeight + 'px';
-
-            if (textarea.value.endsWith('/')) {
-                openTemplateSelector();
-            }
+        // --- INTERACTIVE MESSAGE UI LOGIC ---
+        function openInteractiveMessageModal() {
+            openModal('interactiveMessageModal');
+            showInteractiveTab('quick_reply'); // Default to first tab
+            addListSection(); // Add one section by default
         }
 
-        function openInteractiveTool() {
-            // Simple prompt for now to demonstrate logic
-            const type = prompt("Type 'button' for Buttons or 'list' for List Message:");
-            if (type === 'button') {
-                const body = prompt("Message Body:");
-                const btn1 = prompt("Button 1 Text:");
-                const btn2 = prompt("Button 2 Text:");
+        function showInteractiveTab(tabName) {
+            document.querySelectorAll('.interactive-tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`interactive-${tabName}`).classList.remove('hidden');
+            document.querySelectorAll('.interactive-tab').forEach(el => {
+                el.classList.remove('border-violet-500', 'text-violet-600');
+                el.classList.add('border-transparent', 'text-gray-500');
+            });
+            const activeTab = document.querySelector(`.interactive-tab[onclick*="${tabName}"]`);
+            activeTab.classList.add('border-violet-500', 'text-violet-600');
+            activeTab.classList.remove('border-transparent', 'text-gray-500');
+        }
 
-                const interactive = {
+        let sectionCount = 0;
+        function addListSection() {
+            sectionCount++;
+            const container = document.getElementById('list-sections-container');
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'p-3 border rounded-md mt-2';
+            sectionDiv.innerHTML = `
+                <input type="text" name="section_${sectionCount}_title" class="w-full p-1 border-b mb-2" placeholder="Section Title" required>
+                <div id="section-${sectionCount}-rows"></div>
+                <button type="button" onclick="addListRow(${sectionCount})" class="text-xs text-blue-500 mt-1">Add Row</button>
+            `;
+            container.appendChild(sectionDiv);
+            addListRow(sectionCount); // Add one row by default
+        }
+
+        function addListRow(sectionId) {
+            const rowContainer = document.getElementById(`section-${sectionId}-rows`);
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'flex gap-2 mt-1';
+            rowDiv.innerHTML = `
+                <input type="text" name="section_${sectionId}_row_title[]" class="w-1/2 p-1 border rounded-md text-sm" placeholder="Row Title" required>
+                <input type="text" name="section_${sectionId}_row_desc[]" class="w-1/2 p-1 border rounded-md text-sm" placeholder="Row Description (Optional)">
+            `;
+            rowContainer.appendChild(rowDiv);
+        }
+
+        document.addEventListener('submit', function(e) {
+            if (e.target.id === 'quickReplyForm') {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const buttons = [formData.get('button1'), formData.get('button2'), formData.get('button3')]
+                    .filter(Boolean)
+                    .map((title, i) => ({ type: 'reply', reply: { id: `btn_${i+1}`, title: title } }));
+
+                const payload = {
                     type: 'button',
-                    body: { text: body },
+                    body: { text: formData.get('body') },
+                    action: { buttons: buttons }
+                };
+                sendInteractive(payload);
+                closeModal('interactiveMessageModal');
+                e.target.reset();
+            } else if (e.target.id === 'listMessageForm') {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const sections = [];
+                for(let i = 1; i <= sectionCount; i++) {
+                    const titles = formData.getAll(`section_${i}_row_title[]`);
+                    const descs = formData.getAll(`section_${i}_row_desc[]`);
+                    sections.push({
+                        title: formData.get(`section_${i}_title`),
+                        rows: titles.map((title, j) => ({
+                            id: `row_${i}_${j}`,
+                            title: title,
+                            description: descs[j] || ''
+                        }))
+                    });
+                }
+
+                const payload = {
+                    type: 'list',
+                    header: { type: 'text', text: formData.get('header') },
+                    body: { text: formData.get('body') },
                     action: {
-                        buttons: [
-                            { type: 'reply', reply: { id: 'btn1', title: btn1 } },
-                            { type: 'reply', reply: { id: 'btn2', title: btn2 } }
-                        ]
+                        button: formData.get('button'),
+                        sections: sections
                     }
                 };
-                sendInteractive(interactive);
+                sendInteractive(payload);
+                closeModal('interactiveMessageModal');
+                e.target.reset();
+                document.getElementById('list-sections-container').innerHTML = '';
+                sectionCount = 0;
             }
-        }
+        });
 
         async function sendInteractive(data) {
              const result = await fetchApi('send_whatsapp_message.php', {
@@ -7645,6 +7819,40 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         // Initialize App
+        // --- FILE UPLOAD LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const attachmentBtn = document.getElementById('attachment-btn');
+            const fileInput = document.getElementById('file-input');
+
+            if(attachmentBtn && fileInput) {
+                attachmentBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', handleFileUpload);
+            }
+        });
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !currentConversationId) return;
+
+            showToast('Uploading file...', 'info');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('conversation_id', currentConversationId);
+
+            const result = await fetchApi('upload_file.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (result && result.success) {
+                showToast('File sent successfully!');
+                loadMessages(currentConversationId, document.getElementById('chat-partner-name').textContent, 1, false);
+            } else {
+                showToast(result ? result.message : 'File upload failed.', 'error');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             renderAllModals();
             await initializeAppSettings();

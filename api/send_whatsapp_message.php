@@ -109,6 +109,9 @@ try {
         throw new Exception('WhatsApp API settings are not configured.');
     }
 
+    // Enhanced logging for debugging
+    log_send_debug("Using PhoneID: {$whatsappPhoneId} and a Token.");
+
     // 2. Get Recipient Phone
     $stmt = $pdo->prepare("SELECT c.phone_number FROM contacts c JOIN conversations conv ON c.id = conv.contact_id WHERE conv.id = ?");
     $stmt->execute([$conversationId]);
@@ -120,6 +123,18 @@ try {
     }
     $recipientPhoneNumber = $contact['phone_number'];
     log_send_debug("Original Phone: $recipientPhoneNumber");
+
+    // Check if it's a new conversation and handle template logic
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE conversation_id = ?");
+    $stmt->execute([$conversationId]);
+    $messageCount = $stmt->fetchColumn();
+
+    if ($messageCount == 0) {
+        // Business Initiated Conversation: Must use a template
+        if ($messageType !== 'template') {
+            throw new Exception('New conversations must be initiated with a message template.');
+        }
+    }
 
     // Normalize Phone
     $recipientPhoneNumber = preg_replace('/[^0-9]/', '', $recipientPhoneNumber);
@@ -193,9 +208,7 @@ try {
 
     $pdo->beginTransaction();
 
-    // Determine safe sender_type (likely 'user' based on common ENUM('user','contact') schemas)
-    // The error "Data truncated for column 'sender_type'" suggests 'agent' (5 chars) might be invalid if ENUM is strict.
-    $senderType = 'user';
+    $senderType = 'agent';
 
     // Dynamic Insert Logic
     $columns = "conversation_id, sender_type, user_id, content, message_type, created_at, sent_at, status";

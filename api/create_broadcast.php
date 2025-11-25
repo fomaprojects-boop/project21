@@ -141,7 +141,7 @@ try {
 
         // Helper function for sending
         function sendToWhatsApp($phone, $messageType, $bodyOrTemplateId, $token, $phoneId, $templateData = null) {
-            $url = "https://graph.facebook.com/v20.0/{$phoneId}/messages";
+            $url = "https://graph.facebook.com/v21.0/{$phoneId}/messages";
             $data = [
                 'messaging_product' => 'whatsapp',
                 'to' => $phone,
