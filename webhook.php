@@ -181,9 +181,11 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                         } elseif ($msg_type === 'interactive') {
                              $type = $message['interactive']['type'];
                              if($type == 'button_reply') {
-                                 $msg_body = $message['interactive']['button_reply']['title'];
+                                 // FIX: Extract only the title of the reply, not the full JSON object.
+                                 $msg_body = $message['interactive']['button_reply']['title'] ?? '[Button Reply]';
                              } elseif($type == 'list_reply') {
-                                 $msg_body = $message['interactive']['list_reply']['title'];
+                                 // FIX: Extract only the title of the selected list item.
+                                 $msg_body = $message['interactive']['list_reply']['title'] ?? '[List Reply]';
                              } else {
                                  $msg_body = "[Interactive]";
                              }
