@@ -167,7 +167,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             appId            : '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>',
             autoLogAppEvents : true,
             xfbml            : true,
-            version          : 'v20.0'
+            version          : 'v21.0'
             });
         };
 

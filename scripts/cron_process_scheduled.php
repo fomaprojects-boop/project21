@@ -70,7 +70,7 @@ try {
         }
 
         // Send to Meta
-        $url = "https://graph.facebook.com/v20.0/" . $msg['whatsapp_phone_number_id'] . "/messages";
+        $url = "https://graph.facebook.com/v21.0/" . $msg['whatsapp_phone_number_id'] . "/messages";
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, 1);
