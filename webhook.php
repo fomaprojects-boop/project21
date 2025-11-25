@@ -181,9 +181,12 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                         } elseif ($msg_type === 'interactive') {
                              $type = $message['interactive']['type'];
                              if($type == 'button_reply') {
-                                 $msg_body = $message['interactive']['button_reply']['title'];
+                                 // For a button reply, the content is just the title of the button.
+                                 // We also need to store the raw interactive data for potential future use or analytics
+                                 $msg_body = json_encode($message['interactive']);
                              } elseif($type == 'list_reply') {
-                                 $msg_body = $message['interactive']['list_reply']['title'];
+                                 // For a list reply, it's the title of the selected item.
+                                 $msg_body = json_encode($message['interactive']);
                              } else {
                                  $msg_body = "[Interactive]";
                              }

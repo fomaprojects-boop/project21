@@ -91,13 +91,14 @@ try {
         // Fallback to global settings
         log_send_debug("User settings missing. Checking global settings.");
         try {
-            $stmt = $pdo->prepare("SELECT whatsapp_token, whatsapp_phone_id FROM settings LIMIT 1");
+        // FIX: Standardize column names to match what's saved by the OAuth controller.
+        $stmt = $pdo->prepare("SELECT whatsapp_access_token, whatsapp_phone_number_id FROM settings LIMIT 1");
             $stmt->execute();
             $globalSettings = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($globalSettings) {
-                $whatsappToken = $globalSettings['whatsapp_token'] ?? null;
-                $whatsappPhoneId = $globalSettings['whatsapp_phone_id'] ?? null;
+            $whatsappToken = $globalSettings['whatsapp_access_token'] ?? null;
+            $whatsappPhoneId = $globalSettings['whatsapp_phone_number_id'] ?? null;
             }
         } catch (PDOException $e) {
             // Ignore
@@ -108,6 +109,9 @@ try {
         log_send_debug("Credentials missing.");
         throw new Exception('WhatsApp API settings are not configured.');
     }
+
+    // Enhanced logging for debugging
+    log_send_debug("Using PhoneID: {$whatsappPhoneId} and a Token.");
 
     // 2. Get Recipient Phone
     $stmt = $pdo->prepare("SELECT c.phone_number FROM contacts c JOIN conversations conv ON c.id = conv.contact_id WHERE conv.id = ?");
@@ -120,6 +124,18 @@ try {
     }
     $recipientPhoneNumber = $contact['phone_number'];
     log_send_debug("Original Phone: $recipientPhoneNumber");
+
+    // Check if it's a new conversation and handle template logic
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE conversation_id = ?");
+    $stmt->execute([$conversationId]);
+    $messageCount = $stmt->fetchColumn();
+
+    if ($messageCount == 0) {
+        // Business Initiated Conversation: Must use a template
+        if ($messageType !== 'template') {
+            throw new Exception('New conversations must be initiated with a message template.');
+        }
+    }
 
     // Normalize Phone
     $recipientPhoneNumber = preg_replace('/[^0-9]/', '', $recipientPhoneNumber);
@@ -193,14 +209,18 @@ try {
 
     $pdo->beginTransaction();
 
-    // Determine safe sender_type (likely 'user' based on common ENUM('user','contact') schemas)
-    // The error "Data truncated for column 'sender_type'" suggests 'agent' (5 chars) might be invalid if ENUM is strict.
-    $senderType = 'user';
+    $senderType = 'agent';
 
     // Dynamic Insert Logic
+    // For interactive messages, the actual content for DB storage is the JSON payload.
+    $dbContent = $content;
+    if ($messageType === 'interactive' && !empty($interactiveData)) {
+        $dbContent = is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData;
+    }
+
     $columns = "conversation_id, sender_type, user_id, content, message_type, created_at, sent_at, status";
     $values = "?, ?, ?, ?, ?, NOW(), NOW(), 'sent'";
-    $params = [$conversationId, $senderType, $userId, $content, $messageType];
+    $params = [$conversationId, $senderType, $userId, $dbContent, $messageType];
 
     if ($hasTenantId) {
         $columns .= ", tenant_id";
@@ -216,7 +236,8 @@ try {
         log_send_debug("Saving Provider ID: $providerMessageId");
     }
 
-    if (!empty($interactiveData)) {
+    // This is now redundant as interactive data is stored as JSON in the 'content' field.
+    /* if (!empty($interactiveData)) {
         // Note: You might need to ensure `interactive_data` column exists via migration script if running first time
         try {
             $pdo->query("SELECT interactive_data FROM messages LIMIT 1"); // Cheap check
@@ -226,7 +247,7 @@ try {
         } catch (Exception $e) {
             // Ignore if column missing, just text content saved
         }
-    }
+    } */
 
     $stmt = $pdo->prepare("INSERT INTO messages ($columns) VALUES ($values)");
     $stmt->execute($params);
