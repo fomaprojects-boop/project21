@@ -17,13 +17,20 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id'])) {
 }
 
 // Pata tenant ID kutoka kwa mtumiaji aliyelogin
-$tenantId = $_SESSION['user_id']; 
+$tenantId = $_SESSION['user_id'];
 
-$data = json_decode(file_get_contents('php://input'), true);
-$invoice_id = $data['invoice_id'] ?? null;
-$amount = (float)($data['amount'] ?? 0);
-$payment_date = $data['payment_date'] ?? date('Y-m-d');
-$notes = trim($data['notes'] ?? '');
+// Handle JSON input explicitly
+$inputData = json_decode(file_get_contents('php://input'), true);
+
+// Fallback to $_POST if JSON decode fails (for traditional form submissions)
+if (!$inputData) {
+    $inputData = $_POST;
+}
+
+$invoice_id = $inputData['invoice_id'] ?? null;
+$amount = (float)($inputData['amount'] ?? 0);
+$payment_date = $inputData['payment_date'] ?? date('Y-m-d');
+$notes = trim($inputData['notes'] ?? '');
 
 if (empty($invoice_id) || $amount <= 0) {
     http_response_code(400);
@@ -44,8 +51,8 @@ if ($year_status && $year_status['is_closed']) {
 }
 // --- End Guardrail ---
 
-$new_balance_due = 0; 
-$email_warning = null; 
+$new_balance_due = 0;
+$email_warning = null;
 
 // Variables kwa ajili ya email ya advertiser (kama itatumika)
 $send_advertiser_email = false;
@@ -78,17 +85,17 @@ try {
 
     // 3. Sasisha ankara
     $new_amount_paid = $invoice['amount_paid'] + $amount;
-    $new_balance_due = $invoice['balance_due'] - $amount; 
-    
+    $new_balance_due = $invoice['balance_due'] - $amount;
+
     if (abs($new_balance_due) < 0.01) {
         $new_balance_due = 0.00;
     }
-    
+
     $new_status = ($new_balance_due <= 0) ? 'Paid' : 'Partially Paid';
 
     $stmt_update = $pdo->prepare("UPDATE invoices SET amount_paid = ?, balance_due = ?, status = ? WHERE id = ?");
     $stmt_update->execute([$new_amount_paid, $new_balance_due, $new_status, $invoice_id]);
-    
+
     // --- LOGIC YA ADVERTISER NA UPDATE YA AD (KUTUMIA TABLE SAHIHI 'ads') ---
     if ($new_status === 'Paid') {
         // Angalia kama hii invoice inahusiana na Ad kwenye table ya 'ads'
@@ -102,10 +109,10 @@ try {
 
         if ($ad_data) {
             // Ni Ad. Anzisha mchakato wa 'Processing' na update tarehe
-            
+
             // Weka status mpya
             $new_ad_status = $ad_data['status']; // Default ni status ya sasa
-            
+
             if ($ad_data['status'] == 'Queued for Upload' || $ad_data['status'] == 'Pending Payment') {
                 // Kama ni 'Dedicated' ('Queued') inakwenda 'Processing'
                 // Kama ni 'Manual' ('Pending Payment') inakwenda 'Active' (kulingana na Model yako)
@@ -115,10 +122,10 @@ try {
             // Weka tarehe mpya (siku 30 kuanzia malipo)
             $new_start_date = $payment_date;
             $new_end_date = (new \DateTime($payment_date))->add(new \DateInterval('P30D'))->format('Y-m-d');
-            
+
             // Update Ad kwenye database
             $stmt_update_ad = $pdo->prepare(
-                "UPDATE ads SET status = ?, payment_status = 'Paid', start_date = ?, end_date = ? 
+                "UPDATE ads SET status = ?, payment_status = 'Paid', start_date = ?, end_date = ?
                  WHERE id = ?"
             );
             $stmt_update_ad->execute([$new_ad_status, $new_start_date, $new_end_date, $ad_data['id']]);
@@ -137,11 +144,11 @@ try {
                 $new_start_date_for_email = $new_start_date;
                 $new_end_date_for_email = $new_end_date;
             }
-            // (Kama imekuwa 'Active' moja kwa moja (kwa Manual), cron job haihusiki, 
+            // (Kama imekuwa 'Active' moja kwa moja (kwa Manual), cron job haihusiki,
             // tunaweza kuongeza email ya 'Active' hapa baadaye kama unataka)
         }
     }
-    
+
     // 4. Kamilisha Transaction
     $pdo->commit();
 
@@ -213,7 +220,7 @@ if ($send_advertiser_email) {
         $mail_adv->addAddress($advertiser_details_for_email['email'], $advertiser_details_for_email['name']);
         $mail_adv->isHTML(true);
         $mail_adv->Subject = 'Payment Confirmation and Campaign Processing: ' . $ad_title_for_email;
-        
+
         $start_date_formatted = (new \DateTime($new_start_date_for_email))->format('F j, Y');
         $end_date_formatted = (new \DateTime($new_end_date_for_email))->format('F j, Y');
 
@@ -230,7 +237,7 @@ if ($send_advertiser_email) {
         $mail_adv->send();
 
     } catch (Exception $e) {
-        $email_warning = ($email_warning) 
+        $email_warning = ($email_warning)
             ? $email_warning . " | Also failed to send 'Processing' email: " . $e->getMessage()
             : "Failed to send 'Processing' email: " . $e->getMessage();
     }
@@ -245,7 +252,7 @@ if ($email_warning) {
     ]);
 } else {
     echo json_encode([
-        'status' => 'success', 
+        'status' => 'success',
         'message' => 'Payment recorded successfully!'
     ]);
 }
