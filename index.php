@@ -108,22 +108,21 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .message-agent .message-timestamp { color: rgba(255, 255, 255, 0.7); }
         .message-note .message-timestamp { color: #ca8a04; }
         .message-note {
-            background-color: #fef08a; /* yellow-200 */
-            color: #854d0e; /* yellow-800 */
-            border: 1px solid #fde047;
-            font-style: italic;
+            background-color: #fff3cd; /* pale-orange */
+            color: #664d03; /* dark text */
+            border: 1px solid #ffeeba;
             margin-left: auto;
             margin-right: 6px;
             border-radius: 12px;
             border-bottom-right-radius: 4px;
         }
         .message-note::before {
-            content: "PRIVATE NOTE";
+            content: "INTERNAL NOTE";
             display: block;
-            font-size: 0.6rem;
-            font-weight: 800;
+            font-size: 0.7rem;
+            font-weight: 700;
             margin-bottom: 4px;
-            opacity: 0.7;
+            color: #664d03;
         }
 
         .message-scheduled {
@@ -4579,9 +4578,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const timestampHtml = `<span class="message-timestamp select-none">${timeString}${statusIcon}</span>`;
 
             let bubbleClass = 'message-agent';
-            if (!isAgent) bubbleClass = 'message-contact';
-            if (isInternal) bubbleClass = 'message-note';
-            if (isScheduled) bubbleClass = 'message-scheduled';
+            if (!isAgent) {
+                bubbleClass = 'message-contact';
+            }
+            if (isInternal) {
+                bubbleClass = 'message-note';
+            } else if (isScheduled) {
+                bubbleClass = 'message-scheduled';
+            }
 
             let content = msg.content;
             if (msg.message_type === 'interactive') {

@@ -9,9 +9,216 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-
         body { font-family: 'Inter', sans-serif; } .sidebar { background-color: #0f172a; } /* slate-900 */
         .sidebar-link { transition: all 0.2s ease-in-out; border-left: 3px solid transparent; color: #cbd5e1; } /* slate-300 */
+        .sidebar-link:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #8b5cf6; } /* slate-800, slate-50, violet-500 */
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0) 100%); border-left-color: #8b5cf6; color: #fff; font-weight: 600; }
+        .modal { transition: opacity 0.3s ease; }
+        .conversation-item { transition: all 0.2s ease; cursor: pointer; border-left: 4px solid transparent; }
+        .conversation-item:hover { background-color: #f8fafc; }
+        .conversation-item.active { background-color: #f5f3ff; border-left-color: #7c3aed; }
+        .btn-soft { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-soft:active { transform: scale(0.95); }
+        .tab-pill { transition: all 0.3s ease; }
+        .tab-pill.active { background-color: #fff; color: #7c3aed; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
+        /* Modern Message Bubbles with Tails */
+        .message-bubble {
+            max-width: 75%;
+            width: fit-content;
+            min-width: 40px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: normal; /* FIX: Prevent aggressive breaking of short words */
+            border-radius: 18px;
+            padding: 10px 14px;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }
+
+        .message-contact {
+            background-color: #ffffff;
+            color: #1e293b;
+            border-bottom-left-radius: 4px;
+            margin-left: 0; /* Avatar handles spacing */
+        }
+        /* Ensure tail color matches bubble background */
+        .message-contact::before {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: -8px;
+            width: 0;
+            height: 0;
+            border-right: 12px solid #ffffff;
+            border-top: 12px solid transparent;
+        }
+
+        .message-agent {
+            background-color: #7c3aed;
+            color: white;
+            border-bottom-right-radius: 4px;
+            margin-right: 6px;
+        }
+        .message-agent::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            right: -8px;
+            width: 0;
+            height: 0;
+            border-left: 12px solid #7c3aed;
+            border-top: 12px solid transparent;
+        }
+
+        .message-timestamp {
+            float: right;
+            font-size: 0.65rem;
+            margin-left: 8px;
+            margin-top: 10px; /* Increased from 6px for more vertical breathing room */
+            vertical-align: bottom;
+            line-height: 1;
+            position: relative;
+            top: 2px;
+        }
+        .message-contact .message-timestamp { color: #94a3b8; } /* slate-400 */
+        .message-agent .message-timestamp { color: rgba(255, 255, 255, 0.7); }
+        .message-note .message-timestamp { color: #ca8a04; }
+        .message-note {
+            background-color: #fff3cd; /* pale-orange */
+            color: #664d03; /* dark text */
+            border: 1px solid #ffeeba;
+            margin-left: auto;
+            margin-right: 6px;
+            border-radius: 12px;
+            border-bottom-right-radius: 4px;
+        }
+        .message-note::before {
+            content: "INTERNAL NOTE";
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #664d03;
+        }
+
+        .message-scheduled {
+            background-color: #f3f4f6; /* gray-100 */
+            color: #4b5563; /* gray-600 */
+            border: 1px dashed #d1d5db;
+            margin-right: 6px;
+        }
+        #page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+        .loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .loader .dot {
+            width: 15px;
+            height: 15px;
+            background-color: #3498db;
+            border-radius: 50%;
+            margin: 0 5px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loader .dot:nth-child(1) { animation-delay: -0.32s; }
+        .loader .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+        .status-Approved, .status-Paid, .status-Sent, .status-Deposited { background-color: #dcfce7; color: #16a34a; }
+        .status-Pending, .status-Partially-Paid { background-color: #fef9c3; color: #ca8a04; }
+        .status-Submitted, .status-Scheduled { background-color: #dbeafe; color: #3b82f6; }
+        .status-Rejected, .status-Unpaid { background-color: #fee2e2; color: #ef4444; }
+        .status-Draft { background-color: #e5e7eb; color: #4b5563; }
+        [class*="status-Forwarded"] { background-color: #e0e7ff; color: #4f46e5; }
+        .status-Partially-Paid { background-color: #fef9c3; color: #854d0e; }
+        .status-Scheduled { background-color: #dbeafe; color: #1e40af; }
+        .status-Draft { background-color: #e5e7eb; color: #4b5563; }
+        .workflow-template-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); transition: all 0.2s ease-in-out;}
+        .workflow-node { background-color: white; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); width: 300px; text-align: left; position: relative; transition: all 0.2s ease-in-out; cursor: pointer; }
+        .workflow-node:hover { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .workflow-node:active { transform: scale(0.98); }
+        .workflow-node.trigger { border-left: 4px solid #fb7185; } .workflow-node.ai_objective { border-left: 4px solid #818cf8; } .workflow-node.action { border-left: 4px solid #34d399; } .workflow-node.condition { border-left: 4px solid #fbbf24; } .workflow-node.question { border-left: 4px solid #3b82f6; }
+        .workflow-connector { width: 2px; height: 50px; background-color: #94a3b8; margin: 0 auto; position: relative; }
+        .add-node-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; opacity: 0; transition: all 0.2s; background-color: white; border-radius: 9999px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .workflow-connector:hover .add-node-btn, .branch-path .workflow-connector:hover .add-node-btn, .workflow-node:hover + .workflow-connector .add-node-btn { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+        .workflow-branch { display: flex; justify-content: center; gap: 4rem; align-items: flex-start; position: relative; }
+        .branch-path { display: flex; flex-direction: column; align-items: center; position: relative; }
+        .branch-line-container { position: relative; height: 20px; width: 100%; }
+        .branch-line { position: absolute; top: 0; height: 2px; background-color: #94a3b8; }
+        .branch-line-left { left: 50%; right: -2rem; } .branch-line-right { right: 50%; left: -2rem; } .branch-line-down { left: 50%; top: 0; width: 2px; height: 100%; }
+        .branch-label { font-size: 0.75rem; font-weight: 600; color: #475569; background-color: #f1f5f9; padding: 2px 8px; border-radius: 999px; border: 1px solid #e2e8f0; margin-top: 10px; }
+        .workflow-canvas-bg { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 1.5rem 1.5rem; }
+        /* Old settings tab style removal or override */
+        .settings-tab.active-tab { background-color: #f5f3ff; color: #7c3aed; font-weight: 600; }
+        /* New Settings Layout Styles */
+        .settings-sidebar-btn { text-align: left; width: 100%; padding: 0.75rem 1rem; border-radius: 0.5rem; color: #4b5563; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; }
+        .settings-sidebar-btn:hover { background-color: #f3f4f6; color: #111827; }
+        .settings-sidebar-btn.active-tab { background-color: #f5f3ff; color: #7c3aed; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .settings-sidebar-btn i { width: 1.5rem; text-align: center; margin-right: 0.75rem; }
+
+        input:checked ~ .dot { transform: translateX(100%); background-color: #7c3aed; }
+        input:checked ~ .block { background-color: #ddd6fe; }
+
+        @keyframes pulsating-loader {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
+            50% { transform: scale(1); box-shadow: 0 0 0 20px rgba(124, 58, 237, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+        }
+        @keyframes color-change {
+            0% { background-color: #7c3aed; }
+            25% { background-color: #0ea5e9; }
+            50% { background-color: #10b981; }
+            75% { background-color: #f59e0b; }
+            100% { background-color: #ef4444; }
+        }
+        .pulsating-circle-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80px;
+        }
+        .pulsating-circle-loader div {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            animation: pulsating-loader 2s infinite, color-change 5s infinite alternate;
+        }
+        @keyframes pulse-bg {
+            0% { background-color: #f9fafb; } /* gray-50 */
+            50% { background-color: #e5e7eb; } /* gray-200 */
+            100% { background-color: #f9fafb; } /* gray-50 */
+        }
+        .manual-pending-pulse {
+            animation: pulse-bg 2s infinite;
+        }
+        /* Sticky Actions Column */
+        .sticky-right {
+            position: sticky;
+            right: 0;
+            background-color: white;
+            z-index: 10;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+        }
+        thead th.sticky-right {
+            background-color: #f3f4f6; /* Match gray-100 */
+        }
         .sidebar-link:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #8b5cf6; } /* slate-800, slate-50, violet-500 */
         .sidebar-link.active { background: linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0) 100%); border-left-color: #8b5cf6; color: #fff; font-weight: 600; }
         .modal { transition: opacity 0.3s ease; }
@@ -200,6 +407,18 @@
                     <div class="flex items-center mt-1 mr-1">
                         <span class="text-[10px] text-gray-400">10:33 AM</span>
                         <i class="fas fa-check text-gray-300 text-xs ml-1"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Internal Note for Verification -->
+            <div class="flex justify-end">
+                <div class="flex flex-col items-end max-w-[75%]">
+                    <div class="p-3 rounded-lg message-bubble message-note">
+                        This is an internal note for the team.
+                    </div>
+                     <div class="flex items-center mt-1 mr-1">
+                        <span class="text-[10px] text-gray-400">10:35 AM</span>
                     </div>
                 </div>
             </div>

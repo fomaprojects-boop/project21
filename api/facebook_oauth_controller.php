@@ -169,12 +169,18 @@ if ($action === 'embedded_signup') {
     // Log registration response if needed, or assume success if token is valid.
     // -------------------------------------------------------
 
-    // Save the credentials
+    // Save the credentials and update the session
     $user_id = $_SESSION['user_id'];
-    // Also update status to Connected since we attempted automatic registration
     $stmt = $pdo->prepare("UPDATE users SET whatsapp_phone_number_id = ?, whatsapp_business_account_id = ?, whatsapp_access_token = ?, whatsapp_status = 'Connected' WHERE id = ?");
+
     if ($stmt->execute([$phone_number_id, $waba_id, $long_lived_token, $user_id])) {
-        echo json_encode(['status' => 'success', 'message' => 'WhatsApp account connected and subscribed successfully.']);
+        // IMPORTANT: Update the session to prevent using stale credentials
+        $_SESSION['whatsapp_phone_number_id'] = $phone_number_id;
+        $_SESSION['whatsapp_access_token'] = $long_lived_token;
+        $_SESSION['whatsapp_business_account_id'] = $waba_id;
+        $_SESSION['whatsapp_status'] = 'Connected';
+
+        echo json_encode(['status' => 'success', 'message' => 'WhatsApp account connected and subscribed successfully. Your settings have been updated in real-time.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to save credentials to the database.']);
     }
