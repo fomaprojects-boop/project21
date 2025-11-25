@@ -31,7 +31,7 @@ date_default_timezone_set('Africa/Nairobi');
 
 // --- DATABASE CONSTANTS ADDED ---
 // Hizi zinahitajika na AuthController.php (line 26)
-define('DB_SERVER', 'localhost');
+define('DB_SERVER', '127.0.0.1');
 define('DB_USERNAME', 'app_chatmedb');
 define('DB_PASSWORD', 'chatme2025@');
 define('DB_NAME', 'app_chatmedb');

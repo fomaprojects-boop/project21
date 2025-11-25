@@ -242,6 +242,71 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         thead th.sticky-right {
             background-color: #f3f4f6; /* Match gray-100 */
         }
+
+        /* --- UX Overhaul: Soft & Fluid UI --- */
+
+        /* 1. Global Transitions & Cursors */
+        button, a, .sidebar-link, .conversation-item, .tab-pill, [onclick], .workflow-node, .workflow-template-card {
+            cursor: pointer;
+            transition: all 0.2s ease-out;
+        }
+
+        /* 2. Enhanced Hover States */
+        .sidebar-link:hover,
+        .btn-soft:hover,
+        .settings-sidebar-btn:hover,
+        button:hover,
+        a.bg-red-500:hover,
+        .swal2-confirm:hover,
+        .swal2-cancel:hover,
+        .tab-pill:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            filter: brightness(1.05);
+        }
+        .conversation-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
+        .workflow-node:hover, .workflow-template-card:hover {
+             transform: translateY(-4px) scale(1.03);
+             box-shadow: 0 10px 20px rgba(0,0,0,0.07);
+        }
+
+
+        /* 3. Soft Focus States for Inputs & Buttons */
+        input:focus, select:focus, textarea:focus, button:focus, a:focus {
+            outline: none !important; /* Force remove default outline */
+            border-color: #a78bfa !important; /* violet-300 */
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.2) !important; /* Softer, slightly larger violet glow */
+        }
+
+        /* 4. Immediate Click Feedback */
+        button:active, .btn-soft:active, a:active, .settings-sidebar-btn:active, .conversation-item:active, .workflow-node:active, .workflow-template-card:active {
+            transform: scale(0.97) translateY(1px);
+            filter: brightness(0.92);
+            transition-duration: 0.05s;
+        }
+
+        /* 5. Custom Snooze Modal Styling */
+        .swal2-popup.custom-snooze-width {
+            max-width: 320px !important;
+        }
+        #swal-datetime {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        #swal-datetime:focus {
+            outline: none !important;
+            border-color: #a78bfa !important;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+        }
+
     </style>
     <!-- Facebook SDK for JavaScript -->
     <script>
@@ -4662,48 +4727,54 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
 
             let content = msg.content;
-            if (msg.message_type === 'interactive') {
-                let interactiveData;
-                try {
-                    interactiveData = JSON.parse(msg.content);
-                } catch (e) {
-                    interactiveData = null; // Not a JSON object, must be a simple string reply
-                }
 
-                if (interactiveData && typeof interactiveData === 'object') {
-                    // It's a JSON object, so it's an outgoing interactive message prompt
-                    let interactiveHtml = '';
-                    if (interactiveData.type === 'button') {
-                        interactiveHtml = `
-                            <div class="w-full">
-                                <p class="text-base mb-2">${interactiveData.body.text}</p>
-                                <div class="flex flex-col border-t border-white border-opacity-20 -mx-3.5 -mb-2.5">
-                                    ${interactiveData.action.buttons.map(btn => `
-                                        <div class="text-center text-sky-200 hover:bg-white hover:bg-opacity-10 transition-colors cursor-pointer border-t border-white border-opacity-20 py-2.5 px-3 font-medium">
-                                            ${btn.reply.title}
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>`;
-                    } else if (interactiveData.type === 'list') {
-                        interactiveHtml = `
-                            <div class="w-full">
-                                <div class="mb-2">
-                                    <p class="font-bold text-sm">${interactiveData.header.text}</p>
-                                    <p class="text-base">${interactiveData.body.text}</p>
-                                </div>
-                                <div class="border-t border-white border-opacity-20 -mx-3.5 -mb-2.5">
-                                        <div class="text-center text-sky-200 hover:bg-white hover:bg-opacity-10 transition-colors cursor-pointer border-t border-white border-opacity-20 py-2.5 px-3 font-medium">
-                                        <i class="fas fa-list mr-2 opacity-70"></i> ${interactiveData.action.button}
-                                    </div>
-                                </div>
-                            </div>`;
-                    }
-                    content = interactiveHtml;
-                } else {
-                    // It's not a JSON object, so it's a simple string reply from the customer
-                    content = msg.content;
+            // Render images if content is a URL to an image file
+            if (content && typeof content === 'string' && content.match(/\.(jpeg|jpg|gif|png)$/i)) {
+                content = `<a href="${content}" target="_blank" rel="noopener noreferrer" class="block"><img src="${content}" class="max-w-xs rounded-lg shadow-md" alt="Image attachment"></a>`;
+            }
+
+
+            let interactiveData;
+            // CRITICAL FIX: Parse Interactive Messages
+            if (msg.message_type === 'interactive' || (content && content.startsWith('{'))) {
+                try {
+                    interactiveData = JSON.parse(content);
+                } catch (e) {
+                    interactiveData = null;
                 }
+            }
+
+            if (interactiveData && typeof interactiveData === 'object' && (interactiveData.type === 'button' || interactiveData.type === 'list')) {
+
+                let interactiveHtml = '';
+                const baseButtonClasses = "text-center transition-colors cursor-pointer text-sm py-2 px-3 rounded-lg border shadow-sm font-medium";
+                const agentButtonClasses = isAgent ? "bg-white/10 hover:bg-white/20 border-white/20" : "bg-gray-200 hover:bg-gray-300 border-gray-300 text-violet-700";
+
+                if (interactiveData.type === 'button') {
+                    interactiveHtml = `
+                        <div class="w-full">
+                            <p class="mb-3">${interactiveData.body.text}</p>
+                            <div class="flex flex-row gap-2 justify-center">
+                                ${interactiveData.action.buttons.map(btn => `
+                                    <div class="${baseButtonClasses} ${agentButtonClasses}">
+                                        ${btn.reply.title}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>`;
+                } else if (interactiveData.type === 'list') {
+                     interactiveHtml = `
+                        <div class="w-full">
+                            <div class="mb-3">
+                                ${interactiveData.header ? `<p class="font-bold">${interactiveData.header.text}</p>` : ''}
+                                <p>${interactiveData.body.text}</p>
+                            </div>
+                            <div class="${baseButtonClasses} ${agentButtonClasses}">
+                                <i class="fas fa-list mr-2 opacity-70"></i> ${interactiveData.action.button}
+                            </div>
+                        </div>`;
+                }
+                content = interactiveHtml;
             }
 
 
@@ -4763,52 +4834,55 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             event.preventDefault();
             const messageInput = document.getElementById('messageInput');
             const content = messageInput.value.trim();
-            if (!content || !currentConversationId) return;
+            const attachedFileInput = document.getElementById('attached_file_url');
+            const attachment_url = attachedFileInput ? attachedFileInput.value : null;
+
+            if (!content && !attachment_url) return;
+            if (!currentConversationId) return;
 
             const isNote = inputMode === 'note';
+            if (isNote && attachment_url) {
+                return alert('File attachments cannot be added to internal notes.');
+            }
             const endpoint = isNote ? 'save_internal_note.php' : 'send_whatsapp_message.php';
 
-            // Optimistic UI
-            const messageContainer = document.getElementById('message-container');
-            const bubbleWrapper = document.createElement('div');
-            const tempId = 'temp-msg-' + Date.now();
-            bubbleWrapper.id = tempId;
+            const typingIndicator = document.getElementById('typing-indicator');
+            typingIndicator.classList.remove('hidden');
 
-            if (isNote) {
-                bubbleWrapper.className = 'flex justify-end items-end gap-1 mb-2';
-                bubbleWrapper.innerHTML = `<div class="message-bubble message-note shadow-sm">${content}<span class="message-timestamp">Just now</span></div>`;
-            } else {
-                bubbleWrapper.className = 'flex justify-end items-end gap-1 mb-2';
-                bubbleWrapper.innerHTML = `<div class="message-bubble message-agent shadow-sm">${content}<span class="message-timestamp">Sending... <i class="fas fa-clock text-gray-300 text-xs ml-1"></i></span></div>`;
-            }
 
-            messageContainer.appendChild(bubbleWrapper);
-            messageContainer.scrollTop = messageContainer.scrollHeight;
-
+            // Optimistic UI can be tricky with attachments, so we'll just show a sending indicator.
+            // Clear inputs immediately for a responsive feel.
             messageInput.value = '';
             messageInput.style.height = 'auto';
+            if (attachedFileInput) attachedFileInput.value = '';
+
+            const attachmentPreview = document.querySelector('.attachment-preview-container');
+            if (attachmentPreview) attachmentPreview.remove();
+
 
             try {
                 const result = await fetchApi(endpoint, {
                     method: 'POST',
                     body: {
                         conversation_id: currentConversationId,
-                        content: content
+                        content: content,
+                        attachment_url: attachment_url // Pass URL to backend
                     }
                 });
 
                 if (result && result.success) {
-                    const tempMsg = document.getElementById(tempId);
-                    if (tempMsg) tempMsg.remove();
                     loadMessages(currentConversationId, document.getElementById('chat-partner-name').textContent, 1, false);
                     if (!isNote) loadConversations();
                 } else {
-                    bubbleWrapper.remove();
                     alert('Failed: ' + (result ? result.message : 'Unknown error'));
+                    // Restore input if sending failed
+                    messageInput.value = content;
                 }
             } catch (e) {
-                bubbleWrapper.remove();
                 alert('Network error.');
+                messageInput.value = content;
+            } finally {
+                typingIndicator.classList.add('hidden');
             }
         }
 
@@ -4916,49 +4990,69 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         function toggleSnoozeMenu() {
             document.getElementById('snooze-menu').classList.toggle('hidden');
         }
-        async function snoozeChat(duration) {
-            let time = null;
-            const now = new Date();
-            if (duration === '1 HOUR') {
-                now.setHours(now.getHours() + 1);
-                time = now.toISOString().slice(0, 19).replace('T', ' ');
-            } else if (duration === 'TOMORROW') {
-                now.setDate(now.getDate() + 1);
-                now.setHours(9, 0, 0, 0);
-                time = now.toISOString().slice(0, 19).replace('T', ' ');
+
+        async function snoozeChat(preset) {
+            let snoozeUntil = new Date();
+            let successMessage = 'Chat snoozed!';
+
+            switch (preset) {
+                case '1 HOUR':
+                    snoozeUntil.setHours(snoozeUntil.getHours() + 1);
+                    break;
+                case 'TOMORROW':
+                    snoozeUntil.setDate(snoozeUntil.getDate() + 1);
+                    snoozeUntil.setHours(9, 0, 0, 0);
+                    successMessage = 'Snoozed until tomorrow at 9am!';
+                    break;
+                default:
+                    snoozeUntil = new Date(preset);
+                    successMessage = `Snoozed until ${snoozeUntil.toLocaleString()}`;
             }
 
-            if (time && currentConversationId) {
-                const result = await fetchApi('snooze_conversation.php', {
-                    method: 'POST',
-                    body: { conversation_id: currentConversationId, snooze_until: time }
+            const mysqlDatetime = snoozeUntil.toISOString().slice(0, 19).replace('T', ' ');
+
+            if (!mysqlDatetime || !currentConversationId) return;
+
+            const result = await fetchApi('snooze_conversation.php', {
+                method: 'POST',
+                body: { conversation_id: currentConversationId, snooze_until: mysqlDatetime }
+            });
+
+            if (result && result.success) {
+                document.getElementById('snooze-menu').classList.add('hidden');
+                await toggleChatStatus(); // Ensure it completes before showing toast
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: successMessage,
+                    showConfirmButton: false,
+                    timer: 2500
                 });
-                if (result && result.success) {
-                    toggleSnoozeMenu();
-                    toggleChatStatus(); // Close/Refresh
-                    alert('Chat snoozed until ' + time);
-                }
             }
         }
 
         function openCustomSnooze() {
-            const date = prompt("Enter date and time (YYYY-MM-DD HH:MM:SS):", new Date().toISOString().slice(0, 19).replace('T', ' '));
-            if (date) {
-                snoozeChatCustom(date);
-            }
-        }
-        async function snoozeChatCustom(time) {
-             if (currentConversationId) {
-                const result = await fetchApi('snooze_conversation.php', {
-                    method: 'POST',
-                    body: { conversation_id: currentConversationId, snooze_until: time }
-                });
-                if (result && result.success) {
-                    toggleSnoozeMenu();
-                    toggleChatStatus();
-                    alert('Chat snoozed.');
+            Swal.fire({
+                title: 'Snooze until...',
+                html: '<input type="datetime-local" id="swal-datetime" class="swal2-input">',
+                confirmButtonText: 'Set Snooze',
+                stopKeydownPropagation: false,
+                customClass: {
+                    popup: 'custom-snooze-width'
+                },
+                preConfirm: () => {
+                    const datetime = document.getElementById('swal-datetime').value;
+                    if (!datetime) {
+                        Swal.showValidationMessage('Please select a date and time');
+                    }
+                    return datetime;
                 }
-            }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    snoozeChat(result.value);
+                }
+            });
         }
 
         // SCHEDULE LOGIC
@@ -7345,6 +7439,76 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         function setupEventListeners() {
+            // --- FILE INPUT LISTENER ---
+            const fileInput = document.getElementById('file-input');
+            if(fileInput) {
+                fileInput.addEventListener('change', handleFileUpload);
+            }
+
+            // --- GLOBAL CLICK LISTENER FOR CLOSING MENUS ---
+            document.body.addEventListener('click', function(event) {
+                const target = event.target;
+
+                // --- Attachment button logic ---
+                // Use closest to handle clicks on the icon inside the button
+                if (target.closest('#attachment-btn')) {
+                    document.getElementById('file-input').click();
+                }
+
+                // Helper to check if a click is "outside" an element and its toggle button
+                const isOutside = (element, button) => {
+                    // If the element doesn't exist or is hidden, do nothing.
+                    if (!element || element.classList.contains('hidden')) return false;
+
+                    // Check if the click is on the element itself or any of its children.
+                    if (element.contains(target)) return false;
+
+                    // Check if the click is on the button that toggles the element.
+                    // Use closest to handle clicks on icons inside the button.
+                    if (button && button.contains(target)) return false;
+
+                    // If we reach here, the click was outside.
+                    return true;
+                };
+
+                // --- For popups in the chat header ---
+                const snoozeMenu = document.getElementById('snooze-menu');
+                const snoozeButton = document.querySelector('button[onclick="toggleSnoozeMenu()"]');
+                if (isOutside(snoozeMenu, snoozeButton)) {
+                    snoozeMenu.classList.add('hidden');
+                }
+
+                const assignMenu = document.getElementById('assign-menu');
+                const assignButton = document.querySelector('button[onclick*="toggleAssignMenu"]');
+                if (isOutside(assignMenu, assignButton)) {
+                    toggleAssignMenu(false);
+                }
+
+                const schedulePicker = document.getElementById('schedule-picker');
+                const scheduleButton = document.querySelector('button[onclick="toggleSchedulePicker()"]');
+                if (isOutside(schedulePicker, scheduleButton)) {
+                    schedulePicker.classList.add('hidden');
+                }
+
+                // --- For the CRM sidebar (toggles on all screen sizes) ---
+                const crmSidebar = document.getElementById('crm-sidebar');
+                if (crmSidebar && !crmSidebar.classList.contains('hidden')) {
+                    // Check if click is on ANY button that can toggle the sidebar
+                    const crmToggles = document.querySelectorAll('[onclick="toggleCrmSidebar()"]');
+                    let isClickOnToggle = false;
+                    crmToggles.forEach(toggle => {
+                        if (toggle.contains(target)) {
+                            isClickOnToggle = true;
+                        }
+                    });
+
+                    // If the click is NOT on a toggle AND it's outside the sidebar itself, close it.
+                    if (!isClickOnToggle && !crmSidebar.contains(target)) {
+                        toggleCrmSidebar();
+                    }
+                }
+            });
+
             // Consolidated event listener for forms (modals and main view)
             document.body.addEventListener('submit', async (e) => {
                 // We only want to handle forms that we explicitly manage via ID
@@ -7872,62 +8036,70 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
         // Initialize App
         // --- FILE UPLOAD LOGIC ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const attachmentBtn = document.getElementById('attachment-btn');
-            const fileInput = document.getElementById('file-input');
-
-            if(attachmentBtn && fileInput) {
-                attachmentBtn.addEventListener('click', () => fileInput.click());
-                fileInput.addEventListener('change', handleFileUpload);
-            }
-
-            // --- GLOBAL CLICK LISTENER FOR CLOSING POPOVERS ---
-            document.addEventListener('click', function(event) {
-                // Close Assign Menu
-                const assignMenu = document.getElementById('assign-menu');
-                const assignToggle = document.querySelector('button[onclick*="toggleAssignMenu"]');
-                if (assignMenu && !assignMenu.classList.contains('hidden') && !assignMenu.contains(event.target) && !assignToggle.contains(event.target)) {
-                    toggleAssignMenu(false);
-                }
-
-                // Close Snooze Menu
-                const snoozeMenu = document.getElementById('snooze-menu');
-                const snoozeToggle = document.querySelector('button[onclick*="toggleSnoozeMenu"]');
-                if (snoozeMenu && !snoozeMenu.classList.contains('hidden') && !snoozeMenu.contains(event.target) && !snoozeToggle.contains(event.target)) {
-                    toggleSnoozeMenu();
-                }
-
-                // Close CRM Sidebar on mobile/overlay view
-                const crmSidebar = document.getElementById('crm-sidebar');
-                const crmToggle = document.querySelector('button[onclick*="toggleCrmSidebar"]');
-                // Check if it's in overlay mode (hidden on md screens)
-                const isOverlay = crmSidebar.classList.contains('absolute');
-                if (isOverlay && !crmSidebar.classList.contains('hidden') && !crmSidebar.contains(event.target) && !crmToggle.contains(event.target) && !event.target.closest('#message-view-header')) {
-                    toggleCrmSidebar();
-                }
-            });
-        });
-
         async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file || !currentConversationId) return;
 
-            showToast('Uploading file...', 'info');
+            const attachmentBtn = document.getElementById('attachment-btn');
+            const chatFooter = document.getElementById('chat-footer');
+
+            // Remove any existing preview
+            const existingPreview = chatFooter.querySelector('.attachment-preview-container');
+            if (existingPreview) existingPreview.remove();
+
+            const previewEl = document.createElement('div');
+            previewEl.className = 'attachment-preview-container flex items-center gap-3 p-2 bg-gray-100 border border-gray-200 rounded-lg text-sm mb-2';
+            previewEl.innerHTML = `
+                <div class="file-icon text-gray-500 text-lg"><i class="fas fa-circle-notch fa-spin"></i></div>
+                <div class="flex-1">
+                    <div class="file-name font-medium truncate">${file.name}</div>
+                    <div class="upload-status text-xs text-gray-500">Uploading...</div>
+                </div>
+                <button type="button" class="remove-file text-red-500 hover:text-red-700 font-bold p-1 text-lg leading-none">&times;</button>
+            `;
+
+            chatFooter.insertBefore(previewEl, chatFooter.firstChild);
+            attachmentBtn.disabled = true;
+
+            const removePreview = () => {
+                previewEl.remove();
+                const hiddenInput = document.getElementById('attached_file_url');
+                if (hiddenInput) hiddenInput.value = '';
+                event.target.value = ''; // Clear file input so it can be selected again
+            };
+
+            previewEl.querySelector('.remove-file').addEventListener('click', removePreview);
 
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('conversation_id', currentConversationId);
+            formData.append('conversation_id', currentConversationId); // Context for upload
 
-            const result = await fetchApi('upload_file.php', {
-                method: 'POST',
-                body: formData
-            });
+            try {
+                const result = await fetchApi('upload_file.php', { method: 'POST', body: formData });
 
-            if (result && result.success) {
-                showToast('File sent successfully!');
-                loadMessages(currentConversationId, document.getElementById('chat-partner-name').textContent, 1, false);
-            } else {
-                showToast(result ? result.message : 'File upload failed.', 'error');
+                if (result && result.success && result.file_url) {
+                    previewEl.querySelector('.file-icon').innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+                    previewEl.querySelector('.upload-status').textContent = 'Ready to send.';
+
+                    let hiddenInput = document.getElementById('attached_file_url');
+                    if (!hiddenInput) {
+                        hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.id = 'attached_file_url';
+                        hiddenInput.name = 'attached_file_url';
+                        document.getElementById('sendMessageForm').appendChild(hiddenInput);
+                    }
+                    hiddenInput.value = result.file_url;
+                    showToast('File attached. Add a caption or send directly.');
+                } else {
+                    removePreview();
+                    showToast(result ? result.message : 'File upload failed.', 'error');
+                }
+            } catch (error) {
+                removePreview();
+                showToast('An error occurred during upload.', 'error');
+            } finally {
+                attachmentBtn.disabled = false;
             }
         }
 
