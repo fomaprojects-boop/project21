@@ -57,13 +57,26 @@ try {
     $last_insert_id = $pdo->lastInsertId();
 
     // Meta API Integration
-    $settings_stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM settings WHERE id = 1");
-    $settings_stmt->execute();
-    $settings = $settings_stmt->fetch(PDO::FETCH_ASSOC);
+    $user_id = $_SESSION['user_id'];
+    $stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user_settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($settings && !empty($settings['whatsapp_business_account_id']) && !empty($settings['whatsapp_access_token'])) {
-        $waba_id = $settings['whatsapp_business_account_id'];
-        $access_token = $settings['whatsapp_access_token'];
+    if ($user_settings && !empty($user_settings['whatsapp_business_account_id']) && !empty($user_settings['whatsapp_access_token'])) {
+        $waba_id = $user_settings['whatsapp_business_account_id'];
+        $access_token = $user_settings['whatsapp_access_token'];
+    } else {
+        $settings_stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM settings WHERE id = 1");
+        $settings_stmt->execute();
+        $settings = $settings_stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($settings && !empty($settings['whatsapp_business_account_id']) && !empty($settings['whatsapp_access_token'])) {
+            $waba_id = $settings['whatsapp_business_account_id'];
+            $access_token = $settings['whatsapp_access_token'];
+        }
+    }
+
+    if (isset($waba_id) && isset($access_token)) {
 
         $meta_body = $body;
         if (!empty($variables_raw)) {
@@ -91,10 +104,14 @@ try {
             $components[] = ['type' => 'BUTTONS', 'buttons' => $buttons];
         }
 
+        // Sanitize the template name for Meta API requirements (lowercase, no special chars)
+        $clean_name = preg_replace('/[^a-zA-Z0-9\s]/', '', $name);
+        $meta_template_name = strtolower(str_replace(' ', '_', $clean_name));
+
         $payload = [
-            'name' => strtolower(str_replace(' ', '_', $name)),
+            'name' => $meta_template_name,
             'language' => 'en_US',
-            'category' => 'UTILITY',
+            'category' => 'TRANSACTIONAL',
             'components' => $components
         ];
 
@@ -116,7 +133,13 @@ try {
 
         if ($http_code < 200 || $http_code >= 300) {
             $error_response = json_decode($response, true);
-            throw new Exception("Meta API Error: " . ($error_response['error']['message'] ?? 'Unknown error'));
+            $error_message = $error_response['error']['message'] ?? 'Unknown error';
+            $error_details = $error_response['error']['error_data']['details'] ?? '';
+            $full_error_message = "Meta API Error: {$error_message}";
+            if (!empty($error_details)) {
+                $full_error_message .= " (Details: {$error_details})";
+            }
+            throw new Exception($full_error_message);
         }
 
         // Save Meta's response details
@@ -129,10 +152,12 @@ try {
             );
             $update_stmt->execute([
                 $meta_response['id'],
-                $payload['name'], // The name we sent to Meta
+                $meta_template_name, // The sanitized name we sent to Meta
                 $last_insert_id
             ]);
         }
+    } else {
+        // If no credentials found, just commit the local save without hitting Meta API
     }
 
     $pdo->commit();
