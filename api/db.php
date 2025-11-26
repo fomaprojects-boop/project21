@@ -54,6 +54,25 @@ try {
     }
     // -----------------------------------------------------------
 
+    // --- Schema Auto-Fix: Ensure user_id column exists in templates ---
+    $schema_lock_template_user = __DIR__ . '/schema_template_userid.lock';
+    if (!file_exists($schema_lock_template_user)) {
+        try {
+            // Add user_id column and an index for performance
+            $pdo->exec("ALTER TABLE message_templates ADD COLUMN user_id INT NULL, ADD INDEX (user_id)");
+            // Mark as done on success
+            file_put_contents($schema_lock_template_user, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            // If column already exists (error 1060), mark as done
+            if ($e->errorInfo[1] == 1060) {
+                file_put_contents($schema_lock_template_user, date('Y-m-d H:i:s'));
+            } else {
+                // Log other errors but allow the app to continue
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Template UserID Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');

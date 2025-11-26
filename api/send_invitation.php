@@ -12,6 +12,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/mailer_config.php'; // HILI NI MUHIMU - Tunatumia usanidi mkuu
 require_once __DIR__ . '/config.php'; // Ongeza config file
+require_once __DIR__ . '/submit_default_templates.php'; // Ongeza file jipya
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
@@ -57,14 +58,56 @@ try {
          VALUES (?, ?, ?, 'Pending', ?, ?)"
     );
     $stmt->execute([$name, $email, $role, $token, $token_expiry]);
+    $userId = $pdo->lastInsertId(); // Get the new user's ID
+
+    // Add default templates for the new user
+    $defaultTemplates = [
+        [
+            'name' => 'sample_marketing',
+            'category' => 'MARKETING',
+            'body' => 'Hi {{customer_name}}! Don\'t miss out on our special offer. Get 20% off on all new arrivals this week. Use code: PROMO20',
+            'quick_replies' => 'Shop Now,Learn More'
+        ],
+        [
+            'name' => 'sample_transactional',
+            'category' => 'TRANSACTIONAL',
+            'body' => 'Your order {{order_number}} has been shipped and is expected to arrive by {{delivery_date}}. Thank you for your purchase!',
+            'quick_replies' => 'Track Order'
+        ],
+        [
+            'name' => 'sample_otp',
+            'category' => 'TRANSACTIONAL',
+            'body' => 'Your verification code is {{otp_code}}. This code is valid for 10 minutes.',
+            'quick_replies' => ''
+        ]
+    ];
+
+    $stmt_template = $pdo->prepare(
+        "INSERT INTO message_templates (user_id, name, category, body, status, quick_replies)
+         VALUES (?, ?, ?, ?, 'PENDING', ?)"
+    );
+
+    foreach ($defaultTemplates as $template) {
+        $stmt_template->execute([
+            $userId,
+            $template['name'],
+            $template['category'],
+            $template['body'],
+            $template['quick_replies']
+        ]);
+    }
     
     $pdo->commit();
+
+    // Submit default templates to Meta. This runs in the background.
+    submit_all_default_templates_for_user($userId);
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) { $pdo->rollBack(); }
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
-    exit();
+    // We will just log the error and the final response will be sent after email attempt
+    error_log("Database error during user creation: " . $e->getMessage());
+    // No echo here, let it fall through to the email part
 }
 
 // --- Tuma barua pepe NJE ya transaction ---
