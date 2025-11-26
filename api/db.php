@@ -54,6 +54,39 @@ try {
     }
     // -----------------------------------------------------------
 
+    // --- Schema Auto-Fix: Ensure 'user_id' column exists in 'message_templates' ---
+    $schema_lock_userid = __DIR__ . '/schema_templates_userid.lock';
+    if (!file_exists($schema_lock_userid)) {
+        try {
+            $pdo->exec("ALTER TABLE message_templates ADD COLUMN user_id INT(11) NOT NULL");
+            file_put_contents($schema_lock_userid, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1060) { // Duplicate column
+                file_put_contents($schema_lock_userid, date('Y-m-d H:i:s'));
+            } else {
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Template UserID Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+    // -----------------------------------------------------------
+
+    // --- Schema Auto-Fix: Ensure 'category' column exists in 'message_templates' ---
+    $schema_lock_category = __DIR__ . '/schema_templates_category.lock';
+    if (!file_exists($schema_lock_category)) {
+        try {
+            // Add column if not exists. 'UTILITY' is a safe default.
+            $pdo->exec("ALTER TABLE message_templates ADD COLUMN category VARCHAR(50) NOT NULL DEFAULT 'UTILITY'");
+            file_put_contents($schema_lock_category, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1060) { // Duplicate column
+                file_put_contents($schema_lock_category, date('Y-m-d H:i:s'));
+            } else {
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Template Category Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+    // -----------------------------------------------------------
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');

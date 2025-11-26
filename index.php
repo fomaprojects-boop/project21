@@ -29,6 +29,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/emoji-button@4.6.4/dist/index.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
@@ -1027,6 +1028,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                             <button type="button" onclick="openInteractiveMessageModal()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Interactive Messages">
                                                 <i class="fas fa-magic text-lg"></i>
                                             </button>
+                                            <button type="button" id="emoji-btn" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Insert Emoji">
+                                                <i class="fas fa-smile text-lg"></i>
+                                            </button>
                                             <button type="button" id="attachment-btn" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Attach File">
                                                 <i class="fas fa-paperclip text-lg"></i>
                                             </button>
@@ -1192,7 +1196,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </form>
                 </div>`,
             broadcast: `<div class="p-8"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-gray-800">Broadcast History</h2><button onclick="openBroadcastModal()" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-plus mr-2"></i>New Broadcast</button></div><div class="bg-white rounded-lg shadow-md overflow-hidden border"><table class="w-full text-left"><thead class="bg-gray-100"><tr><th class="p-4 font-semibold">Campaign Name</th><th class="p-4 font-semibold">Status</th><th class="p-4 font-semibold">Scheduled For</th><th class="p-4 font-semibold">Actions</th></tr></thead><tbody id="broadcasts-table-body" class="divide-y"></tbody></table></div></div>`,
-            templates: `<div class="p-8"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-gray-800">Message Templates</h2><div><button onclick="openTemplateModal()" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-plus mr-2"></i>New Template</button><button onclick="syncTemplates()" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 font-semibold ml-4"><i class="fas fa-sync-alt mr-2"></i>Sync Status</button></div></div><div id="templates-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>`,
+            templates: `<div class="p-8"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-gray-800">Message Templates</h2><div><button onclick="openTemplateModal()" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-plus mr-2"></i>New Template</button><button onclick="syncTemplates()" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 font-semibold ml-4"><i class="fas fa-sync-alt mr-2"></i>Sync Status</button></div></div><div class="bg-sky-100 border-l-4 border-sky-500 text-sky-800 p-4 mb-6 rounded-md shadow-sm"><div class="flex"><div class="py-1"><i class="fas fa-info-circle fa-lg mr-4"></i></div><div><p class="font-bold">Template Approval Time</p><p class="text-sm">Please note: Meta's review process can take from a few minutes up to 24 hours. After submitting a template, please wait and use the <strong>'Sync Status'</strong> button to get the latest approval status directly from Meta.</p></div></div></div><div id="templates-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>`,
             workflows: `<div class="h-full flex flex-col">
     <div id="workflow-main-view" class="p-8 h-full overflow-y-auto">
         <!-- Hero Section -->
@@ -2592,9 +2596,17 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
                     <div class="mt-3">
                         <h3 id="template-modal-title" class="text-lg text-center leading-6 font-medium text-gray-900">Create New Template</h3>
-                        <form id="addTemplateForm" class="mt-4 space-y-4 p-4">
+                        <form id="addTemplateForm" class="mt-4 space-y-4 p-4" style="max-height: 80vh; overflow-y: auto;">
                             <input id="templateId" type="hidden">
                             <input id="templateName" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Template Name" required>
+                            <div>
+                                <label for="templateCategory" class="block text-sm font-medium text-gray-700">Category *</label>
+                                <select id="templateCategory" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" required>
+                                    <option value="UTILITY">UTILITY (e.g., order updates, alerts)</option>
+                                    <option value="MARKETING">MARKETING (e.g., promotions, offers)</option>
+                                    <option value="AUTHENTICATION">AUTHENTICATION (e.g., verification codes)</option>
+                                </select>
+                            </div>
                             <input id="templateHeader" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Header (Optional)">
 
                             <div>
@@ -3026,57 +3038,57 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const loader = document.getElementById('page-loader');
             loader.style.display = 'flex';
 
-            setTimeout(() => {
-                window.location.hash = viewId;
-                const viewContainer = document.getElementById('view-container');
-                viewContainer.innerHTML = ''; // Futa yaliyopita
-                viewContainer.innerHTML = viewTemplates[viewId] || `<div class="p-8"><h2>${viewId} not implemented</h2></div>`;
+            // REMOVED TIMEOUT WRAPPER FOR INSTANT LOADING
+            window.location.hash = viewId;
+            const viewContainer = document.getElementById('view-container');
+            viewContainer.innerHTML = ''; // Futa yaliyopita
+            viewContainer.innerHTML = viewTemplates[viewId] || `<div class="p-8"><h2>${viewId} not implemented</h2></div>`;
 
-                // Apply min-w-0 to main only for expenses to fix overflow issues without affecting other pages
-                const mainElement = document.querySelector('main');
-                if (viewId === 'expenses') {
-                    mainElement.classList.add('min-w-0');
+            // Apply min-w-0 to main only for expenses to fix overflow issues without affecting other pages
+            const mainElement = document.querySelector('main');
+            if (viewId === 'expenses') {
+                mainElement.classList.add('min-w-0');
+            } else {
+                mainElement.classList.remove('min-w-0');
+            }
+
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+            const activeLink = document.querySelector(`a[onclick*="${viewId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+                if (viewId !== 'settings') { // Keep title the same for settings
+                    const span = activeLink.querySelector('span');
+                    if (span) {
+                         document.getElementById('view-title').textContent = span.textContent;
+                    }
                 } else {
-                    mainElement.classList.remove('min-w-0');
+                    document.getElementById('view-title').textContent = 'Settings';
                 }
+            }
 
-                document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
-                const activeLink = document.querySelector(`a[onclick*="${viewId}"]`);
-                if (activeLink) {
-                    activeLink.classList.add('active');
-                    if (viewId !== 'settings') { // Keep title the same for settings
-                        const span = activeLink.querySelector('span');
-                        if (span) {
-                             document.getElementById('view-title').textContent = span.textContent;
-                        }
-                    } else {
-                        document.getElementById('view-title').textContent = 'Settings';
-                    }
+            // Load data for the selected view AFTER the content is in place
+            if (viewId === 'dashboard') loadDashboard();
+            if (viewId === 'activity_log') loadActivityLog(1);
+            if (viewId === 'youtube') loadYouTube();
+            if (viewId === 'youtube-ads') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const aToken = urlParams.get('at');
+                if (aToken === 'true') {
+                    showSuccessAnimation();
                 }
-
-                // Load data for the selected view AFTER the content is in place
-                if (viewId === 'dashboard') loadDashboard();
-                if (viewId === 'activity_log') loadActivityLog(1);
-                if (viewId === 'youtube') loadYouTube();
-                if (viewId === 'youtube-ads') {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const aToken = urlParams.get('at');
-                    if (aToken === 'true') {
-                        showSuccessAnimation();
-                    }
-                    loadYouTubeAds();
-                }
-                if (viewId === 'users') loadUsers();
-                if (viewId === 'contacts') loadContacts();
-                if (viewId === 'expenses') loadExpenses();
-                if (viewId === 'reports') loadReports();
-                if (viewId === 'conversations') loadConversations();
-                if (viewId === 'templates') loadTemplates();
-                if (viewId === 'broadcast') loadBroadcasts();
-                if (viewId === 'workflows') { loadWorkflowTemplates(); loadWorkflows(); }
-                if (viewId === 'settings') loadSettings();
-                if (viewId === 'vendors') { showVendorTab('payouts'); }
-                else if (viewId === 'invoices') { showInvoiceTab('list'); }
+                loadYouTubeAds();
+            }
+            if (viewId === 'users') loadUsers();
+            if (viewId === 'contacts') loadContacts();
+            if (viewId === 'expenses') loadExpenses();
+            if (viewId === 'reports') loadReports();
+            if (viewId === 'conversations') { loadConversations(); initEmojiPicker(); }
+            if (viewId === 'templates') loadTemplates();
+            if (viewId === 'broadcast') loadBroadcasts();
+            if (viewId === 'workflows') { loadWorkflowTemplates(); loadWorkflows(); }
+            if (viewId === 'settings') loadSettings();
+            if (viewId === 'vendors') { showVendorTab('payouts'); }
+            else if (viewId === 'invoices') { showInvoiceTab('list'); }
             if (viewId === 'analytics') loadAnalytics();
             if (viewId === 'costs') loadCosts();
             if (viewId === 'assets') loadAssets();
@@ -3085,9 +3097,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             if (viewId === 'tax_payments') loadTaxPayments(1);
             if (viewId === 'payroll') loadPayroll();
 
-
+            // Use a minimal timeout to allow the loader to render before locking the main thread
+            setTimeout(() => {
                 loader.style.display = 'none';
-            }, 1500); // 1.5 seconds delay
+            }, 50);
         }
 
         function toggleDropdown(menuId) {
@@ -8305,6 +8318,28 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 showToast('An error occurred during upload.', 'error');
             } finally {
                 attachmentBtn.disabled = false;
+            }
+        }
+
+        function initEmojiPicker() {
+            const button = document.querySelector('#emoji-btn');
+            const messageInput = document.querySelector('#messageInput');
+
+            if (button && messageInput) {
+                const picker = new EmojiButton.EmojiButton({
+                    position: 'top-start',
+                    theme: 'auto',
+                    style: 'twemoji'
+                });
+
+                picker.on('emoji', emoji => {
+                    messageInput.value += emoji;
+                    messageInput.focus();
+                });
+
+                button.addEventListener('click', () => {
+                    picker.togglePicker(button);
+                });
             }
         }
 
