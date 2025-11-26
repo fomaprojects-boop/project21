@@ -57,13 +57,26 @@ try {
     $last_insert_id = $pdo->lastInsertId();
 
     // Meta API Integration
-    $settings_stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM settings WHERE id = 1");
-    $settings_stmt->execute();
-    $settings = $settings_stmt->fetch(PDO::FETCH_ASSOC);
+    $user_id = $_SESSION['user_id'];
+    $stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user_settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($settings && !empty($settings['whatsapp_business_account_id']) && !empty($settings['whatsapp_access_token'])) {
-        $waba_id = $settings['whatsapp_business_account_id'];
-        $access_token = $settings['whatsapp_access_token'];
+    if ($user_settings && !empty($user_settings['whatsapp_business_account_id']) && !empty($user_settings['whatsapp_access_token'])) {
+        $waba_id = $user_settings['whatsapp_business_account_id'];
+        $access_token = $user_settings['whatsapp_access_token'];
+    } else {
+        $settings_stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM settings WHERE id = 1");
+        $settings_stmt->execute();
+        $settings = $settings_stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($settings && !empty($settings['whatsapp_business_account_id']) && !empty($settings['whatsapp_access_token'])) {
+            $waba_id = $settings['whatsapp_business_account_id'];
+            $access_token = $settings['whatsapp_access_token'];
+        }
+    }
+
+    if (isset($waba_id) && isset($access_token)) {
 
         $meta_body = $body;
         if (!empty($variables_raw)) {
@@ -133,6 +146,8 @@ try {
                 $last_insert_id
             ]);
         }
+    } else {
+        // If no credentials found, just commit the local save without hitting Meta API
     }
 
     $pdo->commit();
