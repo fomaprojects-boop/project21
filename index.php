@@ -38,9 +38,34 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .sidebar-link:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #8b5cf6; } /* slate-800, slate-50, violet-500 */
         .sidebar-link.active { background: linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0) 100%); border-left-color: #8b5cf6; color: #fff; font-weight: 600; }
         .modal { transition: opacity 0.3s ease; }
-        .conversation-item { transition: all 0.2s ease; cursor: pointer; border-left: 4px solid transparent; }
-        .conversation-item:hover { background-color: #f8fafc; }
-        .conversation-item.active { background-color: #f5f3ff; border-left-color: #7c3aed; }
+        .conversation-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+        .conversation-item:hover {
+            background-color: #f8fafc;
+            transform: translateX(2px);
+        }
+        .conversation-item.active {
+            background-color: #f5f3ff;
+            border-left-color: #7c3aed;
+            font-weight: 600;
+        }
+        html.dark .conversation-item:hover {
+             background-color: #1f2937;
+        }
+        html.dark .conversation-item.active {
+            background-color: #2e1065;
+            border-left-color: #a78bfa;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
         .btn-soft { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .btn-soft:active { transform: scale(0.95); }
         .tab-pill { transition: all 0.3s ease; }
@@ -412,6 +437,75 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         #addTemplateModal .w-full.max-w-2xl {
             max-width: 40rem; /* equivalent to max-w-xl in Tailwind */
         }
+        /* --- Dark Mode Styles --- */
+        html.dark {
+            color-scheme: dark;
+        }
+        html.dark body {
+            background-color: #111827;
+            color: #f9fafb;
+        }
+        html.dark main {
+             background-color: #111827;
+        }
+        html.dark .bg-white {
+            background-color: #1f2937;
+        }
+         html.dark .bg-gray-50, html.dark .bg-slate-50 {
+            background-color: #111827;
+        }
+        html.dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        html.dark .border, html.dark .border-b, html.dark .border-r, html.dark .border-l, html.dark .border-t {
+            border-color: #374151 !important;
+        }
+        html.dark .divide-y > :not([hidden]) ~ :not([hidden]) {
+            border-color: #374151;
+        }
+        html.dark .text-gray-800, html.dark .text-gray-900 { color: #f9fafb; }
+        html.dark .text-gray-700 { color: #d1d5db; }
+        html.dark .text-gray-600 { color: #9ca3af; }
+        html.dark .text-gray-500 { color: #a1a1aa; }
+        html.dark .text-gray-400 { color: #9ca3af; }
+
+        html.dark .sidebar { background-color: #0d111c; }
+        html.dark .sidebar-link:hover { background-color: #1f2937; }
+
+        html.dark .conversation-item:hover { background-color: #1f2937; }
+        html.dark .conversation-item.active { background-color: #1e1b4b; }
+
+        html.dark .message-contact { background-color: #374151; color: #f3f4f6; }
+        html.dark .message-contact::before { border-right-color: #374151; }
+        html.dark .message-agent { background-color: #6d28d9; }
+        html.dark .message-agent::after { border-left-color: #6d28d9; }
+
+        html.dark #message-container { background-image: radial-gradient(#4b5563 1px, transparent 1px) !important; }
+
+        html.dark input, html.dark select, html.dark textarea {
+             background-color: #374151;
+             color: #f3f4f6;
+             border-color: #4b5563;
+        }
+        html.dark ::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        html.dark #input-wrapper { background-color: #1f2937; border-color: #4b5563; }
+        html.dark .tab-pill { color: #d1d5db; }
+        html.dark .tab-pill.active { background-color: #374151; color: #f9fafb; }
+
+        /* Custom Scrollbar for Dark Mode */
+        html.dark ::-webkit-scrollbar { width: 8px; }
+        html.dark ::-webkit-scrollbar-track { background: #1f2937; }
+        html.dark ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        html.dark #attachment-preview-container {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+
 
     </style>
     <!-- Facebook SDK for JavaScript -->
@@ -573,6 +667,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
              <header class="flex items-center justify-between p-4 border-b bg-gradient-to-r from-violet-700 to-sky-500 h-16 w-full z-10 flex-shrink-0 text-white shadow-sm">
                 <h2 id="view-title" class="text-2xl font-bold">Dashboard</h2>
                 <div class="flex items-center space-x-6">
+                    <button id="theme-switcher" class="hover:text-violet-200" title="Toggle Dark Mode">
+                        <i class="fas fa-moon text-xl"></i>
+                    </button>
                     <span class="font-semibold">Welcome, <?php echo $userName; ?>!</span>
                     <button onclick="showView('settings', event)" class="hover:text-violet-200" title="Settings"><i class="fas fa-cog text-xl"></i></button>
                     <a href="api/logout.php" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold" title="Logout"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
@@ -899,8 +996,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             conversations: `<div class="flex-1 flex flex-col h-full overflow-hidden">
                 <div class="flex-1 flex overflow-hidden">
                     <!-- Conversations Sidebar -->
-                    <div class="w-1/3 flex flex-col bg-white border-r z-10">
-                        <div class="p-4 border-b space-y-4">
+                    <div class="w-96 flex flex-col bg-white border-r z-10">
+                        <div class="p-4 border-b space-y-4 shrink-0">
                             <div class="flex justify-between items-center">
                                 <h2 class="text-2xl font-bold text-gray-800">Inbox</h2>
                                 <button onclick="openNewChatModal()" class="bg-violet-600 hover:bg-violet-700 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md btn-soft transition-colors" title="Start New Chat">
@@ -913,13 +1010,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             </div>
                             <!-- Tabs -->
                             <div class="flex bg-gray-100 p-1.5 rounded-xl">
-                                <button onclick="filterConversations('open')" class="flex-1 py-1.5 text-sm font-medium rounded-lg tab-pill active text-gray-600 hover:text-gray-800" id="tab-open">Open</button>
-                                <button onclick="filterConversations('closed')" class="flex-1 py-1.5 text-sm font-medium rounded-lg tab-pill text-gray-500 hover:text-gray-800" id="tab-closed">Closed</button>
-                                <button onclick="filterConversations('all')" class="flex-1 py-1.5 text-sm font-medium rounded-lg tab-pill text-gray-500 hover:text-gray-800" id="tab-all">All</button>
+                                <button onclick="filterConversations('open')" class="flex-1 py-1.5 text-sm font-medium rounded-lg tab-pill active" id="tab-open">Open</button>
+                                <button onclick="filterConversations('closed')" class="flex-1 py-1.5 text-sm font-medium rounded-lg tab-pill" id="tab-closed">Closed</button>
+                                <button onclick="filterConversations('all')" class="flex-1 py-1.5 text-sm font-medium rounded-lg tab-pill" id="tab-all">All</button>
                             </div>
                         </div>
 
-                        <div id="conversations-container" class="flex-1 overflow-y-auto divide-y divide-gray-50">
+                        <div id="conversations-container" class="flex-1 overflow-y-auto divide-y divide-gray-100">
                             <div class="flex justify-center items-center p-12 opacity-50"><div class="loader"></div></div>
                         </div>
                     </div>
@@ -1014,44 +1111,60 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                                 <!-- Footer / Input -->
                                 <div class="p-4 bg-white border-t z-20" id="chat-footer">
-                                    <form id="sendMessageForm" class="flex flex-col gap-2 max-w-5xl mx-auto relative">
+                                     <form id="sendMessageForm" class="flex flex-col gap-2 max-w-5xl mx-auto relative">
+                                        <!-- Attachment Preview -->
+                                        <div id="attachment-preview-container" class="hidden items-center gap-3 p-2 bg-gray-100 border border-gray-200 rounded-lg text-sm mb-2">
+                                            <div class="file-icon text-gray-500 text-lg"><i class="fas fa-file-alt"></i></div>
+                                            <div class="flex-1">
+                                                <div class="file-name font-medium truncate"></div>
+                                                <div class="upload-status text-xs text-gray-500"></div>
+                                            </div>
+                                            <button type="button" id="remove-attachment-btn" class="remove-file text-red-500 hover:text-red-700 font-bold p-1 text-lg leading-none">&times;</button>
+                                        </div>
+                                        <input type="hidden" id="attached_file_url" name="attached_file_url">
+
+
                                         <!-- Input Mode Toggle -->
                                         <div class="flex justify-center mb-1 space-x-4">
                                             <button type="button" onclick="setInputMode('message')" id="mode-msg-btn" class="text-xs font-bold px-3 py-1 rounded-full bg-violet-100 text-violet-700 transition-colors">Message</button>
                                             <button type="button" onclick="setInputMode('note')" id="mode-note-btn" class="text-xs font-bold px-3 py-1 rounded-full text-gray-500 hover:bg-yellow-100 hover:text-yellow-700 transition-colors">Internal Note</button>
                                         </div>
 
-                                        <div id="input-wrapper" class="flex items-end gap-3 bg-white p-2 rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-violet-200 focus-within:border-violet-400 transition-all">
-                                            <button type="button" id="emoji-btn" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Insert Emoji">
-                                                <i class="fas fa-smile text-lg"></i>
-                                            </button>
-                                            <button type="button" onclick="openTemplateSelector()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Quick Replies & Templates (Type /)">
-                                                <i class="fas fa-bolt text-lg"></i>
-                                            </button>
-                                            <button type="button" onclick="openInteractiveMessageModal()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Interactive Messages">
-                                                <i class="fas fa-magic text-lg"></i>
-                                            </button>
-                                            <button type="button" id="attachment-btn" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Attach File">
-                                                <i class="fas fa-paperclip text-lg"></i>
-                                            </button>
-                                            <input type="file" id="file-input" class="hidden" />
-                                            <textarea id="messageInput" rows="1" class="flex-1 bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400 resize-none py-3 max-h-32 text-base" placeholder="Type a message..." oninput="handleInputType(this)"></textarea>
-
-                                            <!-- Schedule Button -->
-                                            <div class="relative">
-                                                <button type="button" onclick="toggleSchedulePicker()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Send Later">
-                                                    <i class="fas fa-hourglass-half text-lg"></i>
+                                        <div id="input-wrapper" class="flex items-end gap-2 bg-white p-2 rounded-2xl border border-gray-300 shadow-sm focus-within:ring-2 focus-within:ring-violet-200 focus-within:border-violet-400 transition-all">
+                                            <div class="flex">
+                                                <button type="button" id="emoji-btn" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Insert Emoji">
+                                                    <i class="fas fa-smile text-lg"></i>
                                                 </button>
-                                                <div id="schedule-picker" class="hidden absolute bottom-full right-0 mb-2 bg-white p-4 rounded-xl shadow-xl border w-64 z-50">
-                                                    <h4 class="font-bold text-sm mb-2">Schedule Message</h4>
-                                                    <input type="datetime-local" id="schedule-datetime" class="w-full border rounded p-2 text-sm mb-2">
-                                                    <button type="button" onclick="confirmSchedule()" class="w-full bg-violet-600 text-white py-1 rounded text-sm">Set Time</button>
-                                                </div>
+                                                <button type="button" id="attachment-btn" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Attach File">
+                                                    <i class="fas fa-paperclip text-lg"></i>
+                                                </button>
+                                                <button type="button" onclick="openInteractiveMessageModal()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Send Interactive Message">
+                                                    <i class="fas fa-layer-group text-lg"></i>
+                                                </button>
+                                                 <input type="file" id="file-input" class="hidden" />
                                             </div>
 
-                                            <button type="submit" id="send-btn" class="p-3 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-all btn-soft shadow-md hover:shadow-lg">
-                                                <i class="fas fa-paper-plane text-lg"></i>
-                                            </button>
+                                            <textarea id="messageInput" rows="1" class="flex-1 bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400 resize-none py-3 max-h-32 text-base" placeholder="Type a message..." oninput="handleInputType(this)"></textarea>
+
+                                            <div class="flex">
+                                                <button type="button" onclick="openTemplateSelector()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Quick Replies & Templates (Type /)">
+                                                    <i class="fas fa-bolt text-lg"></i>
+                                                </button>
+                                                <!-- Schedule Button & Picker -->
+                                                <div class="relative">
+                                                    <button type="button" onclick="toggleSchedulePicker()" class="p-3 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all btn-soft" title="Schedule Message">
+                                                        <i class="fas fa-clock text-lg"></i>
+                                                    </button>
+                                                    <div id="schedule-picker" class="absolute bottom-full right-0 mb-2 w-72 bg-white p-3 rounded-lg shadow-lg border hidden z-30">
+                                                        <p class="text-sm font-semibold mb-2 text-gray-700">Schedule message for later</p>
+                                                        <input type="datetime-local" id="schedule-datetime" class="w-full p-2 border rounded text-gray-700">
+                                                        <button type="button" onclick="confirmSchedule()" class="w-full mt-2 bg-violet-600 text-white py-2 rounded-lg hover:bg-violet-700">Confirm Schedule</button>
+                                                    </div>
+                                                </div>
+                                                <button type="submit" id="send-btn" class="p-3 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-all btn-soft shadow-md hover:shadow-lg">
+                                                    <i class="fas fa-paper-plane text-lg"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="flex justify-between px-2 items-center">
                                             <p class="text-xs text-gray-400"><strong>Shift + Enter</strong> for new line. Type <strong>/</strong> for templates.</p>
@@ -2383,6 +2496,23 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </div>
                 </div>
             </div>`,
+            fillTemplateVariablesModal: `<div id="fillTemplateVariablesModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
+                <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <h3 class="text-lg text-center leading-6 font-medium text-gray-900">Fill Template Variables</h3>
+                        <form id="fillVariablesForm" class="mt-4 space-y-4 p-4 text-left">
+                            <input type="hidden" id="templateBodyToFill">
+                            <div id="variable-inputs-container" class="space-y-3 max-h-60 overflow-y-auto">
+                                <!-- Dynamic inputs will be injected here -->
+                            </div>
+                            <div class="items-center pt-4 flex justify-end space-x-2 border-t mt-6">
+                                <button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('fillTemplateVariablesModal')">Cancel</button>
+                                <button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Send Message</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>`,
         };
         const modalTemplates = {
             payrollDetailsModal: `<div id="payrollDetailsModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
@@ -2903,30 +3033,32 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             <h3 class="text-lg font-medium text-gray-900">Create Interactive Message</h3>
                             <button onclick="closeModal('interactiveMessageModal')" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button>
                         </div>
-                        <div class="border-b border-gray-200">
-                            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                                <button onclick="showInteractiveTab('quick_reply')" class="interactive-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-violet-500 text-violet-600">Quick Reply</button>
-                                <button onclick="showInteractiveTab('list_message')" class="interactive-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">List Message</button>
-                            </nav>
-                        </div>
-                        <div id="interactive-quick_reply" class="interactive-tab-content mt-4">
-                            <form id="quickReplyForm" class="space-y-4">
-                                <div><label class="block text-sm font-medium">Body Text</label><textarea name="body" class="w-full p-2 border rounded-md" rows="3" required></textarea></div>
-                                <div><label class="block text-sm font-medium">Button 1</label><input type="text" name="button1" class="w-full p-2 border rounded-md" required></div>
-                                <div><label class="block text-sm font-medium">Button 2 (Optional)</label><input type="text" name="button2" class="w-full p-2 border rounded-md"></div>
-                                <div><label class="block text-sm font-medium">Button 3 (Optional)</label><input type="text" name="button3" class="w-full p-2 border rounded-md"></div>
-                                <div class="text-right"><button type="submit" class="bg-violet-600 text-white px-4 py-2 rounded-md">Send</button></div>
-                            </form>
-                        </div>
-                        <div id="interactive-list_message" class="interactive-tab-content mt-4 hidden">
-                            <form id="listMessageForm" class="space-y-4">
-                                <div><label class="block text-sm font-medium">Header Text</label><input type="text" name="header" class="w-full p-2 border rounded-md" required></div>
-                                <div><label class="block text-sm font-medium">Body Text</label><textarea name="body" class="w-full p-2 border rounded-md" rows="2" required></textarea></div>
-                                <div><label class="block text-sm font-medium">Button Text</label><input type="text" name="button" class="w-full p-2 border rounded-md" required></div>
-                                <div id="list-sections-container"></div>
-                                <button type="button" onclick="addListSection()" class="text-sm text-violet-600">Add Section</button>
-                                <div class="text-right"><button type="submit" class="bg-violet-600 text-white px-4 py-2 rounded-md">Send</button></div>
-                            </form>
+                        <div class="max-h-[60vh] overflow-y-auto pr-2">
+                            <div class="border-b border-gray-200 sticky top-0 bg-white">
+                                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                    <button onclick="showInteractiveTab('quick_reply')" class="interactive-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-violet-500 text-violet-600">Quick Reply</button>
+                                    <button onclick="showInteractiveTab('list_message')" class="interactive-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">List Message</button>
+                                </nav>
+                            </div>
+                            <div id="interactive-quick_reply" class="interactive-tab-content mt-4">
+                                <form id="quickReplyForm" class="space-y-4">
+                                    <div><label class="block text-sm font-medium">Body Text</label><textarea name="body" class="w-full p-2 border rounded-md" rows="3" required></textarea></div>
+                                    <div><label class="block text-sm font-medium">Button 1</label><input type="text" name="button1" class="w-full p-2 border rounded-md" required></div>
+                                    <div><label class="block text-sm font-medium">Button 2 (Optional)</label><input type="text" name="button2" class="w-full p-2 border rounded-md"></div>
+                                    <div><label class="block text-sm font-medium">Button 3 (Optional)</label><input type="text" name="button3" class="w-full p-2 border rounded-md"></div>
+                                    <div class="text-right pt-2"><button type="submit" class="bg-violet-600 text-white px-4 py-2 rounded-md">Send</button></div>
+                                </form>
+                            </div>
+                            <div id="interactive-list_message" class="interactive-tab-content mt-4 hidden">
+                                <form id="listMessageForm" class="space-y-4">
+                                    <div><label class="block text-sm font-medium">Header Text</label><input type="text" name="header" class="w-full p-2 border rounded-md" required></div>
+                                    <div><label class="block text-sm font-medium">Body Text</label><textarea name="body" class="w-full p-2 border rounded-md" rows="2" required></textarea></div>
+                                    <div><label class="block text-sm font-medium">Button Text</label><input type="text" name="button" class="w-full p-2 border rounded-md" required></div>
+                                    <div id="list-sections-container"></div>
+                                    <button type="button" onclick="addListSection()" class="text-sm text-violet-600">Add Section</button>
+                                    <div class="text-right pt-2"><button type="submit" class="bg-violet-600 text-white px-4 py-2 rounded-md">Send</button></div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2976,6 +3108,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         let currentVendorId = null;
         let currentVendorName = null;
         let currentExpensesPage = 1;
+        let isEmojiPickerInitialized = false;
 
         // --- ONGEZA FUNCTION HII MPYA HAPA ---
         async function initializeAppSettings() {
@@ -3114,7 +3247,6 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 if (viewId === 'reports') loadReports();
                 if (viewId === 'conversations') {
                     loadConversations();
-                    setTimeout(initEmojiPicker, 500); // Delay to ensure button is in DOM
                 }
                 if (viewId === 'templates') loadTemplates();
                 if (viewId === 'broadcast') loadBroadcasts();
@@ -4590,28 +4722,53 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             const templates = await fetchApi('get_templates.php');
             if (templates && Array.isArray(templates)) {
-                list.innerHTML = templates.map(t => `
-                    <div onclick="selectTemplateContent('${t.body.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')" class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
-                        <div class="flex justify-between mb-1">
-                            <span class="font-semibold text-sm text-gray-800 group-hover:text-violet-700">${t.name}</span>
-                            <span class="text-xs bg-gray-100 px-2 rounded text-gray-500">${t.status}</span>
+                const approvedTemplates = templates.filter(t => t.status === 'APPROVED');
+
+                if (approvedTemplates.length > 0) {
+                    list.innerHTML = approvedTemplates.map(t => `
+                        <div onclick="selectTemplateContent('${t.body.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')" class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
+                            <div class="flex justify-between mb-1">
+                                <span class="font-semibold text-sm text-gray-800 group-hover:text-violet-700">${t.name}</span>
+                                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Approved</span>
+                            </div>
+                            <p class="text-xs text-gray-500 line-clamp-2">${t.body}</p>
                         </div>
-                        <p class="text-xs text-gray-500 line-clamp-2">${t.body}</p>
-                    </div>
-                `).join('');
+                    `).join('');
+                } else {
+                    list.innerHTML = '<p class="text-center text-gray-500">No approved templates found.</p>';
+                }
             } else {
-                list.innerHTML = '<p class="text-center text-gray-500">No templates found.</p>';
+                list.innerHTML = '<p class="text-center text-gray-500">Could not load templates.</p>';
             }
         }
 
         function selectTemplateContent(body) {
-            const input = document.getElementById('messageInput');
-            input.value = body;
             closeModal('templateSelectorModal');
-            input.focus();
-            // Trigger resize
-            input.style.height = 'auto';
-            input.style.height = input.scrollHeight + 'px';
+            const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
+            const variables = [...new Set(Array.from(body.matchAll(variableRegex), m => m[1]))];
+
+            if (variables.length > 0) {
+                // Has variables, open the new modal
+                document.getElementById('templateBodyToFill').value = body;
+                const container = document.getElementById('variable-inputs-container');
+                container.innerHTML = ''; // Clear previous fields
+                variables.forEach(variable => {
+                    container.innerHTML += `
+                        <div>
+                            <label for="var-${variable}" class="block text-sm font-medium text-gray-700">${variable.replace(/_/g, ' ')}</label>
+                            <input type="text" id="var-${variable}" name="${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required>
+                        </div>
+                    `;
+                });
+                openModal('fillTemplateVariablesModal');
+            } else {
+                // No variables, just fill the input
+                const input = document.getElementById('messageInput');
+                input.value = body;
+                input.focus();
+                input.style.height = 'auto';
+                input.style.height = input.scrollHeight + 'px';
+            }
         }
 
         function selectConversation(id, name, phone, status, assignee, profileImage = null) {
@@ -4665,11 +4822,16 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             loadAssignUsers();
             loadCrmData(id); // Pro Feature: CRM Sidebar
 
+            if (!isEmojiPickerInitialized) {
+                initEmojiPicker();
+                isEmojiPickerInitialized = true;
+            }
+
             activeChatInterval = setInterval(() => {
                 if (currentConversationId === id) {
                     loadMessages(id, name, 1, false);
                 }
-            }, 3000);
+            }, 1000); // User requested 1-second refresh
         }
 
         // --- ASSIGN MENU LOGIC ---
@@ -4913,7 +5075,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 }
             }
 
-            const timestampHtml = `<span class="message-timestamp select-none">${timeString}${statusIcon}</span>`;
+            const timestampHtml = `<span class="message-timestamp select-none">${timeString}<span class="status-icon-container">${statusIcon}</span></span>`;
 
             let bubbleClass = 'message-agent';
             if (!isAgent) {
@@ -5055,8 +5217,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             messageInput.style.height = 'auto';
             if (attachedFileInput) attachedFileInput.value = '';
 
-            const attachmentPreview = document.querySelector('.attachment-preview-container');
-            if (attachmentPreview) attachmentPreview.remove();
+            // Corrected selector to use ID
+            const attachmentPreview = document.getElementById('attachment-preview-container');
+            if (attachmentPreview) {
+                attachmentPreview.classList.add('hidden');
+                attachmentPreview.classList.remove('flex');
+            }
 
 
             try {
@@ -7836,6 +8002,30 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         }
                         break;
                     }
+                    case 'fillVariablesForm': {
+                        const templateBody = form.querySelector('#templateBodyToFill').value;
+                        const formData = new FormData(form);
+                        let filledBody = templateBody;
+                        for (let [key, value] of formData.entries()) {
+                            if (key !== 'templateBodyToFill') {
+                                // Create a regex to replace all occurrences of {{variable}}
+                                const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+                                filledBody = filledBody.replace(regex, value);
+                            }
+                        }
+
+                        // Now, place the filled content into the main message input and send
+                        const messageInput = document.getElementById('messageInput');
+                        messageInput.value = filledBody;
+
+                        // Simulate a click on the main send button by calling sendMessage
+                        const fakeEvent = { preventDefault: () => {} };
+                        await sendMessage(fakeEvent);
+
+                        closeModal('fillTemplateVariablesModal');
+                        form.reset();
+                        break;
+                    }
                     case 'trackProgressModal':
                         openTrackProgressModal(form.dataset.expenseId);
                         break;
@@ -8299,34 +8489,29 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             if (!file || !currentConversationId) return;
 
             const attachmentBtn = document.getElementById('attachment-btn');
-            const chatFooter = document.getElementById('chat-footer');
+            const previewContainer = document.getElementById('attachment-preview-container');
+            const fileNameEl = previewContainer.querySelector('.file-name');
+            const statusEl = previewContainer.querySelector('.upload-status');
+            const iconEl = previewContainer.querySelector('.file-icon');
+            const removeBtn = document.getElementById('remove-attachment-btn');
+            const attachedUrlInput = document.getElementById('attached_file_url');
 
-            // Remove any existing preview
-            const existingPreview = chatFooter.querySelector('.attachment-preview-container');
-            if (existingPreview) existingPreview.remove();
-
-            const previewEl = document.createElement('div');
-            previewEl.className = 'attachment-preview-container flex items-center gap-3 p-2 bg-gray-100 border border-gray-200 rounded-lg text-sm mb-2';
-            previewEl.innerHTML = `
-                <div class="file-icon text-gray-500 text-lg"><i class="fas fa-circle-notch fa-spin"></i></div>
-                <div class="flex-1">
-                    <div class="file-name font-medium truncate">${file.name}</div>
-                    <div class="upload-status text-xs text-gray-500">Uploading...</div>
-                </div>
-                <button type="button" class="remove-file text-red-500 hover:text-red-700 font-bold p-1 text-lg leading-none">&times;</button>
-            `;
-
-            chatFooter.insertBefore(previewEl, chatFooter.firstChild);
+            previewContainer.classList.remove('hidden');
+            previewContainer.classList.add('flex');
+            fileNameEl.textContent = file.name;
+            statusEl.textContent = 'Uploading...';
+            iconEl.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
             attachmentBtn.disabled = true;
 
             const removePreview = () => {
-                previewEl.remove();
-                const hiddenInput = document.getElementById('attached_file_url');
-                if (hiddenInput) hiddenInput.value = '';
+                previewContainer.classList.add('hidden');
+                previewContainer.classList.remove('flex');
+                attachedUrlInput.value = '';
                 event.target.value = ''; // Clear file input so it can be selected again
+                attachmentBtn.disabled = false;
             };
 
-            previewEl.querySelector('.remove-file').addEventListener('click', removePreview);
+            removeBtn.onclick = removePreview;
 
             const formData = new FormData();
             formData.append('file', file);
@@ -8336,18 +8521,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 const result = await fetchApi('upload_file.php', { method: 'POST', body: formData });
 
                 if (result && result.success && result.file_url) {
-                    previewEl.querySelector('.file-icon').innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
-                    previewEl.querySelector('.upload-status').textContent = 'Ready to send.';
-
-                    let hiddenInput = document.getElementById('attached_file_url');
-                    if (!hiddenInput) {
-                        hiddenInput = document.createElement('input');
-                        hiddenInput.type = 'hidden';
-                        hiddenInput.id = 'attached_file_url';
-                        hiddenInput.name = 'attached_file_url';
-                        document.getElementById('sendMessageForm').appendChild(hiddenInput);
-                    }
-                    hiddenInput.value = result.file_url;
+                    iconEl.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+                    statusEl.textContent = 'Ready to send.';
+                    attachedUrlInput.value = result.file_url;
                     showToast('File attached. Add a caption or send directly.');
                 } else {
                     removePreview();
@@ -8357,7 +8533,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 removePreview();
                 showToast('An error occurred during upload.', 'error');
             } finally {
-                attachmentBtn.disabled = false;
+                attachmentBtn.disabled = false; // Should always be re-enabled
             }
         }
 
@@ -8376,10 +8552,54 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
         }
 
+        function setupThemeSwitcher() {
+            const themeSwitcher = document.getElementById('theme-switcher');
+            const sunIcon = '<i class="fas fa-sun text-xl"></i>';
+            const moonIcon = '<i class="fas fa-moon text-xl"></i>';
+
+            // Function to apply theme
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    themeSwitcher.innerHTML = sunIcon;
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    themeSwitcher.innerHTML = moonIcon;
+                }
+            };
+
+            // Check for saved theme in localStorage
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else {
+                // Optional: Check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    applyTheme('dark');
+                } else {
+                    applyTheme('light');
+                }
+            }
+
+            // Add click event listener
+            themeSwitcher.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    applyTheme('light');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    applyTheme('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             renderAllModals();
             await initializeAppSettings();
             setupEventListeners();
+            setupThemeSwitcher();
+
 
             // Check hash for initial view
             const hash = window.location.hash.substring(1);
