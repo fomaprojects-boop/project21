@@ -25,10 +25,11 @@ try {
             COALESCE(con.name, con.phone_number, 'Unknown') as contact_name,
             con.phone_number,
             u.full_name as assignee_name,
-            (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.sender_type = 'contact' AND m.status = 'received') as unread_count
+            COUNT(m.id) as unread_count
         FROM conversations c
         JOIN contacts con ON c.contact_id = con.id
         LEFT JOIN users u ON c.assigned_to = u.id
+        LEFT JOIN messages m ON c.id = m.conversation_id AND m.sender_type = 'contact' AND m.status = 'received'
         WHERE 1=1
     ";
 
