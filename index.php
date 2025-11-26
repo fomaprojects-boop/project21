@@ -38,26 +38,26 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .sidebar-link:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #8b5cf6; } /* slate-800, slate-50, violet-500 */
         .sidebar-link.active { background: linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0) 100%); border-left-color: #8b5cf6; color: #fff; font-weight: 600; }
         .modal { transition: opacity 0.3s ease; }
-        .conversation-item {
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border-left: 4px solid transparent;
+        .conversation-item { 
+            transition: all 0.2s ease; 
+            cursor: pointer; 
+            border-left: 4px solid transparent; 
         }
-        .conversation-item:hover {
-            background-color: #f8fafc;
+        .conversation-item:hover { 
+            background-color: #f8fafc; 
             transform: translateX(2px);
         }
-        .conversation-item.active {
-            background-color: #f5f3ff;
-            border-left-color: #7c3aed;
+        .conversation-item.active { 
+            background-color: #f5f3ff; 
+            border-left-color: #7c3aed; 
             font-weight: 600;
         }
         html.dark .conversation-item:hover {
              background-color: #1f2937;
         }
-        html.dark .conversation-item.active {
-            background-color: #2e1065;
-            border-left-color: #a78bfa;
+        html.dark .conversation-item.active { 
+            background-color: #2e1065; 
+            border-left-color: #a78bfa; 
         }
 
         /* Custom Scrollbar */
@@ -442,7 +442,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             color-scheme: dark;
         }
         html.dark body {
-            background-color: #111827;
+            background-color: #111827; 
             color: #f9fafb;
         }
         html.dark main {
@@ -3379,24 +3379,32 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
         // --- UTILITY FUNCTIONS ---
         function playNotificationSound() {
-            // Use Web Audio API for reliability across browsers without needing a file.
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            if (!audioContext) {
-                console.warn("Web Audio API is not supported in this browser.");
-                return;
+            const audio = new Audio('assets/ding.mp3');
+            const playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn("Could not play notification sound file, falling back to generated tone.", error);
+                    // Fallback to Web Audio API
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    if (!audioContext) {
+                        console.warn("Web Audio API is not supported in this browser.");
+                        return;
+                    }
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                });
             }
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A nice 'ping' frequency (A5 note)
-            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime); // Volume
-
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.15); // Play for 150ms
         }
         function safeDate(dateStr) {
             if (!dateStr) return new Date();
@@ -4755,7 +4763,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const templates = await fetchApi('get_templates.php');
             if (templates && Array.isArray(templates)) {
                 const approvedTemplates = templates.filter(t => t.status === 'APPROVED');
-
+                
                 if (approvedTemplates.length > 0) {
                     list.innerHTML = approvedTemplates.map(t => `
                         <div onclick="selectTemplateContent('${t.body.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')" class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
@@ -4875,7 +4883,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 messageInput.disabled = true;
                 messageInput.placeholder = 'Select a template to restart the conversation.';
                 inputWrapper.classList.add('opacity-50', 'bg-gray-100');
-
+                
                 // Add the "chat closed" indicator message
                 const closedIndicator = document.createElement('div');
                 closedIndicator.id = 'chat-closed-indicator';
@@ -4889,7 +4897,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 messageInput.placeholder = 'Type a message...';
                 inputWrapper.classList.remove('opacity-50', 'bg-gray-100');
             }
-
+            
             if (!isEmojiPickerInitialized) {
                 initEmojiPicker();
                 isEmojiPickerInitialized = true;
@@ -5297,7 +5305,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             messageInput.value = '';
             messageInput.style.height = 'auto';
             if (attachedFileInput) attachedFileInput.value = '';
-
+            
             // Corrected selector to use ID
             const attachmentPreview = document.getElementById('attachment-preview-container');
             if (attachmentPreview) {
@@ -8106,11 +8114,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 filledBody = filledBody.replace(regex, value);
                             }
                         }
-
+                        
                         // Now, place the filled content into the main message input and send
                         const messageInput = document.getElementById('messageInput');
                         messageInput.value = filledBody;
-
+                        
                         // Simulate a click on the main send button by calling sendMessage
                         const fakeEvent = { preventDefault: () => {} };
                         await sendMessage(fakeEvent);
