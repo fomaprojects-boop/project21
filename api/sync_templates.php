@@ -12,17 +12,30 @@ require_once 'db.php';
 require_once 'config.php';
 
 try {
-    // Get WhatsApp credentials from settings for the current user/account
-    $stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM settings WHERE id = 1"); // Assuming settings are stored with id=1
-    $stmt->execute();
-    $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+    // First, try to get user-specific credentials
+    $user_id = $_SESSION['user_id'];
+    $stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user_settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$settings || empty($settings['whatsapp_business_account_id']) || empty($settings['whatsapp_access_token'])) {
-        throw new Exception('WhatsApp Business Account ID or Access Token is not configured.');
+    if ($user_settings && !empty($user_settings['whatsapp_business_account_id']) && !empty($user_settings['whatsapp_access_token'])) {
+        $waba_id = $user_settings['whatsapp_business_account_id'];
+        $access_token = $user_settings['whatsapp_access_token'];
+    } else {
+        // Fallback to global settings
+        $settings_stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM settings WHERE id = 1");
+        $settings_stmt->execute();
+        $settings = $settings_stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($settings && !empty($settings['whatsapp_business_account_id']) && !empty($settings['whatsapp_access_token'])) {
+            $waba_id = $settings['whatsapp_business_account_id'];
+            $access_token = $settings['whatsapp_access_token'];
+        }
     }
 
-    $waba_id = $settings['whatsapp_business_account_id'];
-    $access_token = $settings['whatsapp_access_token'];
+    if (!isset($waba_id) || !isset($access_token)) {
+        throw new Exception('WhatsApp Business Account ID or Access Token is not configured.');
+    }
 
     $url = "https://graph.facebook.com/v21.0/{$waba_id}/message_templates";
 
