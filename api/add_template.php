@@ -13,6 +13,7 @@ require_once 'db.php';
 $data = json_decode(file_get_contents('php://input'), true);
 
 $name = trim($data['name'] ?? '');
+$category = trim($data['category'] ?? 'UTILITY');
 $body = trim($data['body'] ?? '');
 $header = trim($data['header'] ?? null);
 $footer = trim($data['footer'] ?? null);
@@ -24,14 +25,12 @@ if (empty($name) || empty($body)) {
     exit();
 }
 
-// Andaa quick replies ziwe JSON string
 $quick_replies = null;
 if (!empty($quick_replies_raw)) {
     $replies_array = array_map('trim', explode(',', $quick_replies_raw));
     $quick_replies = json_encode($replies_array);
 }
 
-// Andaa variables ziwe JSON string
 $variables = null;
 if (!empty($variables_raw) && is_array($variables_raw)) {
     $variables = json_encode($variables_raw);
@@ -56,29 +55,51 @@ try {
 
     $last_insert_id = $pdo->lastInsertId();
 
-    // Meta API Integration
-    $settings_stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM settings WHERE id = 1");
-    $settings_stmt->execute();
-    $settings = $settings_stmt->fetch(PDO::FETCH_ASSOC);
+    $user_id = $_SESSION['user_id'];
+    $stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user_settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($settings && !empty($settings['whatsapp_business_account_id']) && !empty($settings['whatsapp_access_token'])) {
-        $waba_id = $settings['whatsapp_business_account_id'];
-        $access_token = $settings['whatsapp_access_token'];
+    if ($user_settings && !empty($user_settings['whatsapp_business_account_id']) && !empty($user_settings['whatsapp_access_token'])) {
+        $waba_id = $user_settings['whatsapp_business_account_id'];
+        $access_token = $user_settings['whatsapp_access_token'];
+    } else {
+        $settings_stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM settings WHERE id = 1");
+        $settings_stmt->execute();
+        $settings = $settings_stmt->fetch(PDO::FETCH_ASSOC);
 
-        $meta_body = $body;
+        if ($settings && !empty($settings['whatsapp_business_account_id']) && !empty($settings['whatsapp_access_token'])) {
+            $waba_id = $settings['whatsapp_business_account_id'];
+            $access_token = $settings['whatsapp_access_token'];
+        }
+    }
+
+    if (isset($waba_id) && isset($access_token)) {
+        $meta_body_text = $body;
+        $body_examples = [];
         if (!empty($variables_raw)) {
             $i = 1;
             foreach ($variables_raw as $var) {
-                $meta_body = str_replace("{{{$var}}}", "{{{$i}}}", $meta_body);
+                $meta_body_text = str_replace("{{{$var}}}", "{{{$i}}}", $meta_body_text);
+                // Provide a generic example for each body variable
+                $body_examples[] = "Example for {$var}";
                 $i++;
             }
         }
 
-        $components = [
-            ['type' => 'BODY', 'text' => $meta_body]
-        ];
+        $body_component = ['type' => 'BODY', 'text' => $meta_body_text];
+        if (!empty($body_examples)) {
+            $body_component['example'] = ['body_text' => [$body_examples]];
+        }
+
+        $components = [$body_component];
+
         if (!empty($header)) {
-            $components[] = ['type' => 'HEADER', 'format' => 'TEXT', 'text' => $header];
+            $header_component = ['type' => 'HEADER', 'format' => 'TEXT', 'text' => $header];
+            if (preg_match('/{{\s*([a-zA-Z0-9_]+)\s*}}/', $header)) {
+                 $header_component['example'] = ['header_text' => ["Value for Header"]];
+            }
+            $components[] = $header_component;
         }
         if (!empty($footer)) {
             $components[] = ['type' => 'FOOTER', 'text' => $footer];
@@ -91,15 +112,21 @@ try {
             $components[] = ['type' => 'BUTTONS', 'buttons' => $buttons];
         }
 
+        $clean_name = preg_replace('/[^a-z0-9_]/i', '', str_replace(' ', '_', $name));
+        $meta_template_name = strtolower($clean_name);
+
+        if (empty($meta_template_name)) {
+            throw new Exception("Template name becomes empty after sanitization. Please use a different name with alphanumeric characters.");
+        }
+
         $payload = [
-            'name' => strtolower(str_replace(' ', '_', $name)),
+            'name' => $meta_template_name,
             'language' => 'en_US',
-            'category' => 'UTILITY',
+            'category' => $category,
             'components' => $components
         ];
 
         $url = "https://graph.facebook.com/v21.0/{$waba_id}/message_templates";
-
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -109,29 +136,25 @@ try {
             "Authorization: Bearer {$access_token}",
             "Content-Type: application/json"
         ]);
-
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
         if ($http_code < 200 || $http_code >= 300) {
             $error_response = json_decode($response, true);
-            throw new Exception("Meta API Error: " . ($error_response['error']['message'] ?? 'Unknown error'));
+            $error_message = $error_response['error']['message'] ?? 'Unknown error';
+            $error_details = $error_response['error']['error_data']['details'] ?? '';
+            $full_error_message = "Meta API Error: {$error_message}";
+            if (!empty($error_details)) {
+                $full_error_message .= " (Details: {$error_details})";
+            }
+            throw new Exception($full_error_message);
         }
 
-        // Save Meta's response details
         $meta_response = json_decode($response, true);
         if (isset($meta_response['id'])) {
-            $update_stmt = $pdo->prepare(
-                "UPDATE message_templates
-                 SET meta_template_id = ?, meta_template_name = ?
-                 WHERE id = ?"
-            );
-            $update_stmt->execute([
-                $meta_response['id'],
-                $payload['name'], // The name we sent to Meta
-                $last_insert_id
-            ]);
+            $update_stmt = $pdo->prepare("UPDATE message_templates SET meta_template_id = ?, meta_template_name = ? WHERE id = ?");
+            $update_stmt->execute([$meta_response['id'], $meta_template_name, $last_insert_id]);
         }
     }
 
