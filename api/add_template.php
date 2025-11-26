@@ -38,9 +38,11 @@ if (!empty($variables_raw) && is_array($variables_raw)) {
 }
 
 try {
+    $pdo->beginTransaction();
+
     $stmt = $pdo->prepare(
         "INSERT INTO message_templates (name, body, header, footer, quick_replies, variables, status) 
-         VALUES (?, ?, ?, ?, ?, ?, 'Pending')"
+         VALUES (?, ?, ?, ?, ?, ?, 'PENDING')"
     );
     
     $stmt->execute([
@@ -52,10 +54,95 @@ try {
         $variables
     ]);
 
-    echo json_encode(['status' => 'success', 'message' => "Template '{$name}' created successfully and is pending approval."]);
+    $last_insert_id = $pdo->lastInsertId();
 
-} catch (PDOException $e) {
+    // Meta API Integration
+    $settings_stmt = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM settings WHERE id = 1");
+    $settings_stmt->execute();
+    $settings = $settings_stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($settings && !empty($settings['whatsapp_business_account_id']) && !empty($settings['whatsapp_access_token'])) {
+        $waba_id = $settings['whatsapp_business_account_id'];
+        $access_token = $settings['whatsapp_access_token'];
+
+        $meta_body = $body;
+        if (!empty($variables_raw)) {
+            $i = 1;
+            foreach ($variables_raw as $var) {
+                $meta_body = str_replace("{{{$var}}}", "{{{$i}}}", $meta_body);
+                $i++;
+            }
+        }
+
+        $components = [
+            ['type' => 'BODY', 'text' => $meta_body]
+        ];
+        if (!empty($header)) {
+            $components[] = ['type' => 'HEADER', 'format' => 'TEXT', 'text' => $header];
+        }
+        if (!empty($footer)) {
+            $components[] = ['type' => 'FOOTER', 'text' => $footer];
+        }
+        if (!empty($quick_replies_raw)) {
+            $buttons = [];
+            foreach (explode(',', $quick_replies_raw) as $reply) {
+                $buttons[] = ['type' => 'QUICK_REPLY', 'text' => trim($reply)];
+            }
+            $components[] = ['type' => 'BUTTONS', 'buttons' => $buttons];
+        }
+
+        $payload = [
+            'name' => strtolower(str_replace(' ', '_', $name)),
+            'language' => 'en_US',
+            'category' => 'UTILITY',
+            'components' => $components
+        ];
+
+        $url = "https://graph.facebook.com/v21.0/{$waba_id}/message_templates";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer {$access_token}",
+            "Content-Type: application/json"
+        ]);
+
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($http_code < 200 || $http_code >= 300) {
+            $error_response = json_decode($response, true);
+            throw new Exception("Meta API Error: " . ($error_response['error']['message'] ?? 'Unknown error'));
+        }
+
+        // Save Meta's response details
+        $meta_response = json_decode($response, true);
+        if (isset($meta_response['id'])) {
+            $update_stmt = $pdo->prepare(
+                "UPDATE message_templates
+                 SET meta_template_id = ?, meta_template_name = ?
+                 WHERE id = ?"
+            );
+            $update_stmt->execute([
+                $meta_response['id'],
+                $payload['name'], // The name we sent to Meta
+                $last_insert_id
+            ]);
+        }
+    }
+
+    $pdo->commit();
+    echo json_encode(['status' => 'success', 'message' => "Template '{$name}' created and submitted for approval."]);
+
+} catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
 ?>

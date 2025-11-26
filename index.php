@@ -173,6 +173,91 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .status-Partially-Paid { background-color: #fef9c3; color: #854d0e; }
         .status-Scheduled { background-color: #dbeafe; color: #1e40af; }
         .status-Draft { background-color: #e5e7eb; color: #4b5563; }
+        .phone-mockup {
+            border: 8px solid #111;
+            border-radius: 40px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            background: #E5DDD5; /* WhatsApp background color */
+            padding: 15px; /* Reduced padding slightly */
+            display: flex; /* USE FLEXBOX */
+            flex-direction: column; /* Stack items vertically */
+            min-height: 350px; /* Give a consistent minimum height */
+            position: relative; /* Keep for potential future absolute elements if needed, but not for status */
+        }
+        .template-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 5px; /* Add some horizontal padding */
+        }
+        .template-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 60%; /* Prevent long names from pushing status badge */
+        }
+        .template-status-badge {
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            border-width: 1px;
+            flex-shrink: 0; /* Prevent badge from shrinking */
+        }
+        .template-content-wrapper {
+            flex-grow: 1; /* This will push the footer down */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .whatsapp-bubble {
+            background-color: #DCF8C6; /* WhatsApp green */
+            color: #303030;
+            padding: 10px 15px;
+            border-radius: 12px;
+            max-width: 100%;
+            width: 100%;
+            margin-bottom: 10px;
+            position: relative;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+        }
+
+        .whatsapp-bubble.has-header .header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .whatsapp-bubble .body {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .whatsapp-bubble .footer {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .whatsapp-buttons {
+            margin-top: 10px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        .whatsapp-button {
+            background: #fff;
+            border: 1px solid #ddd;
+            color: #3498db;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
         .workflow-template-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); transition: all 0.2s ease-in-out;}
         .workflow-node { background-color: white; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); width: 300px; text-align: left; position: relative; transition: all 0.2s ease-in-out; cursor: pointer; }
         .workflow-node:hover { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
@@ -307,9 +392,42 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
         }
 
+        .variable-chip {
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .variable-chip:hover {
+            background-color: #d1d5db;
+            transform: scale(1.05);
+        }
+
+        /* Custom style to make the template modal smaller */
+        #addTemplateModal .w-full.max-w-2xl {
+            max-width: 40rem; /* equivalent to max-w-xl in Tailwind */
+        }
+
     </style>
     <!-- Facebook SDK for JavaScript -->
     <script>
+        function insertVariable(variable) {
+            const textarea = document.getElementById('templateBody');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const before = text.substring(0, start);
+            const after = text.substring(end, text.length);
+            textarea.value = before + variable + after;
+            textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+            textarea.focus();
+            updateTemplateVariables();
+        }
+
         window.fbAsyncInit = function() {
             // Debugging: Log App ID to console
             console.log('Initializing Facebook SDK with App ID:', '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>');
@@ -1074,7 +1192,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </form>
                 </div>`,
             broadcast: `<div class="p-8"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-gray-800">Broadcast History</h2><button onclick="openBroadcastModal()" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-plus mr-2"></i>New Broadcast</button></div><div class="bg-white rounded-lg shadow-md overflow-hidden border"><table class="w-full text-left"><thead class="bg-gray-100"><tr><th class="p-4 font-semibold">Campaign Name</th><th class="p-4 font-semibold">Status</th><th class="p-4 font-semibold">Scheduled For</th><th class="p-4 font-semibold">Actions</th></tr></thead><tbody id="broadcasts-table-body" class="divide-y"></tbody></table></div></div>`,
-            templates: `<div class="p-8"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-gray-800">Message Templates</h2><button onclick="openTemplateModal()" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-plus mr-2"></i>New Template</button></div><div id="templates-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>`,
+            templates: `<div class="p-8"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-gray-800">Message Templates</h2><div><button onclick="openTemplateModal()" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-plus mr-2"></i>New Template</button><button onclick="syncTemplates()" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 font-semibold ml-4"><i class="fas fa-sync-alt mr-2"></i>Sync Status</button></div></div><div id="templates-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>`,
             workflows: `<div class="h-full flex flex-col">
     <div id="workflow-main-view" class="p-8 h-full overflow-y-auto">
         <!-- Hero Section -->
@@ -2470,7 +2588,43 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 </div>
             </div>`,
             addContactModal: `<div id="addContactModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center"><div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"><div class="mt-3 text-center"><h3 class="text-lg leading-6 font-medium text-gray-900">Add New Contact</h3><div class="mt-2 px-7 py-3"><form id="addContactForm" class="space-y-4"><input id="contactName" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Full Name" required><input id="contactEmail" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="email" placeholder="Email Address (Optional)"><input id="contactPhone" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Phone Number (e.g. +255...)" required></form></div><div class="items-center px-4 py-3"><button type="submit" form="addContactForm" class="px-4 py-2 bg-violet-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-violet-600">Save Contact</button><button type="button" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300" onclick="closeModal('addContactModal')">Cancel</button></div></div></div></div>`,
-            addTemplateModal: `<div id="addTemplateModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white"><div class="mt-3"><h3 id="template-modal-title" class="text-lg text-center leading-6 font-medium text-gray-900">Create New Template</h3><form id="addTemplateForm" class="mt-4 space-y-4 p-4"><input id="templateId" type="hidden"><input id="templateName" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Template Name" required><input id="templateHeader" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Header (Optional)"><div class="grid grid-cols-2 gap-4"><div><label for="templateBody" class="block text-sm font-medium text-gray-700">Body</label><textarea id="templateBody" oninput="updateTemplateVariables()" class="px-3 py-2 text-gray-700 border rounded-md w-full font-mono" rows="8" placeholder="e.g. Hello {{customer_name}}" required></textarea></div><div><label class="block text-sm font-medium text-gray-700">Common Variables</label><div class="p-3 bg-gray-50 rounded-md border h-full text-sm"><p class="font-semibold mb-2">Click to copy:</p><div class="space-y-1"><span onclick="copyVariable('{{customer_name}}')" class="cursor-pointer font-mono bg-gray-200 text-gray-700 px-2 py-1 rounded">customer_name</span> <span onclick="copyVariable('{{order_number}}')" class="cursor-pointer font-mono bg-gray-200 text-gray-700 px-2 py-1 rounded">order_number</span></div></div></div></div><div id="template-vars-container" class="hidden"><label class="block text-sm font-medium text-gray-700">Variable Definitions</label><div id="template-vars-list" class="p-3 bg-gray-50 rounded-md border space-y-2"></div></div><input id="templateFooter" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Footer (Optional, e.g. Team ChatMe or a URL)"><input id="templateQuickReplies" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Quick Replies (comma-separated, e.g., Yes,No,👍)"><div class="items-center pt-4 flex justify-end space-x-2"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('addTemplateModal')">Cancel</button><button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Save Template</button></div></form></div></div></div>`,
+            addTemplateModal: `<div id="addTemplateModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
+                <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <h3 id="template-modal-title" class="text-lg text-center leading-6 font-medium text-gray-900">Create New Template</h3>
+                        <form id="addTemplateForm" class="mt-4 space-y-4 p-4">
+                            <input id="templateId" type="hidden">
+                            <input id="templateName" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Template Name" required>
+                            <input id="templateHeader" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Header (Optional)">
+
+                            <div>
+                                <label for="templateBody" class="block text-sm font-medium text-gray-700">Body</label>
+                                <textarea id="templateBody" oninput="updateTemplateVariables()" class="px-3 py-2 text-gray-700 border rounded-md w-full font-mono" rows="8" placeholder="e.g. Hello {{customer_name}}" required></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Insert Variable</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="insertVariable('{{customer_name}}')" class="variable-chip">customer_name</button>
+                                    <button type="button" onclick="insertVariable('{{company_name}}')" class="variable-chip">company_name</button>
+                                    <button type="button" onclick="insertVariable('{{order_number}}')" class="variable-chip">order_number</button>
+                                    <button type="button" onclick="insertVariable('{{order_status}}')" class="variable-chip">order_status</button>
+                                    <button type="button" onclick="insertVariable('{{invoice_amount}}')" class="variable-chip">invoice_amount</button>
+                                    <button type="button" onclick="insertVariable('{{payment_link}}')" class="variable-chip">payment_link</button>
+                                    <button type="button" onclick="insertVariable('{{delivery_date}}')" class="variable-chip">delivery_date</button>
+                                </div>
+                            </div>
+
+                            <div id="template-vars-container" class="hidden"><label class="block text-sm font-medium text-gray-700">Variable Definitions</label><div id="template-vars-list" class="p-3 bg-gray-50 rounded-md border space-y-2"></div></div>
+                            <input id="templateFooter" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Footer (Optional, e.g. Team ChatMe or a URL)">
+                            <input id="templateQuickReplies" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Quick Replies (comma-separated, e.g., Yes,No,👍)">
+                            <div class="items-center pt-4 flex justify-end space-x-2">
+                                <button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('addTemplateModal')">Cancel</button>
+                                <button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Save Template</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>`,
             newBroadcastModal: `<div id="newBroadcastModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center"><div class="relative mx-auto p-5 border w-[700px] shadow-lg rounded-md bg-white"><div class="mt-3"><h3 class="text-lg text-center font-medium text-gray-900">Create New Broadcast</h3><form id="newBroadcastForm" class="mt-4 space-y-4 p-4"><input name="campaign_name" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Campaign Name" required><div><label class="block text-sm font-medium text-gray-700 mb-2">Recipients</label><div class="flex space-x-4"><label class="inline-flex items-center"><input type="radio" name="recipient_type" value="all" class="form-radio" checked onchange="toggleContactSelect(this.value)"> <span class="ml-2">All</span></label><label class="inline-flex items-center"><input type="radio" name="recipient_type" value="select" class="form-radio" onchange="toggleContactSelect(this.value)"> <span class="ml-2">Select</span></label></div><div id="contact-select-container" class="mt-2 hidden"><label for="selectContacts" class="block text-sm font-medium">Choose contacts</label><select name="selected_contacts[]" id="selectContacts" multiple class="mt-1 block w-full rounded-md h-40 border-gray-300"></select></div></div><div><label class="block text-sm font-medium text-gray-700 mb-2">Message Type</label><div class="flex space-x-4"><label class="inline-flex items-center"><input type="radio" name="message_type" value="custom" class="form-radio" checked onchange="toggleBroadcastMessageType(this.value)"> <span class="ml-2">Custom Message</span></label><label class="inline-flex items-center"><input type="radio" name="message_type" value="template" class="form-radio" onchange="toggleBroadcastMessageType(this.value)"> <span class="ml-2">Use Template</span></label></div></div><div id="broadcast-custom-message-container"><label class="block text-sm font-medium text-gray-700 mb-2">Message</label><textarea name="message_body" class="px-3 py-2 border rounded-md w-full" rows="4" placeholder="Type your message..."></textarea></div><div id="broadcast-template-select-container" class="hidden"><label for="selectTemplate" class="block text-sm font-medium">Choose an approved template</label><select name="template_id" id="selectTemplate" class="mt-1 block w-full rounded-md border-gray-300"></select></div><div><label class="block text-sm font-medium text-gray-700 mb-2">Schedule</label><div class="flex space-x-4"><label class="inline-flex items-center"><input type="radio" name="schedule_type" value="now" class="form-radio" checked onchange="toggleScheduleDate(this.value)"> <span class="ml-2">Now</span></label><label class="inline-flex items-center"><input type="radio" name="schedule_type" value="later" class="form-radio" onchange="toggleScheduleDate(this.value)"> <span class="ml-2">Later</span></label></div><div id="schedule-date-container" class="mt-2 hidden"><input name="scheduled_at" class="px-3 py-2 border rounded-md w-full" type="datetime-local"></div></div><div class="items-center pt-4 flex justify-end space-x-2"><button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md" onclick="closeModal('newBroadcastModal')">Cancel</button><button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Schedule/Send</button></div></form></div></div></div>`,
             configureNodeModal: `<div id="configureNodeModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-1/3 shadow-lg rounded-md bg-white"><h3 id="configure-node-title" class="text-lg font-medium text-gray-900 mb-4"></h3><div id="configure-node-body"></div><div class="mt-4 flex justify-end gap-2"><button type="button" onclick="closeModal('configureNodeModal')" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="button" onclick="updateNodeContent()" class="px-4 py-2 bg-violet-600 text-white rounded-md">Save</button></div></div></div>`,
             selectTriggerModal: `<div id="selectTriggerModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"><div class="relative mx-auto p-6 border w-full max-w-3xl shadow-xl rounded-2xl bg-white"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-gray-800">Select a Trigger</h3><button onclick="closeModal('selectTriggerModal')" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-times text-2xl"></i></button></div><div class="grid grid-cols-2 md:grid-cols-3 gap-4"><button onclick="selectTrigger('Conversation Started')" class="p-4 border border-gray-200 rounded-xl hover:bg-violet-50 hover:border-violet-200 hover:shadow-md transition-all text-left group"><div class="bg-violet-100 text-violet-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-comments"></i></div><h4 class="font-semibold text-gray-800">Conversation Started</h4><p class="text-xs text-gray-500 mt-1">When a new chat begins</p></button><button onclick="selectTrigger('Message Received')" class="p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 hover:shadow-md transition-all text-left group"><div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-envelope"></i></div><h4 class="font-semibold text-gray-800">Message Received</h4><p class="text-xs text-gray-500 mt-1">When any message arrives</p></button><button onclick="selectTrigger('Payment Completed')" class="p-4 border border-gray-200 rounded-xl hover:bg-green-50 hover:border-green-200 hover:shadow-md transition-all text-left group"><div class="bg-green-100 text-green-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-gray-800">Payment Completed</h4><p class="text-xs text-gray-500 mt-1">When a payment is successful</p></button><button onclick="selectTrigger('Order Status Changed')" class="p-4 border border-gray-200 rounded-xl hover:bg-orange-50 hover:border-orange-200 hover:shadow-md transition-all text-left group"><div class="bg-orange-100 text-orange-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-shipping-fast"></i></div><h4 class="font-semibold text-gray-800">Order Status</h4><p class="text-xs text-gray-500 mt-1">When an order updates</p></button><button onclick="selectTrigger('New Contact')" class="p-4 border border-gray-200 rounded-xl hover:bg-pink-50 hover:border-pink-200 hover:shadow-md transition-all text-left group"><div class="bg-pink-100 text-pink-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-user-plus"></i></div><h4 class="font-semibold text-gray-800">New Contact</h4><p class="text-xs text-gray-500 mt-1">When a contact is created</p></button><button onclick="selectTrigger('Tag Added')" class="p-4 border border-gray-200 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 hover:shadow-md transition-all text-left group"><div class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-tag"></i></div><h4 class="font-semibold text-gray-800">Tag Added</h4><p class="text-xs text-gray-500 mt-1">When a specific tag is added</p></button><button onclick="selectTrigger('Deal Stage Updated')" class="p-4 border border-gray-200 rounded-xl hover:bg-teal-50 hover:border-teal-200 hover:shadow-md transition-all text-left group"><div class="bg-teal-100 text-teal-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-handshake"></i></div><h4 class="font-semibold text-gray-800">Deal Stage Updated</h4><p class="text-xs text-gray-500 mt-1">When a deal moves stages</p></button><button onclick="selectTrigger('Form Submitted')" class="p-4 border border-gray-200 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 hover:shadow-md transition-all text-left group"><div class="bg-yellow-100 text-yellow-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-file-alt"></i></div><h4 class="font-semibold text-gray-800">Form Submitted</h4><p class="text-xs text-gray-500 mt-1">When a form is filled</p></button><button onclick="selectTrigger('Conversation Closed')" class="p-4 border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 hover:shadow-md transition-all text-left group"><div class="bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-times-circle"></i></div><h4 class="font-semibold text-gray-800">Conversation Closed</h4><p class="text-xs text-gray-500 mt-1">When a chat ends</p></button></div></div></div>`,
@@ -5190,18 +5344,69 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             if (result && result.success) loadMessages(currentConversationId, document.getElementById('chat-partner-name').textContent, 1, false);
         }
 
+        async function syncTemplates() {
+            const syncButton = document.querySelector('button[onclick="syncTemplates()"]');
+            syncButton.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i>Syncing...';
+            syncButton.disabled = true;
+
+            try {
+                const result = await fetchApi('sync_templates.php', { method: 'POST' });
+                if (result && result.status === 'success') {
+                    showToast(result.message);
+                    loadTemplates(); // Refresh the view
+                }
+            } finally {
+                syncButton.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sync Status';
+                syncButton.disabled = false;
+            }
+        }
+
         async function loadTemplates() {
             const grid = document.getElementById('templates-grid');
             grid.innerHTML = `<p class="text-gray-500 col-span-3">Loading templates...</p>`;
             const templates = await fetchApi('get_templates.php');
             grid.innerHTML = '';
-            if(templates && Array.isArray(templates) && templates.length > 0) {
-                 templates.forEach(template => {
-                    let varsHtml = (template.variables && template.variables.length > 0) ? `<div class="mt-2 space-y-1">` + template.variables.map(v => `<span class="inline-block bg-gray-200 rounded-full px-2 py-0.5 text-xs font-semibold text-gray-700 font-mono">{{${v}}}</span>`).join(' ') + `</div>` : '';
-                    let repliesHtml = (template.quick_replies && template.quick_replies.length > 0) ? `<div class="mt-3 flex flex-wrap gap-2">` + template.quick_replies.map(reply => `<button class="bg-violet-100 text-violet-800 text-xs font-semibold px-3 py-1 rounded-full cursor-default">${reply}</button>`).join('') + `</div>` : '';
-                    grid.innerHTML += `<div class="bg-white p-5 rounded-lg shadow-md border flex flex-col"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-lg">${template.name}</h4><span class="text-xs font-medium px-2.5 py-0.5 rounded-full flex-shrink-0 status-${template.status}">${template.status}</span></div><div class="flex-grow text-gray-600 bg-gray-50 p-3 rounded-md text-sm border">${template.header ? `<p class="font-bold text-xs text-gray-500 mb-2">${template.header}</p>` : ''}<p class="font-mono whitespace-pre-wrap">${template.body}</p>${template.footer ? `<p class="text-xs text-gray-400 mt-2">${template.footer}</p>` : ''}</div>${varsHtml}${repliesHtml}<div class="mt-4 flex justify-end space-x-2 pt-2 border-t"><button onclick='openTemplateModal(${JSON.stringify(template)})' class="text-gray-500 hover:text-violet-600"><i class="fas fa-pencil-alt"></i></button><button onclick='deleteTemplate(${template.id}, "${template.name.replace(/'/g, "\\'")}")' class="text-gray-500 hover:text-red-600"><i class="fas fa-trash-alt"></i></button></div></div>`;
-                 });
-            } else { grid.innerHTML = `<p class="text-gray-500 col-span-3">No templates found.</p>`; }
+            if (templates && Array.isArray(templates) && templates.length > 0) {
+                templates.forEach(template => {
+                    const statusColors = {
+                        'APPROVED': 'bg-green-100 text-green-800 border-green-200',
+                        'PENDING': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                        'REJECTED': 'bg-red-100 text-red-800 border-red-200'
+                    };
+                    const statusColor = statusColors[template.status] || 'bg-gray-100 text-gray-800 border-gray-200';
+
+                    let buttonsHtml = '';
+                    if (template.quick_replies && template.quick_replies.length > 0) {
+                        buttonsHtml = '<div class="whatsapp-buttons flex flex-col gap-2">' +
+                            template.quick_replies.map(reply => `<div class="whatsapp-button">${reply}</div>`).join('') +
+                            '</div>';
+                    }
+
+                    // Using the new flexbox structure
+                    grid.innerHTML += `
+                        <div class="phone-mockup">
+                            <div class="template-card-header">
+                                <span class="template-name">${template.name}</span>
+                                <span class="template-status-badge ${statusColor}">${template.status}</span>
+                            </div>
+                            <div class="template-content-wrapper">
+                                <div class="whatsapp-bubble ${template.header ? 'has-header' : ''}">
+                                    ${template.header ? `<div class="header">${template.header}</div>` : ''}
+                                    <div class="body">${template.body}</div>
+                                    ${template.footer ? `<div class="footer">${template.footer}</div>` : ''}
+                                </div>
+                                ${buttonsHtml}
+                            </div>
+                            <div class="mt-auto flex justify-end space-x-2 pt-2 border-t border-gray-500/20">
+                                ${template.status !== 'APPROVED' ? `<button onclick='openTemplateModal(${JSON.stringify(template)})' class="text-gray-500 hover:text-violet-600" title="Edit"><i class="fas fa-pencil-alt"></i></button>` : `<button class="text-gray-300 cursor-not-allowed" title="Cannot edit approved templates"><i class="fas fa-pencil-alt"></i></button>`}
+                                <button onclick='deleteTemplate(${template.id}, "${template.name.replace(/'/g, "\\'")}")' class="text-gray-500 hover:text-red-600" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                grid.innerHTML = `<p class="text-gray-500 col-span-3">No templates found.</p>`;
+            }
         }
         async function deleteTemplate(id, name) { if (!confirm(`Delete template "${name}"?`)) return; const result = await fetchApi('delete_template.php', { method: 'POST', body: { id: id } }); if (result && result.status === 'success') { loadTemplates(); } else if (result) { alert('Error: ' + result.message); } }
 
