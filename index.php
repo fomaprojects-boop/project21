@@ -472,6 +472,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
     </script>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
+    <!-- Global Alert Banner -->
+    <div id="global-alert-banner" class="hidden bg-red-500 text-white text-sm font-bold text-center p-2">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <span>You have reached the free tier limit for conversations. Please upgrade your plan to continue sending messages.</span>
+        <a href="#" class="underline ml-2">Upgrade Now</a>
+    </div>
     <div id="page-loader" style="display: none;">
         <div class="loader">
             <div class="dot"></div>
@@ -2542,6 +2548,21 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             </div>`,
             newChatModal: `<div id="newChatModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white"><div class="mt-3"><div class="flex justify-between items-center mb-4"><h3 class="text-lg text-center leading-6 font-medium text-gray-900">Start New Chat</h3><button onclick="closeModal('newChatModal')" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div><div class="relative mb-4"><i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i><input type="text" id="new-chat-search" placeholder="Search contact..." class="w-full pl-10 pr-4 py-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-violet-200 transition-all" onkeyup="searchNewChatContacts()"></div><div id="new-chat-contacts-list" class="max-h-60 overflow-y-auto divide-y divide-gray-100"></div></div></div></div>`,
             templateSelectorModal: `<div id="templateSelectorModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white"><div class="mt-3"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium text-gray-900">Select Template</h3><button onclick="closeModal('templateSelectorModal')" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div><div id="template-selector-list" class="max-h-96 overflow-y-auto space-y-2"></div></div></div></div>`,
+            fillTemplateVarsModal: `<div id="fillTemplateVarsModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
+                <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <h3 class="text-lg text-center leading-6 font-medium text-gray-900 mb-2">Fill Template Variables</h3>
+                        <p id="template-to-fill-body" class="text-sm text-center text-gray-500 p-2 bg-gray-50 rounded-md mb-4"></p>
+                        <form id="fillTemplateVarsForm" class="mt-2 space-y-4 p-4 text-left">
+                            <div id="template-vars-inputs"></div>
+                            <div class="items-center pt-4 flex justify-end space-x-2 border-t mt-6">
+                                <button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('fillTemplateVarsModal')">Cancel</button>
+                                <button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Send Message</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>`,
             newJobOrderModal: `<div id="newJobOrderModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
                 <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
                     <div class="mt-3">
@@ -2986,7 +3007,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 DEFAULT_CURRENCY = settings.default_currency;
                 console.log('App Currency set to:', DEFAULT_CURRENCY);
             }
-            // Hatuna haja ya kujaza fomu ya settings hapa, tunachukua currency tu.
+           
+                // Show global banner if free tier limit is reached
+                if (settings && settings.free_tier_limit_reached) {
+                    const banner = document.getElementById('global-alert-banner');
+                    if (banner) {
+                        banner.classList.remove('hidden');
+                    }
+                }
         }
         // --- MWISHO WA FUNCTION MPYA ---
 
@@ -3235,6 +3263,83 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         // --- UTILITY FUNCTIONS ---
+        function enableChatInput() {
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('send-btn');
+            const existingWarning = document.getElementById('time-window-warning'); // System message in chat
+
+            if (existingWarning) {
+                existingWarning.remove();
+            }
+
+            if (messageInput) messageInput.disabled = false;
+            if (sendBtn) sendBtn.disabled = false;
+
+            // Make sure the input area is fully visible and interactive
+            const inputWrapper = document.getElementById('input-wrapper');
+            if(inputWrapper) {
+                inputWrapper.style.opacity = '1';
+                inputWrapper.style.pointerEvents = 'auto';
+            }
+        }
+        function checkTimeWindow(lastContactMessageAt) {
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('send-btn');
+            const messageContainer = document.getElementById('message-container');
+
+            // Always re-enable first, then disable if needed. This handles switching between convos.
+            enableChatInput();
+
+            if (lastContactMessageAt) {
+                const lastMessageDate = new Date(lastContactMessageAt.replace(' ', 'T'));
+                const now = new Date();
+                const hoursDiff = (now - lastMessageDate) / (1000 * 60 * 60);
+
+                if (hoursDiff > 24) {
+                    // Window is closed: disable only text area and send button
+                    if(messageInput) {
+                        messageInput.disabled = true;
+                        messageInput.placeholder = 'Use templates to continue...';
+                    }
+                    if(sendBtn) sendBtn.disabled = true;
+
+                    // Display a system message inside the chat window
+                    const warningEl = document.createElement('div');
+                    warningEl.id = 'time-window-warning';
+                    warningEl.className = 'text-center my-4';
+                    warningEl.innerHTML = `
+                        <div class="inline-block p-2 px-4 text-xs bg-yellow-100 text-yellow-800 rounded-full shadow-sm border border-yellow-200">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> The 24-hour window to reply has closed. Use a template to re-engage.
+                        </div>
+                    `;
+
+                    if (messageContainer) {
+                        messageContainer.appendChild(warningEl);
+                        messageContainer.scrollTop = messageContainer.scrollHeight;
+                    }
+                }
+            }
+        }
+        function playNotificationSound() {
+            // Use Web Audio API for reliability across browsers without needing a file.
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioContext) {
+                console.warn("Web Audio API is not supported in this browser.");
+                return;
+            }
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A nice 'ping' frequency (A5 note)
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime); // Volume
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.15); // Play for 150ms
+        }
         function safeDate(dateStr) {
             if (!dateStr) return new Date();
             // Replace space with T for ISO format compatibility (Safari/older browsers)
@@ -4460,7 +4565,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                     // Note: Passing null for profileImage as it is not yet in API
                     container.innerHTML += `
-                        <div onclick="selectConversation(${c.conversation_id}, '${c.contact_name.replace(/'/g, "\\'")}', '${c.phone_number}', '${c.status}', '${c.assignee_name || ''}', null)" class="p-4 cursor-pointer border-b transition-all ${isActive}">
+                        <div onclick="selectConversation(${c.conversation_id}, '${c.contact_name.replace(/'/g, "\\'")}', '${c.phone_number}', '${c.status}', '${c.assignee_name || ''}', null, '${c.last_contact_message_at}')" class="p-4 cursor-pointer border-b transition-all ${isActive}">
                             <div class="flex justify-between items-start mb-1">
                                 <div class="flex items-center">
                                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-white flex items-center justify-center font-bold shadow-sm mr-3">${avatarChar}</div>
@@ -4566,7 +4671,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const data = await fetchApi(`get_conversations.php?search=${encodeURIComponent(phone)}`);
             if (data && data.success && data.conversations.length > 0) {
                 const conv = data.conversations[0]; // Assuming first match
-                selectConversation(conv.conversation_id, conv.contact_name, conv.phone_number, conv.status, conv.assignee_name, null);
+                selectConversation(conv.conversation_id, conv.contact_name, conv.phone_number, conv.status, conv.assignee_name, null, conv.last_contact_message_at);
             } else {
                 // If really new and not in DB yet (no messages), UI might struggle.
                 // But webhook creates it on inbound. Outbound?
@@ -4580,6 +4685,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 document.getElementById('chat-partner-phone').textContent = phone;
                 document.getElementById('header-avatar').textContent = name.charAt(0).toUpperCase();
                 document.getElementById('message-container').innerHTML = '<div class="text-center text-gray-400 mt-4">Start a new conversation</div>';
+                enableChatInput();
             }
         }
 
@@ -4589,9 +4695,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             list.innerHTML = '<div class="text-center"><div class="loader"></div></div>';
 
             const templates = await fetchApi('get_templates.php');
+            window.chatTemplates = templates; // Cache templates
+
             if (templates && Array.isArray(templates)) {
                 list.innerHTML = templates.map(t => `
-                    <div onclick="selectTemplateContent('${t.body.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')" class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
+                    <div onclick='selectTemplate(${t.id})' class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
                         <div class="flex justify-between mb-1">
                             <span class="font-semibold text-sm text-gray-800 group-hover:text-violet-700">${t.name}</span>
                             <span class="text-xs bg-gray-100 px-2 rounded text-gray-500">${t.status}</span>
@@ -4604,17 +4712,81 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
-        function selectTemplateContent(body) {
-            const input = document.getElementById('messageInput');
-            input.value = body;
+        async function selectTemplate(templateId) {
+            const template = window.chatTemplates.find(t => t.id === templateId);
+            if (!template) return;
+
+            const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
+            const variables = [...new Set(Array.from(template.body.matchAll(variableRegex), m => m[1]))];
+
             closeModal('templateSelectorModal');
-            input.focus();
-            // Trigger resize
-            input.style.height = 'auto';
-            input.style.height = input.scrollHeight + 'px';
+
+            if (variables.length > 0) {
+                // Open modal to fill variables
+                const formInputs = document.getElementById('template-vars-inputs');
+                formInputs.innerHTML = '';
+                variables.forEach(variable => {
+                    formInputs.innerHTML += `
+                        <div>
+                            <label for="var-${variable}" class="block text-sm font-medium text-gray-700">${variable}</label>
+                            <input type="text" id="var-${variable}" name="${variable}" class="mt-1 w-full p-2 border-gray-300 border rounded-md" required>
+                        </div>
+                    `;
+                });
+                document.getElementById('template-to-fill-body').textContent = template.body;
+                document.getElementById('fillTemplateVarsForm').dataset.templateId = template.id;
+                openModal('fillTemplateVarsModal');
+            } else {
+                // No variables, send directly
+                await sendTemplateMessage(template.name, {});
+            }
+        }
+        async function handleFillTemplateVarsSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const templateId = parseInt(form.dataset.templateId);
+            const template = window.chatTemplates.find(t => t.id === templateId);
+
+            const filledVariables = Object.fromEntries(formData.entries());
+
+            await sendTemplateMessage(template.name, filledVariables);
+            closeModal('fillTemplateVarsModal');
+            form.reset();
         }
 
-        function selectConversation(id, name, phone, status, assignee, profileImage = null) {
+        async function sendTemplateMessage(templateName, variables) {
+            if (!currentConversationId) return;
+
+            const typingIndicator = document.getElementById('typing-indicator');
+            typingIndicator.classList.remove('hidden');
+
+            try {
+                const result = await fetchApi('send_whatsapp_message.php', {
+                    method: 'POST',
+                    body: {
+                        conversation_id: currentConversationId,
+                        type: 'template',
+                        template_name: templateName,
+                        template_variables: variables
+                    }
+                });
+
+                if (result && result.success) {
+                    // It worked, so re-enable the chat
+                    enableChatInput();
+                    // And refresh the conversation
+                    loadMessages(currentConversationId, document.getElementById('chat-partner-name').textContent, 1, false);
+                    loadConversations(); // Update conversation list (e.g., last message preview)
+                } else {
+                    showToast(result ? result.message : 'Failed to send template.', 'error');
+                }
+            } finally {
+                typingIndicator.classList.add('hidden');
+            }
+        }
+
+        function selectConversation(id, name, phone, status, assignee, profileImage = null, lastContactMessageAt = null) {
             if (activeChatInterval) clearInterval(activeChatInterval);
             currentConversationId = id;
             currentConversationStatus = status;
@@ -4661,9 +4833,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             document.getElementById('assignee-name').textContent = assignee || 'Unassigned';
 
             loadMessages(id, name, 1, true);
-            loadConversations();
+            // This loadConversations() call is redundant here, selectConversation is called from it.
+            // loadConversations();
             loadAssignUsers();
             loadCrmData(id); // Pro Feature: CRM Sidebar
+            checkTimeWindow(lastContactMessageAt);
 
             activeChatInterval = setInterval(() => {
                 if (currentConversationId === id) {
@@ -4820,6 +4994,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                             // Check if we already have this message (to prevent dupes)
                             if (!document.getElementById(`msg-${msg.id}`)) {
+                                // Play sound for new incoming messages
+                                const type = String(msg.sender_type || '').toLowerCase();
+                                const isAgent = (type === 'agent' || type === 'user');
+                                if (!isAgent) {
+                                    playNotificationSound();
+                                }
+
                                 const newNode = createMessageElement(msg);
                                 messageContainer.appendChild(newNode);
                                 // Auto-scroll if user was at bottom
@@ -7784,7 +7965,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     'createInvoiceForm', 'createExpenseFormRequisition', 'createExpenseFormClaim',
                     'settingsForm', 'addTaxPaymentForm', 'uploadPayrollForm', 'addAssetForm',
                     'addCostForm', 'pricingCalculatorForm', 'fileUploadForm', 'newProofForm',
-                    'convertDocumentForm', 'linkVideoForm'
+                    'convertDocumentForm', 'linkVideoForm', 'fillTemplateVarsForm'
                 ];
 
                 if (!managedForms.includes(form.id)) return;
@@ -7794,6 +7975,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 switch(form.id) {
                     case 'sendMessageForm':
                         await sendMessage(e);
+                        break;
+                    case 'fillTemplateVarsForm':
+                        await handleFillTemplateVarsSubmit(e);
                         break;
                     case 'editInvestmentForm':
                         await handleEditInvestmentSubmit(e);
