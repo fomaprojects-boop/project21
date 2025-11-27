@@ -48,7 +48,7 @@ function processWorkflows($pdo, $userId, $conversationId, $contextData = []) {
                     $edges = $wfData['edges'] ?? [];
 
                     // Attempt to resume
-                    resumeWorkflow($pdo, $userId, $conversationId, $nodes, $edges, $state['active_node_id'], $msgBody);
+                    resumeWorkflow($pdo, $userId, $conversationId, $nodes, $edges, $state['active_node_id'], $msgBody, $state['workflow_id']);
                     return; // Stop processing other triggers
                 }
             }
@@ -140,40 +140,65 @@ function clearWorkflowState($pdo, $conversationId) {
 
 // --- EXECUTION LOGIC ---
 
-function resumeWorkflow($pdo, $userId, $conversationId, $nodes, $edges, $currentNodeId, $userReply) {
+function resumeWorkflow($pdo, $userId, $conversationId, $nodes, $edges, $currentNodeId, $userReply, $workflowId = null) {
     log_debug("Resuming Workflow at Node $currentNodeId with Reply: $userReply");
 
-    // Find valid connections from the current node using EDGES
+    // Find valid connections from the current node using EDGES or PARENT_ID
     $matchedNextNodeId = null;
     $defaultNextNodeId = null;
 
-    foreach ($edges as $edge) {
-        // Support both React Flow formats: string IDs or objects
-        $source = $edge['source'] ?? '';
-        $target = $edge['target'] ?? '';
+    // 1. Try EDGES (Graph Structure)
+    if (!empty($edges)) {
+        foreach ($edges as $edge) {
+            // Support both React Flow formats: string IDs or objects
+            $source = $edge['source'] ?? '';
+            $target = $edge['target'] ?? '';
 
-        if ($source == $currentNodeId) {
-            // Check for conditions (Branching)
-            // Example: Edge label or Edge data handle
-            $condition = $edge['label'] ?? ($edge['data']['label'] ?? '');
-            // Also check 'sourceHandle' if using handles for conditions
-            $handle = $edge['sourceHandle'] ?? ''; // e.g., 'true', 'false', 'yes', 'no'
+            if ($source == $currentNodeId) {
+                // Check for conditions (Branching)
+                // Example: Edge label or Edge data handle
+                $condition = $edge['label'] ?? ($edge['data']['label'] ?? '');
+                // Also check 'sourceHandle' if using handles for conditions
+                $handle = $edge['sourceHandle'] ?? ''; // e.g., 'true', 'false', 'yes', 'no'
 
-            // Normalize reply and conditions
-            $cleanReply = trim(strtolower($userReply));
-            $cleanCondition = trim(strtolower($condition));
-            $cleanHandle = trim(strtolower($handle));
+                // Normalize reply and conditions
+                $cleanReply = trim(strtolower($userReply));
+                $cleanCondition = trim(strtolower($condition));
+                $cleanHandle = trim(strtolower($handle));
 
-            // Match Logic: Check label OR handle
-            if (($cleanCondition !== '' && $cleanCondition === $cleanReply) ||
-                ($cleanHandle !== '' && $cleanHandle === $cleanReply)) {
-                $matchedNextNodeId = $target;
-                break;
+                // Match Logic: Check label OR handle
+                if (($cleanCondition !== '' && $cleanCondition === $cleanReply) ||
+                    ($cleanHandle !== '' && $cleanHandle === $cleanReply)) {
+                    $matchedNextNodeId = $target;
+                    break;
+                }
+
+                // Keep track of a default path (empty condition)
+                if ($cleanCondition === '' && $cleanHandle === '') {
+                    $defaultNextNodeId = $target;
+                }
             }
+        }
+    }
 
-            // Keep track of a default path (empty condition)
-            if ($cleanCondition === '' && $cleanHandle === '') {
-                $defaultNextNodeId = $target;
+    // 2. Try NODES ParentID (Tree Structure - Fallback)
+    if (!$matchedNextNodeId) {
+        foreach ($nodes as $childNode) {
+            if (isset($childNode['parentId']) && $childNode['parentId'] == $currentNodeId) {
+                $branch = $childNode['branch'] ?? '';
+                $cleanBranch = trim(strtolower($branch));
+                $cleanReply = trim(strtolower($userReply));
+
+                // Match Logic: Check branch name (e.g. "Yes", "No", "Option A")
+                if ($cleanBranch !== '' && $cleanBranch === $cleanReply) {
+                    $matchedNextNodeId = $childNode['id'];
+                    break;
+                }
+
+                // Keep track of a default path (empty branch or matches nothing else)
+                if ($cleanBranch === '') {
+                    $defaultNextNodeId = $childNode['id'];
+                }
             }
         }
     }
@@ -185,7 +210,7 @@ function resumeWorkflow($pdo, $userId, $conversationId, $nodes, $edges, $current
         // Clear state since we are moving on
         clearWorkflowState($pdo, $conversationId);
         // Continue execution from the found child
-        executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges, null, $workflowId = null, $nextNodeId);
+        executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges, null, $workflowId, $nextNodeId);
     } else {
         log_debug("No matching branch found for reply '$userReply'. Workflow stops or waits.");
     }
@@ -424,8 +449,13 @@ function sendWorkflowQuestion($pdo, $userId, $conversationId, $node) {
 
     // 3. Construct Buttons
     $content = $node['content']; // Question text
-    // Support multiple data keys for options
-    $options = $node['data']['options'] ?? ($node['data']['quick_replies'] ?? []);
+    // Support multiple data keys for options (Frontend uses root 'options', backend might use 'data.options')
+    $options = $node['options'] ?? ($node['data']['options'] ?? ($node['data']['quick_replies'] ?? []));
+
+    // Ensure options is an array
+    if (is_string($options)) {
+        $options = array_map('trim', explode(',', $options));
+    }
 
     // API Limitation: Max 3 buttons for 'button' type. If more, use 'list'.
     // For now, assume < 3 or handle first 3.
