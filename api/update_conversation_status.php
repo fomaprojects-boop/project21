@@ -19,8 +19,13 @@ if (!$conversation_id || !in_array($status, ['open', 'closed'])) {
 }
 
 try {
-    $stmt = $pdo->prepare("UPDATE conversations SET status = ? WHERE id = ?");
-    $stmt->execute([$status, $conversation_id]);
+    if ($status === 'closed') {
+        $stmt = $pdo->prepare("UPDATE conversations SET status = ?, closed_by = ?, closed_at = NOW() WHERE id = ?");
+        $stmt->execute([$status, $_SESSION['user_id'], $conversation_id]);
+    } else {
+        $stmt = $pdo->prepare("UPDATE conversations SET status = ?, closed_by = NULL, closed_at = NULL WHERE id = ?");
+        $stmt->execute([$status, $conversation_id]);
+    }
 
     echo json_encode(['success' => true, 'message' => 'Status updated', 'new_status' => $status]);
 
