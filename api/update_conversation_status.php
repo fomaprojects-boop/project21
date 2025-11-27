@@ -19,9 +19,22 @@ if (!$conversation_id || !in_array($status, ['open', 'closed'])) {
 }
 
 try {
+    // Include workflow helper
+    if (file_exists(__DIR__ . '/workflow_helper.php')) {
+        require_once __DIR__ . '/workflow_helper.php';
+    }
+
     if ($status === 'closed') {
         $stmt = $pdo->prepare("UPDATE conversations SET status = ?, closed_by = ?, closed_at = NOW() WHERE id = ?");
         $stmt->execute([$status, $_SESSION['user_id'], $conversation_id]);
+
+        // Trigger 'Conversation Closed' Workflow
+        if (function_exists('processWorkflows')) {
+            processWorkflows($pdo, $_SESSION['user_id'], $conversation_id, [
+                'event_type' => 'conversation_closed'
+            ]);
+        }
+
     } else {
         $stmt = $pdo->prepare("UPDATE conversations SET status = ?, closed_by = NULL, closed_at = NULL WHERE id = ?");
         $stmt->execute([$status, $conversation_id]);
