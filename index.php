@@ -297,16 +297,16 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             font-size: 0.9rem;
         }
         .workflow-template-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); transition: all 0.2s ease-in-out;}
-        .workflow-node { background-color: white; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); width: 300px; text-align: left; position: relative; transition: all 0.2s ease-in-out; cursor: pointer; }
+        .workflow-node { background-color: white; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); width: 300px; text-align: left; position: relative; z-index: 20; transition: all 0.2s ease-in-out; cursor: pointer; }
         .workflow-node:hover { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
         .workflow-node:active { transform: scale(0.98); }
         .workflow-node.trigger { border-left: 4px solid #fb7185; } .workflow-node.ai_objective { border-left: 4px solid #818cf8; } .workflow-node.action { border-left: 4px solid #34d399; } .workflow-node.condition { border-left: 4px solid #fbbf24; } .workflow-node.question { border-left: 4px solid #3b82f6; }
-        .workflow-connector { width: 2px; height: 50px; background-color: #94a3b8; margin: 0 auto; position: relative; }
-        .add-node-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; opacity: 0; transition: all 0.2s; background-color: white; border-radius: 9999px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .workflow-connector { width: 2px; height: 50px; background-color: #94a3b8; margin: 0 auto; position: relative; z-index: 10; }
+        .add-node-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 30; opacity: 0; transition: all 0.2s; background-color: white; border-radius: 9999px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .workflow-connector:hover .add-node-btn, .branch-path .workflow-connector:hover .add-node-btn, .workflow-node:hover + .workflow-connector .add-node-btn { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-        .workflow-branch { display: flex; justify-content: center; padding-top: 20px; position: relative; }
+        .workflow-branch { display: flex; justify-content: center; padding-top: 0; position: relative; }
         .branch-path { display: flex; flex-direction: column; align-items: center; position: relative; padding: 20px 20px 0 20px; box-sizing: border-box; min-width: 150px; }
-        .branch-path::before, .branch-path::after { content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 20px; border-top: 2px solid #94a3b8; }
+        .branch-path::before, .branch-path::after { content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 20px; border-top: 2px solid #94a3b8; z-index: 10; }
         .branch-path::after { right: auto; left: 50%; border-left: 2px solid #94a3b8; }
         .branch-path:only-child::after, .branch-path:only-child::before { display: none; }
         .branch-path:only-child { padding-top: 0; }
@@ -7294,19 +7294,36 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             const childNode = children.find(c => c.branch === branchName);
                             return `<div class="branch-path"><div class="branch-label">${branchName}</div>${childNode ? buildHtmlForNode(childNode) : `<div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, '${branchName}')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div>`}</div>`;
                         }).join('') + `</div>`;
+                        // Prepend connector to the branch container
+                        childrenHtml = `<div class="workflow-connector"></div>` + childrenHtml;
                     } else {
                         // Single path
                         children.forEach(child => { childrenHtml += `<div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${child.parentId})" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div>` + buildHtmlForNode(child); });
                     }
                 }
-                return `<div>${nodeHtml}${childrenHtml}</div>`;
+                return `<div class="flex flex-col items-center">${nodeHtml}${childrenHtml}</div>`;
             };
             const rootNode = nodes.find(n => !n.parentId); if (rootNode) canvas.innerHTML = buildHtmlForNode(rootNode);
         }
 
         function addNode(type, parentId, branch = null) { const newId = (currentWorkflow.workflow_data.nodes.length > 0 ? Math.max(...currentWorkflow.workflow_data.nodes.map(n => n.id)) : 0) + 1; currentWorkflow.workflow_data.nodes.push({id: newId, type, content: 'New Action', parentId, branch}); renderWorkflow(); openNodeConfig(newId); }
 
-        function deleteNode(nodeId) { if (nodeId === 1) return; if (!confirm('Delete this node and all below it?')) return; let nodesToDelete = [nodeId]; let i=0; while(i<nodesToDelete.length){ const children = currentWorkflow.workflow_data.nodes.filter(n => n.parentId === nodesToDelete[i]); children.forEach(c => nodesToDelete.push(c.id)); i++; } currentWorkflow.workflow_data.nodes = currentWorkflow.workflow_data.nodes.filter(n => !nodesToDelete.includes(n.id)); renderWorkflow(); }
+        function deleteNode(nodeId) { 
+            if (nodeId === 1) {
+                alert('Cannot delete the Trigger node.');
+                return;
+            }
+            if (!confirm('Delete this node and all below it?')) return; 
+            let nodesToDelete = [nodeId]; 
+            let i=0; 
+            while(i<nodesToDelete.length){ 
+                const children = currentWorkflow.workflow_data.nodes.filter(n => n.parentId === nodesToDelete[i]); 
+                children.forEach(c => nodesToDelete.push(c.id)); 
+                i++; 
+            } 
+            currentWorkflow.workflow_data.nodes = currentWorkflow.workflow_data.nodes.filter(n => !nodesToDelete.includes(n.id)); 
+            renderWorkflow(); 
+        }
 
         function openNodeConfig(nodeId) {
             configuringNodeId = nodeId;
