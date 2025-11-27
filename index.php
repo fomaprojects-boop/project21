@@ -28,7 +28,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
     <title>ChatMe - Professional Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@latest/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.4/dist/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -8677,15 +8677,44 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
         function initEmojiPicker() {
             const button = document.querySelector('#emoji-btn');
+            if (!button) return;
+
+            // Check if EmojiButton is defined
+            if (typeof EmojiButton === 'undefined') {
+                console.error('EmojiButton library not loaded');
+                return;
+            }
+
             const picker = new EmojiButton({
-                position: 'top-start'
+                position: 'top-start',
+                zIndex: 10000,
+                autoHide: false // Optional: keep it open if user wants to select multiple? Standard is autoHide true.
             });
 
-            picker.on('emoji', emoji => {
-                document.querySelector('#messageInput').value += (emoji.emoji || emoji);
+            picker.on('emoji', selection => {
+                const input = document.querySelector('#messageInput');
+                // v4 returns an object { emoji: '👍' }
+                const emojiChar = selection.emoji || selection;
+
+                // Insert at cursor position
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const text = input.value;
+                const before = text.substring(0, start);
+                const after = text.substring(end, text.length);
+
+                input.value = before + emojiChar + after;
+
+                // Move cursor after emoji
+                input.selectionStart = input.selectionEnd = start + emojiChar.length;
+                input.focus();
+
+                // Trigger input event for auto-resize
+                input.dispatchEvent(new Event('input', { bubbles: true }));
             });
 
-            button.addEventListener('click', () => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent bubbling to document click listener
                 picker.togglePicker(button);
             });
         }
