@@ -181,7 +181,18 @@ try {
         $postData['interactive'] = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
     } elseif ($messageType === 'template') {
         $postData['type'] = 'template';
-        $postData['template'] = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
+        // Ensure template payload is correctly structured
+        $templatePayload = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
+
+        // If content is present but not in parameters (legacy support or fallback), we might need logic here
+        // But the new frontend logic sends a fully formed 'interactive_data' object which maps to 'template' here.
+        // We just assign it.
+        $postData['template'] = $templatePayload;
+
+        // Ensure language code is set
+        if (!isset($postData['template']['language'])) {
+             $postData['template']['language'] = ['code' => 'en_US'];
+        }
     } elseif (in_array($messageType, ['image', 'video', 'document', 'audio'])) {
         $postData['type'] = $messageType;
         // Construct full URL if it's relative
@@ -256,8 +267,14 @@ try {
     // FIX: For interactive messages, the actual content for DB storage MUST be the JSON payload.
     // For Media messages, store URL and caption
     $dbContent = $content;
-    if ($messageType === 'interactive' && !empty($interactiveData)) {
-        $dbContent = is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData;
+    if (($messageType === 'interactive' || $messageType === 'template') && !empty($interactiveData)) {
+        // For templates, if explicit content was passed (preview text), use it.
+        // Otherwise fall back to JSON data.
+        if ($messageType === 'template' && !empty($content)) {
+            $dbContent = $content;
+        } else {
+            $dbContent = is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData;
+        }
     } elseif ($attachmentUrl) {
         // Store only the URL if no caption, or combine?
         // Generally good to store the URL or a JSON representation.

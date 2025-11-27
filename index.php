@@ -2517,15 +2517,36 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </div>
                 </div>
             </div>`,
+        };
+        const modalTemplates = {
             fillTemplateVariablesModal: `<div id="fillTemplateVariablesModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
-                <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+                <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
                     <div class="mt-3">
                         <h3 class="text-lg text-center leading-6 font-medium text-gray-900">Fill Template Variables</h3>
                         <form id="fillVariablesForm" class="mt-4 space-y-4 p-4 text-left">
                             <input type="hidden" id="templateBodyToFill">
+
+                            <!-- Header Media Section -->
+                            <div id="header-media-container" class="hidden space-y-2 mb-4 p-3 bg-gray-50 rounded border">
+                                <label id="header-media-label" class="block text-sm font-bold text-gray-700">Header Media</label>
+                                <input type="file" id="header-media-file" name="header_file" class="w-full text-sm">
+                                <p class="text-xs text-gray-500">Upload the media file for the header.</p>
+                            </div>
+
+                            <!-- Header Text Variables -->
+                            <div id="header-vars-container" class="space-y-3"></div>
+
+                            <!-- Body Text Variables -->
                             <div id="variable-inputs-container" class="space-y-3 max-h-60 overflow-y-auto">
                                 <!-- Dynamic inputs will be injected here -->
                             </div>
+
+                            <!-- Button Dynamic URL Variables -->
+                            <div id="button-vars-container" class="space-y-3 pt-2 border-t border-dashed border-gray-300 mt-2 hidden">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase">Button Links</h4>
+                                <!-- Dynamic button inputs injected here -->
+                            </div>
+
                             <div class="items-center pt-4 flex justify-end space-x-2 border-t mt-6">
                                 <button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('fillTemplateVariablesModal')">Cancel</button>
                                 <button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Send Message</button>
@@ -2534,8 +2555,6 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </div>
                 </div>
             </div>`,
-        };
-        const modalTemplates = {
             payrollDetailsModal: `<div id="payrollDetailsModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
                 <div class="relative mx-auto p-5 border w-full max-w-5xl shadow-lg rounded-md bg-white h-[80vh] flex flex-col">
                     <div class="flex justify-between items-center mb-4 border-b pb-2">
@@ -2762,7 +2781,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             </div>`,
             addContactModal: `<div id="addContactModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center"><div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"><div class="mt-3 text-center"><h3 class="text-lg leading-6 font-medium text-gray-900">Add New Contact</h3><div class="mt-2 px-7 py-3"><form id="addContactForm" class="space-y-4"><input id="contactName" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Full Name" required><input id="contactEmail" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="email" placeholder="Email Address (Optional)"><input id="contactPhone" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Phone Number (e.g. +255...)" required></form></div><div class="items-center px-4 py-3"><button type="submit" form="addContactForm" class="px-4 py-2 bg-violet-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-violet-600">Save Contact</button><button type="button" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300" onclick="closeModal('addContactModal')">Cancel</button></div></div></div></div>`,
             addTemplateModal: `<div id="addTemplateModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
-                <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+                <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
                     <div class="mt-3">
                         <h3 id="template-modal-title" class="text-lg text-center leading-6 font-medium text-gray-900">Create New Template</h3>
                         <form id="addTemplateForm" class="mt-4 space-y-4 p-4">
@@ -4789,7 +4808,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                 if (approvedTemplates.length > 0) {
                     list.innerHTML = approvedTemplates.map(t => `
-                        <div onclick="selectTemplateContent('${t.body.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')" class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
+                        <div onclick='selectTemplateContent(${JSON.stringify(t)})' class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
                             <div class="flex justify-between mb-1">
                                 <span class="font-semibold text-sm text-gray-800 group-hover:text-violet-700">${t.name}</span>
                                 <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Approved</span>
@@ -4840,26 +4859,100 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 list.innerHTML = `<div class="text-center text-red-500 py-4"><p>Sync Error.</p><button onclick="openTemplateSelector()" class="mt-2 text-sm underline">Try Again</button></div>`;
             }
         }
-        function selectTemplateContent(body) {
+        function selectTemplateContent(template) {
             closeModal('templateSelectorModal');
-            const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
-            const variables = [...new Set(Array.from(body.matchAll(variableRegex), m => m[1]))];
 
-            if (variables.length > 0) {
-                // Has variables, open the new modal
-                document.getElementById('templateBodyToFill').value = body;
+            // --- Logic to parse ALL Variable Types ---
+            const body = template.body;
+            const header = template.header || '';
+            const buttonsData = template.buttons_data || [];
+            const headerType = template.header_type || 'TEXT';
+
+            // 1. Body Variables
+            const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
+            const bodyVariables = [...new Set(Array.from(body.matchAll(variableRegex), m => m[1]))];
+
+            // 2. Header Variables (Text)
+            const headerVariables = [...new Set(Array.from(header.matchAll(variableRegex), m => m[1]))];
+
+            // 3. Dynamic URL Buttons
+            const dynamicButtons = buttonsData.filter(btn => btn.type === 'URL' && btn.url && btn.url.includes('{{1}}'));
+
+            // Check if ANY complex input is needed
+            const hasBodyVars = bodyVariables.length > 0;
+            const hasHeaderVars = headerVariables.length > 0;
+            const hasMediaHeader = ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerType);
+            const hasDynamicButtons = dynamicButtons.length > 0;
+
+            if (hasBodyVars || hasHeaderVars || hasMediaHeader || hasDynamicButtons) {
+                // Open the Complex Modal
+                document.getElementById('templateBodyToFill').value = JSON.stringify(template); // Store full object for submission handler
+
+                // A. Header Media
+                const mediaContainer = document.getElementById('header-media-container');
+                const mediaLabel = document.getElementById('header-media-label');
+                const mediaInput = document.getElementById('header-media-file');
+                if (hasMediaHeader) {
+                    mediaContainer.classList.remove('hidden');
+                    mediaLabel.textContent = `Header ${headerType.charAt(0).toUpperCase() + headerType.slice(1).toLowerCase()}`;
+                    mediaInput.accept = headerType === 'IMAGE' ? 'image/*' : (headerType === 'VIDEO' ? 'video/*' : '.pdf,.doc,.docx');
+                    mediaInput.required = true;
+                } else {
+                    mediaContainer.classList.add('hidden');
+                    mediaInput.required = false;
+                }
+
+                // B. Header Text Variables
+                const headerContainer = document.getElementById('header-vars-container');
+                headerContainer.innerHTML = '';
+                if (hasHeaderVars) {
+                    headerContainer.innerHTML = '<h4 class="text-xs font-bold text-gray-500 uppercase">Header Variables</h4>';
+                    headerVariables.forEach(variable => {
+                        headerContainer.innerHTML += `
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Header: {{${variable}}}</label>
+                                <input type="text" name="header_var_${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required placeholder="Value for header">
+                            </div>`;
+                    });
+                }
+
+                // C. Body Variables
                 const container = document.getElementById('variable-inputs-container');
-                container.innerHTML = ''; // Clear previous fields
-                variables.forEach(variable => {
-                    container.innerHTML += `
-                        <div>
-                            <label for="var-${variable}" class="block text-sm font-medium text-gray-700">${variable.replace(/_/g, ' ')}</label>
-                            <input type="text" id="var-${variable}" name="${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required>
-                        </div>
-                    `;
-                });
+                container.innerHTML = '';
+                if (hasBodyVars) {
+                    container.innerHTML = '<h4 class="text-xs font-bold text-gray-500 uppercase mt-2">Body Variables</h4>';
+                    bodyVariables.forEach(variable => {
+                        container.innerHTML += `
+                            <div>
+                                <label for="var-${variable}" class="block text-sm font-medium text-gray-700">Body: {{${variable.replace(/_/g, ' ')}}}</label>
+                                <input type="text" id="var-${variable}" name="${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required>
+                            </div>
+                        `;
+                    });
+                }
+
+                // D. Dynamic Buttons
+                const btnContainer = document.getElementById('button-vars-container');
+                btnContainer.innerHTML = '';
+                if (hasDynamicButtons) {
+                    btnContainer.classList.remove('hidden');
+                    btnContainer.innerHTML = '<h4 class="text-xs font-bold text-gray-500 uppercase">Button Links</h4>';
+                    dynamicButtons.forEach((btn, index) => {
+                        // Assuming only one variable {{1}} at the end usually
+                        btnContainer.innerHTML += `
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Link Suffix for: "${btn.text}"</label>
+                                <p class="text-xs text-gray-400 truncate mb-1">${btn.url}</p>
+                                <input type="text" name="button_var_${index}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required placeholder="e.g. 12345 (replaces {{1}})">
+                            </div>`;
+                    });
+                } else {
+                    btnContainer.classList.add('hidden');
+                }
+
                 openModal('fillTemplateVariablesModal');
             } else {
+                // Simple Text-Only Template
                 // No variables, just fill the input
                 const input = document.getElementById('messageInput');
                 input.value = body;
@@ -8222,6 +8315,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 // Check if it matches one of our managed forms
                 const managedForms = [
                     'sendMessageForm', // Added to fix page reload on reply
+                    'fillVariablesForm',
                     'editInvestmentForm', 'newJobOrderForm', 'addAdvertiserForm', 'verifyEmailForm',
                     'payRequisitionForm', 'expenseActionForm', 'trackProgressModal', 'addUserForm',
                     'addContactForm', 'addCustomerForm', 'addTemplateForm', 'newBroadcastForm',
@@ -8282,27 +8376,170 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         break;
                     }
                     case 'fillVariablesForm': {
-                        const templateBody = form.querySelector('#templateBodyToFill').value;
+                        const templateData = JSON.parse(form.querySelector('#templateBodyToFill').value);
                         const formData = new FormData(form);
-                        let filledBody = templateBody;
-                        for (let [key, value] of formData.entries()) {
-                            if (key !== 'templateBodyToFill') {
-                                // Create a regex to replace all occurrences of {{variable}}
-                                const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
-                                filledBody = filledBody.replace(regex, value);
+
+                        // Construct the payload for send_whatsapp_message.php
+                        const payload = {
+                            conversation_id: currentConversationId,
+                            type: 'template', // Explicitly use template type
+                            interactive_data: {
+                                name: templateData.name,
+                                language: { code: templateData.language || 'en_US' },
+                                components: []
+                            }
+                        };
+
+                        // 1. Header Handling
+                        const headerType = templateData.header_type || 'TEXT';
+
+                        if (headerType !== 'TEXT' && headerType !== 'NONE') {
+                            const mediaFile = document.getElementById('header-media-file').files[0];
+                            // If user uploaded a file, we need to upload it first or send as FormData?
+                            // send_whatsapp_message.php primarily takes JSON.
+                            // We need to upload the media first to get a handle/URL.
+                            // However, standard flow here is to use 'upload_file.php' first if we have a file input.
+
+                            if (mediaFile) {
+                                // Temporary loading state
+                                const submitBtn = form.querySelector('button[type="submit"]');
+                                const originalText = submitBtn.textContent;
+                                submitBtn.textContent = 'Uploading Media...';
+                                submitBtn.disabled = true;
+
+                                const uploadData = new FormData();
+                                uploadData.append('file', mediaFile);
+                                uploadData.append('conversation_id', currentConversationId);
+
+                                const uploadResult = await fetchApi('upload_file.php', { method: 'POST', body: uploadData });
+
+                                if (uploadResult && uploadResult.success) {
+                                    // Use the URL/Handle
+                                    // For Cloud API, ideally we use 'link' parameter in header component
+                                    payload.interactive_data.components.push({
+                                        type: 'header',
+                                        parameters: [{
+                                            type: headerType.toLowerCase(),
+                                            [headerType.toLowerCase()]: {
+                                                link: uploadResult.file_url // Ensure this is a full URL or resolvable by backend
+                                            }
+                                        }]
+                                    });
+                                } else {
+                                    alert('Failed to upload header media.');
+                                    submitBtn.textContent = originalText;
+                                    submitBtn.disabled = false;
+                                    return;
+                                }
+                                submitBtn.textContent = originalText;
+                                submitBtn.disabled = false;
+                            }
+                        } else if (headerType === 'TEXT') {
+                            // Check for header text variables
+                            const headerParams = [];
+                            // We can find them by iterating formData keys starting with 'header_var_'
+                            // Note: Keys in formData are not sorted, but template variables are usually positional {{1}} in standard,
+                            // but here we used named variables. Meta uses positional {{1}}.
+                            // If our template has named vars, we need to map them back to position?
+                            // OR we assume the User Input form fields were generated in order.
+                            // Simple approach: Extract values from formData where name starts with header_var_
+
+                            // Important: Meta expects parameters in order of {{1}}, {{2}}.
+                            // Our parse logic used regex matchAll which returns them in order.
+                            const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
+                            const headerVars = [...new Set(Array.from((templateData.header || '').matchAll(variableRegex), m => m[1]))];
+
+                            headerVars.forEach(v => {
+                                const val = formData.get(`header_var_${v}`);
+                                headerParams.push({ type: 'text', text: val });
+                            });
+
+                            if (headerParams.length > 0) {
+                                payload.interactive_data.components.push({
+                                    type: 'header',
+                                    parameters: headerParams
+                                });
                             }
                         }
 
-                        // Now, place the filled content into the main message input and send
-                        const messageInput = document.getElementById('messageInput');
-                        messageInput.value = filledBody;
+                        // 2. Body Handling
+                        const bodyVars = [...new Set(Array.from(templateData.body.matchAll(/{{\s*([a-zA-Z0-9_]+)\s*}}/g), m => m[1]))];
+                        const bodyParams = [];
+                        bodyVars.forEach(v => {
+                            const val = formData.get(v); // Field name matches variable name
+                            bodyParams.push({ type: 'text', text: val });
+                        });
 
-                        // Simulate a click on the main send button by calling sendMessage
-                        const fakeEvent = { preventDefault: () => {} };
-                        await sendMessage(fakeEvent);
+                        if (bodyParams.length > 0) {
+                            payload.interactive_data.components.push({
+                                type: 'body',
+                                parameters: bodyParams
+                            });
+                        }
 
-                        closeModal('fillTemplateVariablesModal');
-                        form.reset();
+                        // 3. Button Handling (Dynamic URL)
+                        // Iterate through buttons_data to find URL buttons with variables
+                        // Meta expects button components with index 'index' = position in the template (0-based)
+                        if (templateData.buttons_data) {
+                            templateData.buttons_data.forEach((btn, index) => {
+                                if (btn.type === 'URL' && btn.url && btn.url.includes('{{1}}')) {
+                                    // This button has a variable. Get the value from form.
+                                    const val = formData.get(`button_var_${index}`); // We used index in name generation
+                                    if (val) {
+                                        payload.interactive_data.components.push({
+                                            type: 'button',
+                                            sub_type: 'url',
+                                            index: index, // Crucial for Meta to know which button
+                                            parameters: [{
+                                                type: 'text',
+                                                text: val // The suffix to append
+                                            }]
+                                        });
+                                    }
+                                }
+                            });
+                        }
+
+                        // 4. Construct Content Preview for DB (WYSIWYG)
+                        let previewText = templateData.body;
+                        bodyVars.forEach(v => {
+                            const val = formData.get(v);
+                            // Replace all occurrences of {{variable}}
+                            // Using split/join for simple global replacement without regex special char issues
+                            previewText = previewText.split(`{{${v}}}`).join(val);
+                        });
+
+                        // Add this to payload so backend can save it for chat history
+                        payload.content = previewText;
+
+                        // Send Request with Loading State
+                        const mainSubmitBtn = form.querySelector('button[type="submit"]');
+                        const originalBtnText = mainSubmitBtn.textContent;
+                        mainSubmitBtn.textContent = 'Sending...';
+                        mainSubmitBtn.disabled = true;
+
+                        try {
+                            const result = await fetchApi('send_whatsapp_message.php', {
+                                method: 'POST',
+                                body: payload
+                            });
+
+                            if (result && result.success) {
+                                closeModal('fillTemplateVariablesModal');
+                                form.reset();
+                                // Reset hidden containers
+                                document.getElementById('header-media-container').classList.add('hidden');
+                                document.getElementById('button-vars-container').classList.add('hidden');
+                                loadMessages(currentConversationId, document.getElementById('chat-partner-name').textContent, 1, false);
+                            } else {
+                                alert('Error: ' + (result ? result.message : 'Unknown error'));
+                            }
+                        } catch (e) {
+                            alert('Network or Server Error');
+                        } finally {
+                            mainSubmitBtn.textContent = originalBtnText;
+                            mainSubmitBtn.disabled = false;
+                        }
                         break;
                     }
                     case 'trackProgressModal':

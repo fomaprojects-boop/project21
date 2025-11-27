@@ -30,21 +30,36 @@ if (empty($name) || empty($body) || empty($category)) {
 }
 
 $quick_replies_json = null;
+$buttons_data_json = null;
+
 if (!empty($quick_replies_raw)) {
     $replies_array = array_map('trim', explode(',', $quick_replies_raw));
     $quick_replies_json = json_encode($replies_array);
+
+    // Construct buttons_data for new schema support
+    $buttons_data = [];
+    foreach ($replies_array as $reply) {
+        $buttons_data[] = ['type' => 'QUICK_REPLY', 'text' => $reply];
+    }
+    $buttons_data_json = json_encode($buttons_data);
 }
 
 // Extract variable names like {{customer_name}} -> customer_name
 preg_match_all('/{{\s*([a-zA-Z0-9_]+)\s*}}/', $body, $matches);
 $variables_json = !empty($matches[1]) ? json_encode($matches[1]) : null;
 
+// Determine Header Type
+$header_type = 'NONE';
+if (!empty($header)) {
+    $header_type = 'TEXT'; // Default to TEXT if header exists from this form
+}
+
 try {
     $pdo->beginTransaction();
 
     $stmt = $pdo->prepare(
-        "INSERT INTO message_templates (user_id, name, category, body, header, footer, quick_replies, variables, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')"
+        "INSERT INTO message_templates (user_id, name, category, body, header, footer, quick_replies, variables, status, language, header_type, buttons_data)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'en_US', ?, ?)"
     );
     
     $stmt->execute([
@@ -55,7 +70,9 @@ try {
         empty($header) ? null : $header,
         empty($footer) ? null : $footer,
         $quick_replies_json,
-        $variables_json
+        $variables_json,
+        $header_type,
+        $buttons_data_json
     ]);
 
     $last_insert_id = $pdo->lastInsertId();
