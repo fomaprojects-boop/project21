@@ -304,12 +304,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .workflow-connector { width: 2px; height: 50px; background-color: #94a3b8; margin: 0 auto; position: relative; }
         .add-node-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; opacity: 0; transition: all 0.2s; background-color: white; border-radius: 9999px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .workflow-connector:hover .add-node-btn, .branch-path .workflow-connector:hover .add-node-btn, .workflow-node:hover + .workflow-connector .add-node-btn { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-        .workflow-branch { display: flex; justify-content: center; gap: 4rem; align-items: flex-start; position: relative; }
-        .branch-path { display: flex; flex-direction: column; align-items: center; position: relative; }
-        .branch-line-container { position: relative; height: 20px; width: 100%; }
-        .branch-line { position: absolute; top: 0; height: 2px; background-color: #94a3b8; }
-        .branch-line-left { left: 50%; right: -2rem; } .branch-line-right { right: 50%; left: -2rem; } .branch-line-down { left: 50%; top: 0; width: 2px; height: 100%; }
-        .branch-label { font-size: 0.75rem; font-weight: 600; color: #475569; background-color: #f1f5f9; padding: 2px 8px; border-radius: 999px; border: 1px solid #e2e8f0; margin-top: 10px; }
+        .workflow-branch { display: flex; justify-content: center; padding-top: 20px; position: relative; }
+        .branch-path { display: flex; flex-direction: column; align-items: center; position: relative; padding: 20px 20px 0 20px; box-sizing: border-box; min-width: 150px; }
+        .branch-path::before, .branch-path::after { content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 20px; border-top: 2px solid #94a3b8; }
+        .branch-path::after { right: auto; left: 50%; border-left: 2px solid #94a3b8; }
+        .branch-path:only-child::after, .branch-path:only-child::before { display: none; }
+        .branch-path:only-child { padding-top: 0; }
+        .branch-path:first-child::before { border-top: 0; }
+        .branch-path:last-child::after { border-top: 0; }
+        .branch-label { font-size: 0.75rem; font-weight: 600; color: #475569; background-color: #f1f5f9; padding: 2px 8px; border-radius: 999px; border: 1px solid #e2e8f0; margin-bottom: 10px; z-index: 10; position: relative; }
         .workflow-canvas-bg { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 1.5rem 1.5rem; }
         /* Old settings tab style removal or override */
         .settings-tab.active-tab { background-color: #f5f3ff; color: #7c3aed; font-weight: 600; }
@@ -7267,11 +7270,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 if (children.length === 0) {
                     // Logic for nodes with no children yet
                     if (node.type === 'condition') {
-                         childrenHtml += `<div class="workflow-branch"><div class="branch-path"><div class="branch-line-container"><div class="branch-line branch-line-left"></div><div class="branch-line branch-line-down"></div></div><div class="branch-label">YES</div><div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, 'YES')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div></div><div class="branch-path"><div class="branch-line-container"><div class="branch-line branch-line-right"></div><div class="branch-line branch-line-down"></div></div><div class="branch-label">NO</div><div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, 'NO')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div></div></div>`;
+                         childrenHtml += `<div class="workflow-branch"><div class="branch-path"><div class="branch-label">YES</div><div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, 'YES')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div></div><div class="branch-path"><div class="branch-label">NO</div><div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, 'NO')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div></div></div>`;
                     } else if (node.type === 'question' && node.options && node.options.length > 0) {
                          // For questions with options, show branches for each option automatically
                          childrenHtml += `<div class="workflow-branch">` + node.options.map(opt => {
-                             return `<div class="branch-path"><div class="branch-line-container"><div class="branch-line branch-line-left"></div><div class="branch-line branch-line-right"></div><div class="branch-line branch-line-down"></div></div><div class="branch-label">${opt}</div><div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, '${opt}')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div></div>`;
+                             return `<div class="branch-path"><div class="branch-label">${opt}</div><div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, '${opt}')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div></div>`;
                          }).join('') + `</div>`;
                     } else {
                         nodeHtml += `<div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id})" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div>`;
@@ -7289,7 +7292,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                         childrenHtml += `<div class="workflow-branch">` + branches.map(branchName => {
                             const childNode = children.find(c => c.branch === branchName);
-                            return `<div class="branch-path"><div class="branch-line-container"><div class="branch-line branch-line-left"></div><div class="branch-line branch-line-right"></div><div class="branch-line branch-line-down"></div></div><div class="branch-label">${branchName}</div>${childNode ? buildHtmlForNode(childNode) : `<div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, '${branchName}')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div>`}</div>`;
+                            return `<div class="branch-path"><div class="branch-label">${branchName}</div>${childNode ? buildHtmlForNode(childNode) : `<div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, '${branchName}')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div>`}</div>`;
                         }).join('') + `</div>`;
                     } else {
                         // Single path
