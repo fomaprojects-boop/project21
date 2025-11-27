@@ -73,6 +73,25 @@ try {
         }
     }
 
+    // --- Schema Auto-Fix: Ensure closed_by and closed_at columns exist in conversations ---
+    $schema_lock_closed_cols = __DIR__ . '/schema_conversation_closed_cols.lock';
+    if (!file_exists($schema_lock_closed_cols)) {
+        try {
+            // Add columns if not exist
+            $pdo->exec("ALTER TABLE conversations ADD COLUMN closed_by INT NULL, ADD COLUMN closed_at DATETIME NULL");
+            // Mark as done on success
+            file_put_contents($schema_lock_closed_cols, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            // If column already exists (error 1060), mark as done
+            if ($e->errorInfo[1] == 1060) {
+                file_put_contents($schema_lock_closed_cols, date('Y-m-d H:i:s'));
+            } else {
+                // Log other errors but allow the app to continue
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Conversation Closed Columns Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');

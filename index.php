@@ -38,26 +38,26 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         .sidebar-link:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #8b5cf6; } /* slate-800, slate-50, violet-500 */
         .sidebar-link.active { background: linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0) 100%); border-left-color: #8b5cf6; color: #fff; font-weight: 600; }
         .modal { transition: opacity 0.3s ease; }
-        .conversation-item { 
-            transition: all 0.2s ease; 
-            cursor: pointer; 
-            border-left: 4px solid transparent; 
+        .conversation-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
         }
-        .conversation-item:hover { 
-            background-color: #f8fafc; 
+        .conversation-item:hover {
+            background-color: #f8fafc;
             transform: translateX(2px);
         }
-        .conversation-item.active { 
-            background-color: #f5f3ff; 
-            border-left-color: #7c3aed; 
+        .conversation-item.active {
+            background-color: #f5f3ff;
+            border-left-color: #7c3aed;
             font-weight: 600;
         }
         html.dark .conversation-item:hover {
              background-color: #1f2937;
         }
-        html.dark .conversation-item.active { 
-            background-color: #2e1065; 
-            border-left-color: #a78bfa; 
+        html.dark .conversation-item.active {
+            background-color: #2e1065;
+            border-left-color: #a78bfa;
         }
 
         /* Custom Scrollbar */
@@ -442,7 +442,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             color-scheme: dark;
         }
         html.dark body {
-            background-color: #111827; 
+            background-color: #111827;
             color: #f9fafb;
         }
         html.dark main {
@@ -3208,6 +3208,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         function showView(viewId, event) {
             if (event) event.preventDefault();
 
+            isEmojiPickerInitialized = false;
+
             const loader = document.getElementById('page-loader');
             loader.style.display = 'flex';
 
@@ -4629,10 +4631,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     const safeContactName = c.contact_name || c.phone_number || 'Unknown';
                     const avatarChar = safeContactName.charAt(0).toUpperCase();
                     const lastContactMessageTimestamp = c.last_contact_message_at ? `'${c.last_contact_message_at}'` : 'null';
+                    const closedByName = c.closed_by_name ? `'${c.closed_by_name.replace(/'/g, "\'")}'` : 'null';
+                    const closedAt = c.closed_at ? `'${c.closed_at}'` : 'null';
 
                     // Note: Passing null for profileImage as it is not yet in API
                     container.innerHTML += `
-                        <div onclick="selectConversation(${c.conversation_id}, '${c.contact_name.replace(/'/g, "\\'")}', '${c.phone_number}', '${c.status}', '${c.assignee_name || ''}', null, ${lastContactMessageTimestamp})" class="p-4 cursor-pointer border-b transition-all ${isActive}">
+                        <div onclick="selectConversation(${c.conversation_id}, '${c.contact_name.replace(/'/g, "\\'")}', '${c.phone_number}', '${c.status}', '${c.assignee_name || ''}', null, ${lastContactMessageTimestamp}, ${closedByName}, ${closedAt})" class="p-4 cursor-pointer border-b transition-all ${isActive}">
                             <div class="flex justify-between items-start mb-1">
                                 <div class="flex items-center">
                                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-white flex items-center justify-center font-bold shadow-sm mr-3">${avatarChar}</div>
@@ -4763,7 +4767,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const templates = await fetchApi('get_templates.php');
             if (templates && Array.isArray(templates)) {
                 const approvedTemplates = templates.filter(t => t.status === 'APPROVED');
-                
+
                 if (approvedTemplates.length > 0) {
                     list.innerHTML = approvedTemplates.map(t => `
                         <div onclick="selectTemplateContent('${t.body.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')" class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
@@ -4811,7 +4815,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
-        function selectConversation(id, name, phone, status, assignee, profileImage = null, lastContactMessageAt = null) {
+        function selectConversation(id, name, phone, status, assignee, profileImage = null, lastContactMessageAt = null, closedByName = null, closedAt = null) {
             if (activeChatInterval) clearInterval(activeChatInterval);
             currentConversationId = id;
             currentConversationStatus = status;
@@ -4863,7 +4867,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             loadAssignUsers();
             loadCrmData(id); // Pro Feature: CRM Sidebar
 
-            // 24-Hour Window Logic
+            // 24-Hour Window Logic & Closed Status Logic
             const now = new Date();
             const lastMessageDate = lastContactMessageAt ? safeDate(lastContactMessageAt) : null;
             const hoursDiff = lastMessageDate ? (now - lastMessageDate) / (1000 * 60 * 60) : Infinity;
@@ -4871,6 +4875,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const messageInput = document.getElementById('messageInput');
             const inputWrapper = document.getElementById('input-wrapper');
             const chatFooter = document.getElementById('chat-footer');
+            const sendBtn = document.getElementById('send-btn');
 
             // Remove previous indicators
             const existingIndicator = document.getElementById('chat-closed-indicator');
@@ -4878,26 +4883,57 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 existingIndicator.remove();
             }
 
-            if (hoursDiff > 24) {
-                // Window is CLOSED
+            if (status === 'closed') {
+                // Chat is manually closed (Resolved)
+                resolveBtn.innerHTML = '<i class="fas fa-undo mr-2"></i> Reopen';
+                resolveBtn.className = 'text-sm border border-gray-300 text-gray-600 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300 px-3 py-1.5 rounded-lg transition-all flex items-center';
+
+                // Disable input and hide send button
                 messageInput.disabled = true;
-                messageInput.placeholder = 'Select a template to restart the conversation.';
+                messageInput.placeholder = 'Conversation is closed.';
                 inputWrapper.classList.add('opacity-50', 'bg-gray-100');
-                
-                // Add the "chat closed" indicator message
+                if (sendBtn) sendBtn.style.display = 'none';
+
+                // Add Yellow Banner
                 const closedIndicator = document.createElement('div');
                 closedIndicator.id = 'chat-closed-indicator';
-                closedIndicator.className = 'my-2 p-3 rounded-lg bg-yellow-100 text-yellow-800 text-sm text-center italic';
-                closedIndicator.innerHTML = `<i>Chat closed at ${lastMessageDate.toLocaleString()} by ${assignee || 'system'}. You must send a template to continue.</i>`;
-                chatFooter.parentNode.insertBefore(closedIndicator, chatFooter);
+                closedIndicator.className = 'my-2 p-3 rounded-lg bg-yellow-100 text-yellow-800 text-sm text-center italic border border-yellow-200 shadow-sm';
+
+                let closedText = `<i>Chat closed`;
+                if (closedByName && closedByName !== 'null') closedText += ` by ${closedByName}`;
+                if (closedAt && closedAt !== 'null') closedText += ` on ${new Date(closedAt).toLocaleString()}`;
+                closedText += `</i>`;
+
+                closedIndicator.innerHTML = closedText;
+                if(chatFooter && chatFooter.parentNode) chatFooter.parentNode.insertBefore(closedIndicator, chatFooter);
 
             } else {
-                // Window is OPEN
+                // Chat is OPEN
+                resolveBtn.innerHTML = '<i class="fas fa-check mr-2"></i> <span class="hidden md:inline">Resolve</span>';
+                resolveBtn.className = 'text-sm border border-gray-300 text-gray-600 hover:bg-green-50 hover:text-green-600 hover:border-green-300 px-3 py-1.5 rounded-lg transition-all flex items-center';
+
+                // Enable input and show send button
                 messageInput.disabled = false;
                 messageInput.placeholder = 'Type a message...';
                 inputWrapper.classList.remove('opacity-50', 'bg-gray-100');
+                if (sendBtn) sendBtn.style.display = 'inline-flex';
+
+                // Check 24-hour window ONLY if chat is open
+                if (hoursDiff > 24) {
+                    // Window is CLOSED (Meta Rule)
+                    messageInput.disabled = true;
+                    messageInput.placeholder = 'Select a template to restart the conversation.';
+                    inputWrapper.classList.add('opacity-50', 'bg-gray-100');
+                    if (sendBtn) sendBtn.style.display = 'none';
+
+                    const windowIndicator = document.createElement('div');
+                    windowIndicator.id = 'chat-closed-indicator';
+                    windowIndicator.className = 'my-2 p-3 rounded-lg bg-red-50 text-red-800 text-sm text-center italic border border-red-100';
+                    windowIndicator.innerHTML = `<i>24-hour window closed. Last message at ${lastMessageDate ? lastMessageDate.toLocaleString() : 'Unknown'}. You must send a template to continue.</i>`;
+                    if(chatFooter && chatFooter.parentNode) chatFooter.parentNode.insertBefore(windowIndicator, chatFooter);
+                }
             }
-            
+
             if (!isEmojiPickerInitialized) {
                 initEmojiPicker();
                 isEmojiPickerInitialized = true;
@@ -5305,7 +5341,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             messageInput.value = '';
             messageInput.style.height = 'auto';
             if (attachedFileInput) attachedFileInput.value = '';
-            
+
             // Corrected selector to use ID
             const attachmentPreview = document.getElementById('attachment-preview-container');
             if (attachmentPreview) {
@@ -5486,7 +5522,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             if (result && result.success) {
                 document.getElementById('snooze-menu').classList.add('hidden');
-                await toggleChatStatus(); // Ensure it completes before showing toast
+                loadConversations(); // Refresh list to reflect snoozed status
                 Swal.fire({
                     toast: true,
                     position: 'top-end',
@@ -7964,11 +8000,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         function setupEventListeners() {
-            // --- FILE INPUT LISTENER ---
-            const fileInput = document.getElementById('file-input');
-            if(fileInput) {
-                fileInput.addEventListener('change', handleFileUpload);
-            }
+            // --- FILE INPUT LISTENER (Delegation) ---
+            document.body.addEventListener('change', function(event) {
+                if (event.target && event.target.id === 'file-input') {
+                    handleFileUpload(event);
+                }
+            });
 
             // --- GLOBAL CLICK LISTENER FOR CLOSING MENUS ---
             document.body.addEventListener('click', function(event) {
@@ -8114,11 +8151,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 filledBody = filledBody.replace(regex, value);
                             }
                         }
-                        
+
                         // Now, place the filled content into the main message input and send
                         const messageInput = document.getElementById('messageInput');
                         messageInput.value = filledBody;
-                        
+
                         // Simulate a click on the main send button by calling sendMessage
                         const fakeEvent = { preventDefault: () => {} };
                         await sendMessage(fakeEvent);
@@ -8645,7 +8682,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
 
             picker.on('emoji', emoji => {
-                document.querySelector('#messageInput').value += emoji;
+                document.querySelector('#messageInput').value += (emoji.emoji || emoji);
             });
 
             button.addEventListener('click', () => {
