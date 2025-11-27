@@ -22,7 +22,8 @@ try {
     $stmt_adopt->execute([$userId]);
 
     // Step 2: Fetch templates
-    $sql = "SELECT id, name, body, header, footer, quick_replies, status, variables, category FROM message_templates WHERE user_id = ?";
+    // Added header_type and buttons_data to selection
+    $sql = "SELECT id, name, body, header, header_type, footer, quick_replies, buttons_data, status, variables, category FROM message_templates WHERE user_id = ?";
     $params = [$userId];
 
     if ($status_filter) {
@@ -56,6 +57,13 @@ try {
             $template['variables'] = (json_last_error() === JSON_ERROR_NONE && is_array($decoded_vars)) ? $decoded_vars : [];
         } else {
             $template['variables'] = [];
+        }
+
+        if (!empty($template['buttons_data'])) {
+            $decoded_btns = json_decode($template['buttons_data']);
+            $template['buttons_data'] = (json_last_error() === JSON_ERROR_NONE && is_array($decoded_btns)) ? $decoded_btns : [];
+        } else {
+            $template['buttons_data'] = [];
         }
     }
 

@@ -181,7 +181,18 @@ try {
         $postData['interactive'] = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
     } elseif ($messageType === 'template') {
         $postData['type'] = 'template';
-        $postData['template'] = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
+        // Ensure template payload is correctly structured
+        $templatePayload = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
+
+        // If content is present but not in parameters (legacy support or fallback), we might need logic here
+        // But the new frontend logic sends a fully formed 'interactive_data' object which maps to 'template' here.
+        // We just assign it.
+        $postData['template'] = $templatePayload;
+
+        // Ensure language code is set
+        if (!isset($postData['template']['language'])) {
+             $postData['template']['language'] = ['code' => 'en_US'];
+        }
     } elseif (in_array($messageType, ['image', 'video', 'document', 'audio'])) {
         $postData['type'] = $messageType;
         // Construct full URL if it's relative
