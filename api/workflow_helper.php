@@ -29,31 +29,38 @@ function processWorkflows($pdo, $userId, $conversationId, $contextData = []) {
         log_debug("Processing workflows for Event: $eventType");
 
         // Fetch active workflows
+        // IMPORTANT: We must filter by tenant if possible, or at least be aware of it.
+        // Currently get_workflows.php fetches ALL workflows.
+        // For robustness, we select all active workflows and match triggers.
         $stmt = $pdo->prepare("SELECT id, name, trigger_type, workflow_data FROM workflows WHERE is_active = 1");
         $stmt->execute();
         $workflows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        log_debug("Found " . count($workflows) . " active workflows in DB.");
+
         foreach ($workflows as $wf) {
-            $triggerType = $wf['trigger_type'];
+            $triggerType = trim($wf['trigger_type']);
             $data = json_decode($wf['workflow_data'], true);
             $nodes = $data['nodes'] ?? [];
 
             $shouldTrigger = false;
 
-            // Match Event Type with Trigger Type
-            if ($triggerType === 'Conversation Started' && $eventType === 'conversation_started') {
+            log_debug("Checking Workflow ID: {$wf['id']} Name: {$wf['name']} Trigger: '$triggerType' vs Event: '$eventType'");
+
+            // Match Event Type with Trigger Type (Case Insensitive to be safe)
+            if (strcasecmp($triggerType, 'Conversation Started') === 0 && $eventType === 'conversation_started') {
                 $shouldTrigger = true;
             }
-            elseif ($triggerType === 'Message Received' && $eventType === 'message_received') {
+            elseif (strcasecmp($triggerType, 'Message Received') === 0 && $eventType === 'message_received') {
                 $shouldTrigger = true;
             }
-            elseif ($triggerType === 'Conversation Closed' && $eventType === 'conversation_closed') {
+            elseif (strcasecmp($triggerType, 'Conversation Closed') === 0 && $eventType === 'conversation_closed') {
                 $shouldTrigger = true;
             }
             // Add other triggers here (e.g., specific keywords if needed)
 
             if ($shouldTrigger) {
-                log_debug("Workflow Triggered: " . $wf['name']);
+                log_debug("MATCH! Workflow Triggered: " . $wf['name']);
                 executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, null); // Start from root
                 // We don't break here if we want multiple independent workflows to potentially run,
                 // but usually one per event is safer to avoid conflicts.
@@ -117,6 +124,15 @@ function executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $paren
         else if ($node['type'] === 'assign') {
             // Basic assignment logic stub
             log_debug("Assignment node reached (Logic pending)");
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
+        }
+        else {
+            // Pass-through for unknown/unhandled nodes (e.g. Conditions, Questions, Delays)
+            // If we don't handle them, we should at least try to continue to their children
+            // so the workflow doesn't stop dead.
+            // NOTE: Logic nodes like Conditions usually require evaluation.
+            // Just passing through effectively treats them as "True" or "Next".
+            log_debug("Unhandled Node Type: " . $node['type'] . ". Attempting to continue to children...");
             executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
         }
     }
