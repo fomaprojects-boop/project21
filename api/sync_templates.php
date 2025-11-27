@@ -45,7 +45,7 @@ try {
         exit;
     }
 
-    $url = "https://graph.facebook.com/v21.0/{$waba_id}/message_templates";
+    $url = "https://graph.facebook.com/v21.0/{$waba_id}/message_templates?limit=250";
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -64,7 +64,6 @@ try {
         $meta_code = $meta_error['code'] ?? 0;
         $meta_message = $meta_error['message'] ?? 'Unknown error';
 
-        // Check for specific OAuth errors (190: Invalid OAuth access token)
         if ($meta_code == 190) {
             echo json_encode([
                 'status' => 'auth_error',
@@ -100,11 +99,23 @@ try {
         $quick_replies = [];
         $variables = [];
 
+        // New Fields for Complex Templates
+        $header_type = 'TEXT'; // Default
+        $buttons_data = []; // Store full structure for URL/Phone buttons
+
         foreach ($components as $component) {
             if ($component['type'] === 'BODY') {
                 $body = $component['text'];
-            } elseif ($component['type'] === 'HEADER' && $component['format'] === 'TEXT') {
-                $header = $component['text'];
+                // Extract variables from body
+                if (preg_match_all('/{{(.*?)}}/', $body, $matches)) {
+                    $variables = array_unique($matches[1]);
+                }
+            } elseif ($component['type'] === 'HEADER') {
+                $header_type = $component['format']; // TEXT, IMAGE, VIDEO, DOCUMENT
+                if ($header_type === 'TEXT') {
+                    $header = $component['text'];
+                }
+                // For MEDIA headers, we don't store text, just the type is important for UI to show file picker
             } elseif ($component['type'] === 'FOOTER') {
                 $footer = $component['text'];
             } elseif ($component['type'] === 'BUTTONS') {
@@ -112,26 +123,23 @@ try {
                     if ($button['type'] === 'QUICK_REPLY') {
                         $quick_replies[] = $button['text'];
                     }
+                    // Store full button config for all types (QUICK_REPLY, URL, PHONE_NUMBER)
+                    // URL buttons specifically might have dynamic variables {{1}} in the url field
+                    $buttons_data[] = $button;
                 }
             }
         }
 
-        // Extract variables from body
-        if (preg_match_all('/{{(.*?)}}/', $body, $matches)) {
-            $variables = array_unique($matches[1]);
-        }
-
         $quick_replies_json = !empty($quick_replies) ? json_encode($quick_replies) : null;
         $variables_json = !empty($variables) ? json_encode(array_values($variables)) : null;
+        $buttons_data_json = !empty($buttons_data) ? json_encode($buttons_data) : null;
 
         // Determine if we update or insert
         $template_id = null;
 
-        // Case-insensitive name match check if exact match fails
         if (isset($existing_templates[$name])) {
             $template_id = $existing_templates[$name];
         } else {
-             // Fallback DB check
              $check_stmt = $pdo->prepare("SELECT id FROM message_templates WHERE name = ? AND user_id = ?");
              $check_stmt->execute([$name, $current_user_id]);
              $existing_id = $check_stmt->fetchColumn();
@@ -141,38 +149,53 @@ try {
         }
 
         if ($template_id) {
-            // Update existing template (Always update regardless of status, to reflect Rejection/Approval)
-            $stmt = $pdo->prepare("UPDATE message_templates SET status = ?, category = ?, body = ?, header = ?, footer = ?, quick_replies = ?, variables = ? WHERE id = ?");
+            // Update existing template - This fixes the issue of "Default Approved" templates that are actually Rejected/Pending on Meta
+            // We OVERWRITE the local status with the Meta status.
+            $stmt = $pdo->prepare("UPDATE message_templates SET
+                status = ?,
+                category = ?,
+                body = ?,
+                header = ?,
+                header_type = ?,
+                footer = ?,
+                quick_replies = ?,
+                variables = ?,
+                buttons_data = ?
+                WHERE id = ?");
             $stmt->execute([
                 $status,
                 $category,
                 $body,
                 $header,
+                $header_type,
                 $footer,
                 $quick_replies_json,
                 $variables_json,
+                $buttons_data_json,
                 $template_id
             ]);
             $updated_count++;
         } elseif ($status === 'APPROVED') {
-            // Insert NEW template ONLY if APPROVED (User Requirement: "Ichukue tu zile ambazo zimehakikiwa")
-            // This prevents polluting the DB with Rejected/Pending templates that originate from Meta but aren't useful.
-            $stmt = $pdo->prepare("INSERT INTO message_templates (user_id, name, category, body, header, footer, quick_replies, variables, status, language, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            // Insert NEW template ONLY if APPROVED
+            $stmt = $pdo->prepare("INSERT INTO message_templates (
+                user_id, name, category, body, header, header_type, footer, quick_replies, variables, buttons_data, status, language, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
             $stmt->execute([
                 $current_user_id,
                 $name,
                 $category,
                 $body,
                 $header,
+                $header_type,
                 $footer,
                 $quick_replies_json,
                 $variables_json,
+                $buttons_data_json,
                 $status,
                 $meta_template['language'] ?? 'en_US'
             ]);
             $inserted_count++;
         }
-        // If it's new but NOT approved, we skip it.
     }
 
     echo json_encode([

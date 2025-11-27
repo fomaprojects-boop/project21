@@ -141,6 +141,24 @@ try {
         }
     }
 
+    // --- Schema Auto-Fix: Ensure header_type and buttons_data columns exist in message_templates ---
+    // Used for dynamic URL buttons and media headers in templates
+    $schema_lock_template_complex = __DIR__ . '/schema_template_complex_v2.lock';
+    if (!file_exists($schema_lock_template_complex)) {
+        try {
+            // Add columns if not exist
+            $pdo->exec("ALTER TABLE message_templates ADD COLUMN header_type VARCHAR(50) DEFAULT NULL, ADD COLUMN buttons_data TEXT DEFAULT NULL");
+            file_put_contents($schema_lock_template_complex, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1060) {
+                file_put_contents($schema_lock_template_complex, date('Y-m-d H:i:s'));
+            } else {
+                // Ignore "duplicate column" if one succeeded and other failed, just log
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Template Complex Columns Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');

@@ -1,29 +1,11 @@
-<?php
-require_once 'api/config.php';
-require_once 'api/db.php';
 
-
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-$userId = $_SESSION['user_id'];
-$userName = isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_name']) : 'User';
-$userRole = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'Staff';
-$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-$path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-$baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="base-url" content="<?php echo $baseUrl; ?>">
-    <meta name="user-id" content="<?php echo $userId; ?>">
-    <meta name="user-role" content="<?php echo $userRole; ?>">
+    <meta name="base-url" content="">
+    <meta name="user-id" content="">
+    <meta name="user-role" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatMe - Professional Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -540,10 +522,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
         window.fbAsyncInit = function() {
             // Debugging: Log App ID to console
-            console.log('Initializing Facebook SDK with App ID:', '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>');
+            console.log('Initializing Facebook SDK with App ID:', '');
 
             FB.init({
-            appId            : '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>',
+            appId            : '',
             autoLogAppEvents : true,
             xfbml            : true,
             version          : 'v21.0'
@@ -609,7 +591,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <i id="business-menu-icon" class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div id="business-menu" class="hidden pl-8 space-y-2 py-2">
-                        <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+
                         <a href="#" onclick="showView('vendors', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-store w-6 mr-3"></i><span>Vendors</span></a>
                         <a href="#" onclick="showView('invoices', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-file-invoice-dollar w-6 mr-3"></i><span>Invoices</span></a>
                         <a href="#" onclick="showView('assets', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-box-open w-6 mr-3"></i><span>Assets</span></a>
@@ -617,15 +599,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <a href="#" onclick="showView('tax_payments', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-landmark w-6 mr-3"></i><span>Tax Payments</span></a>
                         <a href="#" onclick="showView('financials', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-chart-pie w-6 mr-3"></i><span>Financial Statements</span></a>
                         <a href="#" onclick="showView('payroll', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-money-bill-wave w-6 mr-3"></i><span>Wages and Salaries</span></a>
-                        <?php endif; ?>
+
                     </div>
                 </div>
 
                 <a href="#" onclick="showView('youtube-ads', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fab fa-youtube w-6 mr-3"></i><span>YouTube Ads</span></a>
 
-                <?php if (FEATURE_ENHANCED_EXPENSE_WORKFLOW): ?>
+
                 <a href="#" onclick="showView('expenses', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-cash-register w-6 mr-3"></i><span>Expenses</span></a>
-                <?php endif; ?>
+
 
                 <!-- Whatsapp Dropdown -->
                 <div>
@@ -645,9 +627,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </div>
                 </div>
 
-                <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+
                 <a href="#" onclick="showView('users', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-users w-6 mr-3"></i><span>Users</span></a>
-                <?php endif; ?>
+
 
                 <!-- Print & Design Workflow Dropdown -->
                 <div>
@@ -659,20 +641,20 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <i id="print-design-menu-icon" class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div id="print-design-menu" class="hidden pl-8 space-y-2 py-2">
-                        <?php if ($userRole === 'Admin' || $userRole === 'Staff' || $userRole === 'Accountant'): ?>
+
                             <a href="#" onclick="showView('analytics', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-chart-pie w-6 mr-3"></i><span>Analytics</span></a>
-                            <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+
                                 <a href="#" onclick="showView('costs', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-dollar-sign w-6 mr-3"></i><span>Material Costs</span></a>
-                            <?php endif; ?>
+
                             <a href="#" onclick="showView('online-job-order', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-clipboard-list w-6 mr-3"></i><span>Job Orders</span></a>
                             <a href="#" onclick="showView('pricing-calculator', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-calculator w-6 mr-3"></i><span>Pricing Calculator</span></a>
                             <a href="#" onclick="showView('file-upload', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-file-upload w-6 mr-3"></i><span>File Upload</span></a>
                             <a href="#" onclick="showView('digital-proofing', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-check-double w-6 mr-3"></i><span>Digital Proofing</span></a>
-                        <?php endif; ?>
-                        <?php if ($userRole === 'Client'): ?>
+
+
                             <a href="#" onclick="showView('customer-dashboard', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-user-circle w-6 mr-3"></i><span>My Dashboard</span></a>
                             <a href="#" onclick="showView('online-job-order', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-clipboard-list w-6 mr-3"></i><span>New Job Order</span></a>
-                        <?php endif; ?>
+
                     </div>
                 </div>
             </nav>
@@ -685,7 +667,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     <button id="theme-switcher" class="hover:text-violet-200" title="Toggle Dark Mode">
                         <i class="fas fa-moon text-xl"></i>
                     </button>
-                    <span class="font-semibold">Welcome, <?php echo $userName; ?>!</span>
+                    <span class="font-semibold">Welcome, !</span>
                     <button onclick="showView('settings', event)" class="hover:text-violet-200" title="Settings"><i class="fas fa-cog text-xl"></i></button>
                     <a href="api/logout.php" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold" title="Logout"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
                 </div>
@@ -3564,7 +3546,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
 
             FB.login(fbLoginCallback, {
-                config_id: '<?php echo defined('FACEBOOK_CONFIG_ID') ? FACEBOOK_CONFIG_ID : ''; ?>',
+                config_id: '',
                 response_type: 'code',
                 override_default_response_type: true,
                 extras: {
