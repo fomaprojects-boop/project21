@@ -108,6 +108,39 @@ try {
         }
     }
 
+    // --- Schema Auto-Fix: Ensure workflow_state column exists in conversations ---
+    // Used to pause execution at Question nodes and resume on user reply.
+    $schema_lock_workflow_state = __DIR__ . '/schema_conversation_workflow_state.lock';
+    if (!file_exists($schema_lock_workflow_state)) {
+        try {
+            // Add column if not exists (Stores JSON: {active_node_id: "xyz", workflow_id: 123})
+            $pdo->exec("ALTER TABLE conversations ADD COLUMN workflow_state TEXT NULL");
+            file_put_contents($schema_lock_workflow_state, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1060) {
+                file_put_contents($schema_lock_workflow_state, date('Y-m-d H:i:s'));
+            } else {
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Workflow State Column Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+
+    // --- Schema Auto-Fix: Ensure message_type and interactive_data columns exist in messages ---
+    $schema_lock_msg_interactive = __DIR__ . '/schema_message_interactive.lock';
+    if (!file_exists($schema_lock_msg_interactive)) {
+        try {
+            // Add columns for rich messages
+            $pdo->exec("ALTER TABLE messages ADD COLUMN message_type VARCHAR(50) DEFAULT 'text', ADD COLUMN interactive_data JSON NULL");
+            file_put_contents($schema_lock_msg_interactive, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1060) {
+                file_put_contents($schema_lock_msg_interactive, date('Y-m-d H:i:s'));
+            } else {
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Message Interactive Columns Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');
