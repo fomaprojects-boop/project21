@@ -183,16 +183,30 @@ function resumeWorkflow($pdo, $userId, $conversationId, $nodes, $edges, $current
 
     // 2. Try NODES ParentID (Tree Structure - Fallback)
     if (!$matchedNextNodeId) {
+        log_debug("Edges failed. Trying ParentID fallback. Current Node: $currentNodeId, Reply: $userReply");
         foreach ($nodes as $childNode) {
             if (isset($childNode['parentId']) && $childNode['parentId'] == $currentNodeId) {
-                $branch = $childNode['branch'] ?? '';
+                // Check branch in root or data
+                $branch = $childNode['branch'] ?? ($childNode['data']['branch'] ?? '');
+                
                 $cleanBranch = trim(strtolower($branch));
                 $cleanReply = trim(strtolower($userReply));
 
-                // Match Logic: Check branch name (e.g. "Yes", "No", "Option A")
+                log_debug("Checking Child Node " . $childNode['id'] . " Branch: '$cleanBranch' vs Reply: '$cleanReply'");
+
+                // Match Logic: Exact or Fuzzy
+                // 1. Exact Match
                 if ($cleanBranch !== '' && $cleanBranch === $cleanReply) {
                     $matchedNextNodeId = $childNode['id'];
+                    log_debug("Exact match found!");
                     break;
+                }
+                
+                // 2. Fuzzy Match (Contains) - e.g. "Yes please" contains "yes"
+                if ($cleanBranch !== '' && (strpos($cleanReply, $cleanBranch) !== false || strpos($cleanBranch, $cleanReply) !== false)) {
+                     $matchedNextNodeId = $childNode['id'];
+                     log_debug("Fuzzy match found!");
+                     break;
                 }
 
                 // Keep track of a default path (empty branch or matches nothing else)
@@ -263,13 +277,17 @@ function executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges
 
         // Legacy Fallback
         if (!$foundViaEdges) {
+            log_debug("Searching for children of Node $parentId using ParentID strategy...");
             foreach ($nodes as $n) {
+                // Loose comparison == handles string/int mismatch
                 if (isset($n['parentId']) && $n['parentId'] == $parentId) {
                     $nextNodes[] = $n;
                 }
             }
         }
     }
+
+    log_debug("Found " . count($nextNodes) . " next nodes for Parent $parentId");
 
     processNodes:
     foreach ($nextNodes as $node) {
