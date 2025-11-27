@@ -322,7 +322,18 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                         }
 
                         // 4. Trigger Workflow Check
-                        processWorkflows($pdo, $user_id, $conversationId, $msg_body);
+                        // Determine if this is a new conversation start
+                        $isNewConversation = false;
+                        try {
+                            // Simply check if there is only 1 message in this conversation (the one just inserted)
+                            $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE conversation_id = ?");
+                            $stmt_count->execute([$conversationId]);
+                            if ($stmt_count->fetchColumn() <= 1) {
+                                $isNewConversation = true;
+                            }
+                        } catch (Exception $e) {}
+
+                        processWorkflows($pdo, $user_id, $conversationId, $msg_body, $isNewConversation);
                     }
                 }
             }
@@ -335,9 +346,10 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
 }
 
 // --- WORKFLOW PROCESSING HELPER ---
-function processWorkflows($pdo, $userId, $conversationId, $msgBody) {
+function processWorkflows($pdo, $userId, $conversationId, $msgBody, $isNewConversation = false) {
     try {
         // Fetch active workflows
+        // Robust check for is_active column existence handled by catch block if column missing in dev
         $stmt = $pdo->prepare("SELECT id, name, trigger_type, workflow_data FROM workflows WHERE is_active = 1");
         $stmt->execute();
         $workflows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -349,32 +361,23 @@ function processWorkflows($pdo, $userId, $conversationId, $msgBody) {
 
             $shouldTrigger = false;
 
-            if ($triggerType === 'Message Received') {
-                $shouldTrigger = true;
-            } elseif ($triggerType === 'Keyword' || $triggerType === 'Conversation Started') {
-                // Find trigger node
-                $triggerNode = null;
-                foreach ($nodes as $n) {
-                    if ($n['type'] === 'trigger') {
-                        $triggerNode = $n;
-                        break;
-                    }
-                }
-
-                if ($triggerNode) {
-                    // Simple keyword check or generic start
-                    if ($triggerType === 'Conversation Started') {
-                         $shouldTrigger = true;
-                    } elseif (stripos($msgBody, $triggerNode['content']) !== false) {
-                        // $shouldTrigger = true; // Uncomment for strict keyword matching if needed
-                    }
+            // 1. Conversation Started Trigger
+            if ($triggerType === 'Conversation Started') {
+                if ($isNewConversation) {
+                    $shouldTrigger = true;
                 }
             }
+            // 2. Message Received Trigger (Always triggers on any message)
+            else if ($triggerType === 'Message Received') {
+                $shouldTrigger = true;
+            }
+            // 3. Keyword Trigger (Future implementation - strict matching)
+            // For now, we assume standard triggers cover most needs
 
             if ($shouldTrigger) {
                 log_debug("Workflow Triggered: " . $wf['name']);
-                executeWorkflow($pdo, $userId, $conversationId, $nodes);
-                break; // Stop after first match
+                executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, null); // Start from root
+                break; // Stop after first matching workflow to prevent conflicts
             }
         }
     } catch (Exception $e) {
@@ -382,33 +385,106 @@ function processWorkflows($pdo, $userId, $conversationId, $msgBody) {
     }
 }
 
-function executeWorkflow($pdo, $userId, $conversationId, $nodes) {
-    // Find trigger node ID
-    $triggerNodeId = null;
-    foreach ($nodes as $n) {
-        if ($n['type'] === 'trigger') {
-            $triggerNodeId = $n['id'];
-            break;
+function executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $parentId = null) {
+    // Find start node or next node
+    letNextNodes:
+    $nextNodes = [];
+    if ($parentId === null) {
+        // Find trigger (root)
+        foreach ($nodes as $n) {
+            if ($n['type'] === 'trigger') {
+                $parentId = $n['id']; // Start from trigger
+                goto letNextNodes; // Jump to find children of trigger
+            }
+        }
+    } else {
+        // Find children
+        foreach ($nodes as $n) {
+            if (isset($n['parentId']) && $n['parentId'] == $parentId) {
+                $nextNodes[] = $n;
+            }
         }
     }
 
-    if (!$triggerNodeId) return;
+    foreach ($nextNodes as $node) {
+        log_debug("Executing Node ID: " . $node['id'] . " Type: " . $node['type']);
 
-    // Find next node
-    $nextNode = null;
-    foreach ($nodes as $n) {
-        if (isset($n['parentId']) && $n['parentId'] == $triggerNodeId) {
-            $nextNode = $n;
-            break;
+        // EXECUTE ACTION
+        if ($node['type'] === 'message' || $node['type'] === 'action') {
+            sendWorkflowReply($pdo, $userId, $conversationId, $node['content']);
+            // Continue to next node immediately
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
         }
+        else if ($node['type'] === 'add_tag') {
+            // Content format: "Add Tag: VIP"
+            $tag = str_replace('Add Tag: ', '', $node['content']);
+            if (!empty($tag)) {
+                addContactTag($pdo, $conversationId, $tag);
+            }
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
+        }
+        else if ($node['type'] === 'update_contact') {
+            // Use structured data if available, else try parsing content
+            $field = $node['data']['field'] ?? null;
+            $value = $node['data']['value'] ?? null;
+
+            if ($field && $value !== null) {
+                updateContactField($pdo, $conversationId, $field, $value);
+            }
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
+        }
+        else if ($node['type'] === 'assign') {
+            // Basic assignment logic stub
+            log_debug("Assignment node reached (Logic pending)");
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
+        }
+        // Note: 'Question' and 'Condition' nodes would require stopping and waiting for user input
+        // or branching logic which is complex for a stateless webhook without session state tracking.
+        // For this version, we only support linear execution of actions.
     }
+}
 
-    if ($nextNode) {
-        if ($nextNode['type'] === 'message' || $nextNode['type'] === 'action') {
-            $replyContent = $nextNode['content'];
-            log_debug("Executing Workflow Action: Send '$replyContent'");
-            sendWorkflowReply($pdo, $userId, $conversationId, $replyContent);
+function addContactTag($pdo, $conversationId, $tag) {
+    try {
+        $stmt = $pdo->prepare("SELECT contact_id FROM conversations WHERE id = ?");
+        $stmt->execute([$conversationId]);
+        $contactId = $stmt->fetchColumn();
+        if (!$contactId) return;
+
+        // Fetch current tags
+        $stmt = $pdo->prepare("SELECT tags FROM contacts WHERE id = ?");
+        $stmt->execute([$contactId]);
+        $currentTagsJson = $stmt->fetchColumn();
+        $tags = json_decode($currentTagsJson, true) ?? [];
+
+        if (!in_array($tag, $tags)) {
+            $tags[] = $tag;
+            $stmt = $pdo->prepare("UPDATE contacts SET tags = ? WHERE id = ?");
+            $stmt->execute([json_encode($tags), $contactId]);
+            log_debug("Added Tag '$tag' to Contact $contactId");
         }
+    } catch (Exception $e) {
+        log_debug("Error adding tag: " . $e->getMessage());
+    }
+}
+
+function updateContactField($pdo, $conversationId, $field, $value) {
+    try {
+        $allowedFields = ['email', 'name', 'notes'];
+        if (!in_array($field, $allowedFields)) return;
+
+        $stmt = $pdo->prepare("SELECT contact_id FROM conversations WHERE id = ?");
+        $stmt->execute([$conversationId]);
+        $contactId = $stmt->fetchColumn();
+
+        if ($contactId) {
+            $sql = "UPDATE contacts SET $field = ? WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$value, $contactId]);
+            log_debug("Updated Contact $contactId field '$field' to '$value'");
+        }
+    } catch (Exception $e) {
+        log_debug("Error updating contact: " . $e->getMessage());
     }
 }
 
