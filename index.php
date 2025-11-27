@@ -1408,8 +1408,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 <button onclick="importWorkflowJSON()" class="text-gray-500 hover:text-violet-600 bg-gray-100 hover:bg-violet-50 px-4 py-2 rounded-lg text-sm font-semibold transition-colors" title="Import from JSON">
                     <i class="fas fa-upload mr-2"></i>Import
                 </button>
-                <button onclick="saveWorkflow()" class="bg-violet-600 text-white px-6 py-2 rounded-lg hover:bg-violet-700 font-semibold shadow-sm transition-all hover:shadow-md flex items-center">
-                    <i class="fas fa-save mr-2"></i>Save
+                <button onclick="saveWorkflow(0)" class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 font-semibold shadow-sm transition-all mr-2">
+                    Save Draft
+                </button>
+                <button onclick="saveWorkflow(1)" class="bg-violet-600 text-white px-6 py-2 rounded-lg hover:bg-violet-700 font-semibold shadow-sm transition-all hover:shadow-md flex items-center">
+                    <i class="fas fa-rocket mr-2"></i>Publish
                 </button>
             </div>
         </div>
@@ -5835,12 +5838,18 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 return;
             }
 
-            list.innerHTML = workflows.map(w => `
+            list.innerHTML = workflows.map(w => {
+                const isActive = w.is_active == 1;
+                const statusBadge = isActive
+                    ? `<span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide flex-shrink-0">Active</span>`
+                    : `<span class="bg-gray-200 text-gray-600 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide flex-shrink-0">Draft</span>`;
+
+                return `
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all group relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-violet-500"></div>
+                    <div class="absolute top-0 left-0 w-1 h-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}"></div>
                     <div class="flex justify-between items-start mb-3">
                         <h4 class="font-bold text-lg text-gray-800 group-hover:text-violet-600 transition-colors truncate pr-2">${w.name}</h4>
-                        <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide flex-shrink-0">Active</span>
+                        ${statusBadge}
                     </div>
                     <p class="text-sm text-gray-500 mb-6 flex items-center bg-gray-50 p-2 rounded-lg">
                         <i class="fas fa-bolt text-amber-500 mr-2"></i>
@@ -5855,7 +5864,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `;}).join('');
         }
 
         function toggleVfdFrequency() {
@@ -7200,7 +7209,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
         function selectTrigger(triggerContent) {
             closeModal('selectTriggerModal');
-            currentWorkflow = { id: null, name: 'Untitled Workflow', trigger_type: triggerContent, workflow_data: { nodes: [{id: 1, type: 'trigger', content: triggerContent, parentId: null}] } };
+            currentWorkflow = { id: null, name: 'Untitled Workflow', trigger_type: triggerContent, is_active: 0, workflow_data: { nodes: [{id: 1, type: 'trigger', content: triggerContent, parentId: null}] } };
             document.getElementById('workflow-main-view').style.display = 'none';
             document.getElementById('workflow-editor-view').style.display = 'block';
             document.getElementById('workflow-name-input').value = currentWorkflow.name;
@@ -7217,8 +7226,28 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         function renderWorkflow() {
             const canvas = document.getElementById('workflow-editor-canvas'); canvas.innerHTML = '';
             const nodes = currentWorkflow.workflow_data.nodes;
-            const icons = { trigger: 'fa-play-circle', ai_objective: 'fa-robot', action: 'fa-paper-plane', condition: 'fa-code-branch', question: 'fa-question-circle', message: 'fa-comment-alt', assign: 'fa-users' };
-            const colors = { trigger: 'text-rose-500', ai_objective: 'text-violet-500', action: 'text-green-500', condition: 'text-amber-500', question: 'text-blue-500', message: 'text-gray-600', assign: 'text-purple-500' };
+            const icons = {
+                trigger: 'fa-play-circle',
+                ai_objective: 'fa-robot',
+                action: 'fa-paper-plane',
+                condition: 'fa-code-branch',
+                question: 'fa-question-circle',
+                message: 'fa-comment-alt',
+                assign: 'fa-users',
+                add_tag: 'fa-tag',
+                update_contact: 'fa-user-edit'
+            };
+            const colors = {
+                trigger: 'text-rose-500',
+                ai_objective: 'text-violet-500',
+                action: 'text-green-500',
+                condition: 'text-amber-500',
+                question: 'text-blue-500',
+                message: 'text-gray-600',
+                assign: 'text-purple-500',
+                add_tag: 'text-pink-500',
+                update_contact: 'text-cyan-600'
+            };
 
             const buildHtmlForNode = (node) => {
                 let actions = `<div class="absolute top-2 right-2 flex gap-2"><button onclick="deleteNode(${node.id})" class="text-gray-400 hover:text-red-500 text-xs"><i class="fas fa-times"></i></button><button onclick="openNodeConfig(${node.id})" class="text-gray-400 hover:text-violet-500 text-xs"><i class="fas fa-pencil-alt"></i></button></div>`;
@@ -7286,7 +7315,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 {value: 'message', label: 'Send Message'},
                 {value: 'question', label: 'Ask Question / Quick Reply'},
                 {value: 'condition', label: 'Branch (Yes/No)'},
-                {value: 'assign', label: 'Assign to Team'}
+                {value: 'assign', label: 'Assign to Team'},
+                {value: 'add_tag', label: 'Add Tag to Contact'},
+                {value: 'update_contact', label: 'Update Contact Field'}
             ];
 
             let typeOptions = nodeTypes.map(t => `<option value="${t.value}" ${node.type === t.value ? 'selected' : ''}>${t.label}</option>`).join('');
@@ -7352,6 +7383,27 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <option value="Online Only" ${logic === 'Online Only' ? 'selected' : ''}>Online Only</option>
                     </select>
                  `;
+             } else if (type === 'add_tag') {
+                 let tag = content.replace('Add Tag: ', '');
+                 if(tag === 'New Node') tag = '';
+                 html = `
+                    <label class="block text-sm font-medium text-gray-700">Tag Name</label>
+                    <input type="text" id="config-content" class="w-full p-2 border rounded-md mt-1" value="${tag}" placeholder="e.g. VIP, Lead, Interested">
+                 `;
+             } else if (type === 'update_contact') {
+                 html = `
+                    <div class="bg-blue-50 p-3 rounded text-sm text-blue-800 mb-2">
+                        Updates a field in the contact's CRM profile.
+                    </div>
+                    <label class="block text-sm font-medium text-gray-700">Field to Update</label>
+                    <select id="config-field" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border mb-2">
+                        <option value="email">Email Address</option>
+                        <option value="name">Full Name</option>
+                        <option value="notes">Notes</option>
+                    </select>
+                    <label class="block text-sm font-medium text-gray-700">Value</label>
+                    <input type="text" id="config-value" class="w-full p-2 border rounded-md mt-1" placeholder="Value to set (or leave empty)">
+                 `;
              }
 
              container.innerHTML = html;
@@ -7366,6 +7418,16 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             if (type === 'assign') {
                 const logic = document.getElementById('config-logic').value;
                 node.content = `Assign to Team: Sales (${logic})`;
+                delete node.options;
+            } else if (type === 'add_tag') {
+                const tag = document.getElementById('config-content').value;
+                node.content = `Add Tag: ${tag}`;
+                delete node.options;
+            } else if (type === 'update_contact') {
+                const field = document.getElementById('config-field').value;
+                const value = document.getElementById('config-value').value;
+                node.data = { field: field, value: value };
+                node.content = `Update ${field} to '${value}'`;
                 delete node.options;
             } else {
                 const contentEl = document.getElementById('config-content');
@@ -7427,7 +7489,18 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
             input.click();
         }
-        async function saveWorkflow() { currentWorkflow.name = document.getElementById('workflow-name-input').value; const result = await fetchApi('save_workflow.php', { method: 'POST', body: currentWorkflow }); if(result && result.status === 'success') { alert('Workflow saved!'); closeWorkflowEditor(); } else if (result) { alert('Error: ' + result.message); } }
+        async function saveWorkflow(isActive = 0) {
+            currentWorkflow.name = document.getElementById('workflow-name-input').value;
+            currentWorkflow.is_active = isActive;
+            const result = await fetchApi('save_workflow.php', { method: 'POST', body: currentWorkflow });
+            if(result && result.status === 'success') {
+                const statusMsg = isActive ? 'published and active' : 'saved as draft';
+                alert(`Workflow ${statusMsg}!`);
+                closeWorkflowEditor();
+            } else if (result) {
+                alert('Error: ' + result.message);
+            }
+        }
         async function deleteWorkflow(id, name) { if (!confirm(`Delete workflow '${name}'?`)) return; const result = await fetchApi('delete_workflow.php', { method: 'POST', body: { id } }); if (result && result.status === 'success') { alert('Workflow deleted!'); loadWorkflows(); } else if (result) { alert('Error: ' + result.message); } }
 
     // Function ya kuongeza mstari mpya wa item
