@@ -43,8 +43,28 @@ try {
     $content = $input['content'] ?? '';
     $userId = $_SESSION['user_id'];
     $scheduledAt = $input['scheduled_at'] ?? null;
-    $messageType = $input['type'] ?? 'text'; // 'text', 'button', 'list', 'note' (handled via is_internal usually, but let's support explicit type)
+    $messageType = $input['type'] ?? 'text'; // 'text', 'button', 'list', 'note'
     $interactiveData = $input['interactive_data'] ?? null;
+    $attachmentUrl = $input['attachment_url'] ?? null;
+
+    // Detect media type if attachment is present
+    if ($attachmentUrl) {
+        $ext = strtolower(pathinfo($attachmentUrl, PATHINFO_EXTENSION));
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+            $messageType = 'image';
+        } elseif (in_array($ext, ['mp4', '3gp'])) {
+            $messageType = 'video';
+        } elseif (in_array($ext, ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv'])) {
+            $messageType = 'document';
+        } elseif (in_array($ext, ['aac', 'amr', 'mp3', 'm4a', 'ogg'])) {
+            $messageType = 'audio';
+        } else {
+            // Default to document for unknown types if needed, or stick to image?
+            // Safer to assume document if not image/video/audio
+            $messageType = 'document';
+        }
+        log_send_debug("Attachment detected: $attachmentUrl. Type set to: $messageType");
+    }
 
     log_send_debug("Attempting to process message. User: $userId, Conv: $conversationId, Type: $messageType, Scheduled: " . ($scheduledAt ?: 'No'));
 
@@ -62,7 +82,7 @@ try {
         $stmt->execute([
             ':conv_id' => $conversationId,
             ':user_id' => $userId,
-            ':content' => $content, // Content acts as fallback or description
+            ':content' => $attachmentUrl ? $attachmentUrl . ' ' . $content : $content, // Store URL in content for scheduled
             ':msg_type' => $messageType,
             ':int_data' => is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData,
             ':scheduled' => $scheduledAt
@@ -91,14 +111,13 @@ try {
         // Fallback to global settings
         log_send_debug("User settings missing. Checking global settings.");
         try {
-        // FIX: Standardize column names to match what's saved by the OAuth controller.
-        $stmt = $pdo->prepare("SELECT whatsapp_access_token, whatsapp_phone_number_id FROM settings LIMIT 1");
+            $stmt = $pdo->prepare("SELECT whatsapp_access_token, whatsapp_phone_number_id FROM settings LIMIT 1");
             $stmt->execute();
             $globalSettings = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($globalSettings) {
-            $whatsappToken = $globalSettings['whatsapp_access_token'] ?? null;
-            $whatsappPhoneId = $globalSettings['whatsapp_phone_number_id'] ?? null;
+                $whatsappToken = $globalSettings['whatsapp_access_token'] ?? null;
+                $whatsappPhoneId = $globalSettings['whatsapp_phone_number_id'] ?? null;
             }
         } catch (PDOException $e) {
             // Ignore
@@ -163,6 +182,28 @@ try {
     } elseif ($messageType === 'template') {
         $postData['type'] = 'template';
         $postData['template'] = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
+    } elseif (in_array($messageType, ['image', 'video', 'document', 'audio'])) {
+        $postData['type'] = $messageType;
+        // Construct full URL if it's relative
+        $fullUrl = $attachmentUrl;
+        if (!preg_match('/^http/', $fullUrl)) {
+            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+            $host = $_SERVER['HTTP_HOST'];
+            $base = rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'])), '/\\'); // Go up one level from /api/
+            $fullUrl = "$protocol://$host$base/$attachmentUrl";
+        }
+
+        $postData[$messageType] = [
+            'link' => $fullUrl
+        ];
+        // Add caption for types that support it
+        if ($content && $messageType !== 'audio') {
+            $postData[$messageType]['caption'] = $content;
+        }
+        // Document needs a filename for better UX
+        if ($messageType === 'document') {
+            $postData[$messageType]['filename'] = basename($attachmentUrl);
+        }
     }
 
     $ch = curl_init($apiUrl);
@@ -213,10 +254,22 @@ try {
 
     // Dynamic Insert Logic
     // FIX: For interactive messages, the actual content for DB storage MUST be the JSON payload.
-    // The previous logic used the fallback text content, which was incorrect.
+    // For Media messages, store URL and caption
     $dbContent = $content;
     if ($messageType === 'interactive' && !empty($interactiveData)) {
         $dbContent = is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData;
+    } elseif ($attachmentUrl) {
+        // Store only the URL if no caption, or combine?
+        // Generally good to store the URL or a JSON representation.
+        // Let's store URL. Frontend handles rendering based on extension or message_type?
+        // Frontend renderer currently checks for image extension in content string.
+        // So we can store just the URL, or "Caption \n URL".
+        // But message_type column exists now.
+        if ($content) {
+            $dbContent = $attachmentUrl . "\n" . $content;
+        } else {
+            $dbContent = $attachmentUrl;
+        }
     }
 
     $columns = "conversation_id, sender_type, user_id, content, message_type, created_at, sent_at, status";
@@ -236,19 +289,6 @@ try {
         $params[] = $providerMessageId;
         log_send_debug("Saving Provider ID: $providerMessageId");
     }
-
-    // This is now redundant as interactive data is stored as JSON in the 'content' field.
-    /* if (!empty($interactiveData)) {
-        // Note: You might need to ensure `interactive_data` column exists via migration script if running first time
-        try {
-            $pdo->query("SELECT interactive_data FROM messages LIMIT 1"); // Cheap check
-            $columns .= ", interactive_data";
-            $values .= ", ?";
-            $params[] = is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData;
-        } catch (Exception $e) {
-            // Ignore if column missing, just text content saved
-        }
-    } */
 
     $stmt = $pdo->prepare("INSERT INTO messages ($columns) VALUES ($values)");
     $stmt->execute($params);
