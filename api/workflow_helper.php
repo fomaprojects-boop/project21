@@ -28,33 +28,73 @@ function processWorkflows($pdo, $userId, $conversationId, $contextData = []) {
 
         log_debug("Processing workflows for Event: $eventType");
 
+        // --- STEP 1: CHECK FOR ACTIVE WORKFLOW STATE (Waiting for Reply) ---
+        // If we are waiting for a user reply to a Question node, we must resume that workflow instead of starting a new one.
+        if ($eventType === 'message_received') {
+            $state = getWorkflowState($pdo, $conversationId);
+            if ($state) {
+                log_debug("Found Active Workflow State: " . json_encode($state));
+                // We have an active workflow waiting for input.
+                // Check if the input matches any branch from the active node.
+
+                // Fetch the workflow definition
+                $stmt = $pdo->prepare("SELECT workflow_data FROM workflows WHERE id = ?");
+                $stmt->execute([$state['workflow_id']]);
+                $wfDataJson = $stmt->fetchColumn();
+
+                if ($wfDataJson) {
+                    $wfData = json_decode($wfDataJson, true);
+                    $nodes = $wfData['nodes'] ?? [];
+                    $edges = $wfData['edges'] ?? [];
+
+                    // Attempt to resume
+                    resumeWorkflow($pdo, $userId, $conversationId, $nodes, $edges, $state['active_node_id'], $msgBody);
+                    return; // Stop processing other triggers
+                }
+            }
+        }
+
+        // --- STEP 2: CHECK FOR NEW TRIGGERS ---
+
         // Fetch active workflows
+        // IMPORTANT: We must filter by tenant if possible, or at least be aware of it.
+        // Currently get_workflows.php fetches ALL workflows.
+        // For robustness, we select all active workflows and match triggers.
         $stmt = $pdo->prepare("SELECT id, name, trigger_type, workflow_data FROM workflows WHERE is_active = 1");
         $stmt->execute();
         $workflows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        log_debug("Found " . count($workflows) . " active workflows in DB.");
+
         foreach ($workflows as $wf) {
-            $triggerType = $wf['trigger_type'];
+            $triggerType = trim($wf['trigger_type']);
             $data = json_decode($wf['workflow_data'], true);
             $nodes = $data['nodes'] ?? [];
+            $edges = $data['edges'] ?? [];
 
             $shouldTrigger = false;
 
-            // Match Event Type with Trigger Type
-            if ($triggerType === 'Conversation Started' && $eventType === 'conversation_started') {
+            log_debug("Checking Workflow ID: {$wf['id']} Name: {$wf['name']} Trigger: '$triggerType' vs Event: '$eventType'");
+
+            // Match Event Type with Trigger Type (Case Insensitive to be safe)
+            if (strcasecmp($triggerType, 'Conversation Started') === 0 && $eventType === 'conversation_started') {
                 $shouldTrigger = true;
             }
-            elseif ($triggerType === 'Message Received' && $eventType === 'message_received') {
+            elseif (strcasecmp($triggerType, 'Message Received') === 0 && $eventType === 'message_received') {
                 $shouldTrigger = true;
             }
-            elseif ($triggerType === 'Conversation Closed' && $eventType === 'conversation_closed') {
+            elseif (strcasecmp($triggerType, 'Conversation Closed') === 0 && $eventType === 'conversation_closed') {
                 $shouldTrigger = true;
             }
             // Add other triggers here (e.g., specific keywords if needed)
 
             if ($shouldTrigger) {
-                log_debug("Workflow Triggered: " . $wf['name']);
-                executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, null); // Start from root
+                log_debug("MATCH! Workflow Triggered: " . $wf['name']);
+
+                // Clear any previous state before starting new
+                clearWorkflowState($pdo, $conversationId);
+
+                executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges, null, $wf['id']); // Start from root
                 // We don't break here if we want multiple independent workflows to potentially run,
                 // but usually one per event is safer to avoid conflicts.
                 // Let's stick to break for now to avoid loops/spam.
@@ -66,7 +106,104 @@ function processWorkflows($pdo, $userId, $conversationId, $contextData = []) {
     }
 }
 
-function executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $parentId = null) {
+// --- STATE MANAGEMENT HELPERS ---
+
+function getWorkflowState($pdo, $conversationId) {
+    try {
+        $stmt = $pdo->prepare("SELECT workflow_state FROM conversations WHERE id = ?");
+        $stmt->execute([$conversationId]);
+        $json = $stmt->fetchColumn();
+        return $json ? json_decode($json, true) : null;
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
+function saveWorkflowState($pdo, $conversationId, $workflowId, $nodeId) {
+    try {
+        $state = ['workflow_id' => $workflowId, 'active_node_id' => $nodeId, 'updated_at' => date('Y-m-d H:i:s')];
+        $stmt = $pdo->prepare("UPDATE conversations SET workflow_state = ? WHERE id = ?");
+        $stmt->execute([json_encode($state), $conversationId]);
+        log_debug("Saved Workflow State: Conv $conversationId at Node $nodeId");
+    } catch (Exception $e) {
+        log_debug("Error saving state: " . $e->getMessage());
+    }
+}
+
+function clearWorkflowState($pdo, $conversationId) {
+    try {
+        $stmt = $pdo->prepare("UPDATE conversations SET workflow_state = NULL WHERE id = ?");
+        $stmt->execute([$conversationId]);
+        log_debug("Cleared Workflow State for Conv $conversationId");
+    } catch (Exception $e) {}
+}
+
+// --- EXECUTION LOGIC ---
+
+function resumeWorkflow($pdo, $userId, $conversationId, $nodes, $edges, $currentNodeId, $userReply) {
+    log_debug("Resuming Workflow at Node $currentNodeId with Reply: $userReply");
+
+    // Find valid connections from the current node using EDGES
+    $matchedNextNodeId = null;
+    $defaultNextNodeId = null;
+
+    foreach ($edges as $edge) {
+        // Support both React Flow formats: string IDs or objects
+        $source = $edge['source'] ?? '';
+        $target = $edge['target'] ?? '';
+
+        if ($source == $currentNodeId) {
+            // Check for conditions (Branching)
+            // Example: Edge label or Edge data handle
+            $condition = $edge['label'] ?? ($edge['data']['label'] ?? '');
+            // Also check 'sourceHandle' if using handles for conditions
+            $handle = $edge['sourceHandle'] ?? ''; // e.g., 'true', 'false', 'yes', 'no'
+
+            // Normalize reply and conditions
+            $cleanReply = trim(strtolower($userReply));
+            $cleanCondition = trim(strtolower($condition));
+            $cleanHandle = trim(strtolower($handle));
+
+            // Match Logic: Check label OR handle
+            if (($cleanCondition !== '' && $cleanCondition === $cleanReply) ||
+                ($cleanHandle !== '' && $cleanHandle === $cleanReply)) {
+                $matchedNextNodeId = $target;
+                break;
+            }
+
+            // Keep track of a default path (empty condition)
+            if ($cleanCondition === '' && $cleanHandle === '') {
+                $defaultNextNodeId = $target;
+            }
+        }
+    }
+
+    // Determine where to go
+    $nextNodeId = $matchedNextNodeId ?? $defaultNextNodeId;
+
+    if ($nextNodeId) {
+        // Clear state since we are moving on
+        clearWorkflowState($pdo, $conversationId);
+        // Continue execution from the found child
+        executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges, null, $workflowId = null, $nextNodeId);
+    } else {
+        log_debug("No matching branch found for reply '$userReply'. Workflow stops or waits.");
+    }
+}
+
+function executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges = [], $parentId = null, $workflowId = null, $forceNextNodeId = null) {
+    // FORCE NEXT NODE: If provided (e.g. from resumeWorkflow), we skip parent searching
+    if ($forceNextNodeId) {
+        // Find the specific node object
+        foreach ($nodes as $n) {
+            if ($n['id'] == $forceNextNodeId) {
+                $nextNodes = [$n];
+                goto processNodes;
+            }
+        }
+        return; // Node not found
+    }
+
     // Find start node or next node
     letNextNodes:
     $nextNodes = [];
@@ -79,14 +216,37 @@ function executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $paren
             }
         }
     } else {
-        // Find children
-        foreach ($nodes as $n) {
-            if (isset($n['parentId']) && $n['parentId'] == $parentId) {
-                $nextNodes[] = $n;
+        // Find children using EDGES (Primary) or PARENT_ID (Legacy/Fallback)
+        $foundViaEdges = false;
+
+        if (!empty($edges)) {
+            foreach ($edges as $edge) {
+                if (($edge['source'] ?? '') == $parentId) {
+                    $targetId = $edge['target'] ?? null;
+                    if ($targetId) {
+                        // Find the node object for this target ID
+                        foreach ($nodes as $n) {
+                            if ($n['id'] == $targetId) {
+                                $nextNodes[] = $n;
+                                $foundViaEdges = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Legacy Fallback
+        if (!$foundViaEdges) {
+            foreach ($nodes as $n) {
+                if (isset($n['parentId']) && $n['parentId'] == $parentId) {
+                    $nextNodes[] = $n;
+                }
             }
         }
     }
 
+    processNodes:
     foreach ($nextNodes as $node) {
         log_debug("Executing Node ID: " . $node['id'] . " Type: " . $node['type']);
 
@@ -94,7 +254,18 @@ function executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $paren
         if ($node['type'] === 'message' || $node['type'] === 'action') {
             sendWorkflowReply($pdo, $userId, $conversationId, $node['content']);
             // Continue to next node immediately
-            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges, $node['id'], $workflowId);
+        }
+        else if ($node['type'] === 'question') {
+             // 1. Send Interactive Message (Buttons)
+             sendWorkflowQuestion($pdo, $userId, $conversationId, $node);
+             // 2. SAVE STATE: "Waiting for reply to Node X"
+             if ($workflowId) {
+                 saveWorkflowState($pdo, $conversationId, $workflowId, $node['id']);
+             }
+             // 3. STOP RECURSION
+             log_debug("Workflow Paused at Question Node: " . $node['id']);
+             return;
         }
         else if ($node['type'] === 'add_tag') {
             // Content format: "Add Tag: VIP"
@@ -102,7 +273,7 @@ function executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $paren
             if (!empty($tag)) {
                 addContactTag($pdo, $conversationId, $tag);
             }
-            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges, $node['id'], $workflowId);
         }
         else if ($node['type'] === 'update_contact') {
             // Use structured data if available, else try parsing content
@@ -112,12 +283,21 @@ function executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $paren
             if ($field && $value !== null) {
                 updateContactField($pdo, $conversationId, $field, $value);
             }
-            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges, $node['id'], $workflowId);
         }
         else if ($node['type'] === 'assign') {
             // Basic assignment logic stub
             log_debug("Assignment node reached (Logic pending)");
-            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $node['id']);
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges, $node['id'], $workflowId);
+        }
+        else {
+            // Pass-through for unknown/unhandled nodes (e.g. Conditions, Questions, Delays)
+            // If we don't handle them, we should at least try to continue to their children
+            // so the workflow doesn't stop dead.
+            // NOTE: Logic nodes like Conditions usually require evaluation.
+            // Just passing through effectively treats them as "True" or "Next".
+            log_debug("Unhandled Node Type: " . $node['type'] . ". Attempting to continue to children...");
+            executeWorkflowRecursive($pdo, $userId, $conversationId, $nodes, $edges, $node['id'], $workflowId);
         }
     }
 }
@@ -214,10 +394,96 @@ function sendWorkflowReply($pdo, $userId, $conversationId, $content) {
 
     // 4. Save to DB
     try {
+        // Fallback to simple insert if provider_message_id is not yet in all code paths
+        // But better to be consistent if possible.
+        // For now, we use the simple insert as before
         $stmt = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, user_id, content, created_at, status) VALUES (?, 'agent', ?, ?, NOW(), 'sent')");
         $stmt->execute([$conversationId, $userId, $content]);
     } catch (Exception $e) {
         log_debug("Error saving workflow reply: " . $e->getMessage());
+    }
+}
+
+function sendWorkflowQuestion($pdo, $userId, $conversationId, $node) {
+    // 1. Get Settings
+    $stmt = $pdo->prepare("SELECT whatsapp_access_token, whatsapp_phone_number_id FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$user) return;
+
+    $token = $user['whatsapp_access_token'];
+    $phoneId = $user['whatsapp_phone_number_id'];
+
+    // 2. Get Recipient
+    $stmt = $pdo->prepare("SELECT c.phone_number FROM contacts c JOIN conversations conv ON c.id = conv.contact_id WHERE conv.id = ?");
+    $stmt->execute([$conversationId]);
+    $contact = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$contact) return;
+    $to = preg_replace('/[^0-9]/', '', $contact['phone_number']);
+
+    // 3. Construct Buttons
+    $content = $node['content']; // Question text
+    // Support multiple data keys for options
+    $options = $node['data']['options'] ?? ($node['data']['quick_replies'] ?? []);
+
+    // API Limitation: Max 3 buttons for 'button' type. If more, use 'list'.
+    // For now, assume < 3 or handle first 3.
+    $buttons = [];
+    $i = 0;
+    foreach ($options as $opt) {
+        if ($i >= 3) break;
+        $buttons[] = [
+            'type' => 'reply',
+            'reply' => [
+                'id' => 'btn_' . uniqid(),
+                'title' => substr($opt, 0, 20) // Limit title length
+            ]
+        ];
+        $i++;
+    }
+
+    $url = "https://graph.facebook.com/v21.0/$phoneId/messages";
+
+    if (count($buttons) > 0) {
+        $data = [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => $to,
+            'type' => 'interactive',
+            'interactive' => [
+                'type' => 'button',
+                'body' => ['text' => $content],
+                'action' => ['buttons' => $buttons]
+            ]
+        ];
+    } else {
+        // Fallback to text if no options
+        $data = [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => $to,
+            'type' => 'text',
+            'text' => ['body' => $content . "\n(Reply with: " . implode(', ', $options) . ")"]
+        ];
+    }
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', "Authorization: Bearer $token"]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $res = curl_exec($ch);
+    curl_close($ch);
+
+    log_debug("Workflow Question Sent: " . $res);
+
+    // 4. Save to DB
+    try {
+        $stmt = $pdo->prepare("INSERT INTO messages (conversation_id, sender_type, user_id, content, created_at, sent_at, status, message_type, interactive_data) VALUES (?, 'agent', ?, ?, NOW(), NOW(), 'sent', 'interactive', ?)");
+        $stmt->execute([$conversationId, $userId, $content, json_encode($data['interactive'] ?? [])]);
+    } catch (Exception $e) {
+        log_debug("Error saving workflow question: " . $e->getMessage());
     }
 }
 ?>
