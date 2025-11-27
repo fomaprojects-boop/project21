@@ -3277,7 +3277,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 if (viewId === 'expenses') loadExpenses();
                 if (viewId === 'reports') loadReports();
                 if (viewId === 'conversations') {
-                    loadConversations();
+                    filterConversations('open'); // Reset filter to 'open' when entering Inbox
                 }
                 if (viewId === 'templates') loadTemplates();
                 if (viewId === 'broadcast') loadBroadcasts();
