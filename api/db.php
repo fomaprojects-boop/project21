@@ -92,6 +92,22 @@ try {
         }
     }
 
+    // --- Schema Auto-Fix: Ensure is_active column exists in workflows ---
+    $schema_lock_workflow_active = __DIR__ . '/schema_workflow_active.lock';
+    if (!file_exists($schema_lock_workflow_active)) {
+        try {
+            // Add column if not exists (Default 0 = Draft)
+            $pdo->exec("ALTER TABLE workflows ADD COLUMN is_active TINYINT(1) DEFAULT 0");
+            file_put_contents($schema_lock_workflow_active, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1060) {
+                file_put_contents($schema_lock_workflow_active, date('Y-m-d H:i:s'));
+            } else {
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Workflow Active Column Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');

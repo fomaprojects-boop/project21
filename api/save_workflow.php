@@ -15,6 +15,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 $workflowId = $data['id'] ?? null;
 $name = trim($data['name'] ?? 'Untitled Workflow');
 $trigger_type = $data['trigger_type'] ?? 'Unknown';
+$is_active = isset($data['is_active']) ? (int)$data['is_active'] : 0; // Default to 0 (Draft) if not sent
 $workflow_data = json_encode($data['workflow_data'] ?? ['nodes' => []]); // Re-encode to store as JSON string
 
 if (empty($name)) {
@@ -26,16 +27,16 @@ try {
     if ($workflowId) {
         // Update existing workflow
         $stmt = $pdo->prepare(
-            "UPDATE workflows SET name = ?, trigger_type = ?, workflow_data = ? WHERE id = ?"
+            "UPDATE workflows SET name = ?, trigger_type = ?, workflow_data = ?, is_active = ? WHERE id = ?"
         );
-        $stmt->execute([$name, $trigger_type, $workflow_data, $workflowId]);
+        $stmt->execute([$name, $trigger_type, $workflow_data, $is_active, $workflowId]);
         $message = 'Workflow updated successfully!';
     } else {
         // Insert new workflow
         $stmt = $pdo->prepare(
-            "INSERT INTO workflows (name, trigger_type, workflow_data) VALUES (?, ?, ?)"
+            "INSERT INTO workflows (name, trigger_type, workflow_data, is_active) VALUES (?, ?, ?, ?)"
         );
-        $stmt->execute([$name, $trigger_type, $workflow_data]);
+        $stmt->execute([$name, $trigger_type, $workflow_data, $is_active]);
         $workflowId = $pdo->lastInsertId();
         $message = 'Workflow created successfully!';
     }
