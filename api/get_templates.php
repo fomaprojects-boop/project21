@@ -12,30 +12,39 @@ if (!isset($_SESSION['user_id'])) {
 require_once 'db.php';
 
 $userId = $_SESSION['user_id'];
+$status_filter = $_GET['status'] ?? null;
 
 try {
     $pdo->beginTransaction();
 
     // Step 1: Adopt any "orphaned" templates created before the user_id column was added.
-    // This is a one-time operation for each user who logs in and finds orphaned templates.
     $stmt_adopt = $pdo->prepare("UPDATE message_templates SET user_id = ? WHERE user_id IS NULL");
     $stmt_adopt->execute([$userId]);
 
-    // Step 2: Fetch all templates belonging to the current user.
-    $stmt_fetch = $pdo->prepare("SELECT id, name, body, header, footer, quick_replies, status, variables, category FROM message_templates WHERE user_id = ? ORDER BY name");
-    $stmt_fetch->execute([$userId]);
+    // Step 2: Fetch templates
+    $sql = "SELECT id, name, body, header, footer, quick_replies, status, variables, category FROM message_templates WHERE user_id = ?";
+    $params = [$userId];
+
+    if ($status_filter) {
+        $sql .= " AND status = ?";
+        $params[] = $status_filter;
+    }
+
+    $sql .= " ORDER BY name";
+
+    $stmt_fetch = $pdo->prepare($sql);
+    $stmt_fetch->execute($params);
     $templates = $stmt_fetch->fetchAll(PDO::FETCH_ASSOC);
 
     $pdo->commit();
 
-    // Decode JSON fields (quick_replies and variables) into arrays
+    // Decode JSON fields
     foreach ($templates as &$template) {
         if (!empty($template['quick_replies'])) {
             $decoded_replies = json_decode($template['quick_replies']);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_replies)) {
                  $template['quick_replies'] = $decoded_replies;
             } else {
-                // Fallback for comma-separated strings
                 $template['quick_replies'] = array_map('trim', explode(',', $template['quick_replies']));
             }
         } else {
@@ -53,7 +62,6 @@ try {
     echo json_encode($templates);
 
 } catch (PDOException $e) {
-    // If something goes wrong, roll back the transaction
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }

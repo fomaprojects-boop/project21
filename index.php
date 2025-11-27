@@ -3277,7 +3277,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 if (viewId === 'expenses') loadExpenses();
                 if (viewId === 'reports') loadReports();
                 if (viewId === 'conversations') {
-                    loadConversations();
+                    filterConversations('open'); // Reset filter to 'open' when entering Inbox
                 }
                 if (viewId === 'templates') loadTemplates();
                 if (viewId === 'broadcast') loadBroadcasts();
@@ -4782,9 +4782,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const list = document.getElementById('template-selector-list');
             list.innerHTML = '<div class="text-center"><div class="loader"></div></div>';
 
-            const templates = await fetchApi('get_templates.php');
+            // Filter status at API level to prevent showing unapproved templates
+            const templates = await fetchApi('get_templates.php?status=APPROVED');
             if (templates && Array.isArray(templates)) {
-                const approvedTemplates = templates.filter(t => t.status === 'APPROVED');
+                const approvedTemplates = templates; // Already filtered by API
 
                 if (approvedTemplates.length > 0) {
                     list.innerHTML = approvedTemplates.map(t => `
@@ -4797,13 +4798,48 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         </div>
                     `).join('');
                 } else {
-                    list.innerHTML = '<p class="text-center text-gray-500">No approved templates found.</p>';
+                    list.innerHTML = `
+                        <div class="text-center py-6">
+                            <p class="text-gray-500 mb-4">No approved templates found locally.</p>
+                            <button onclick="quickSyncTemplates()" class="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-violet-700 transition-colors shadow-sm">
+                                <i class="fas fa-sync-alt mr-2"></i> Sync from Meta
+                            </button>
+                        </div>
+                    `;
                 }
             } else {
                 list.innerHTML = '<p class="text-center text-gray-500">Could not load templates.</p>';
             }
         }
 
+        async function quickSyncTemplates() {
+            const list = document.getElementById('template-selector-list');
+            list.innerHTML = '<div class="text-center py-6"><div class="loader mb-2"></div><p class="text-sm text-gray-500">Syncing with Meta...</p></div>';
+
+            try {
+                const result = await fetchApi('sync_templates.php', { method: 'POST' });
+
+                if (result && result.status === 'success') {
+                    openTemplateSelector(); // Reload the list
+                } else if (result && result.status === 'auth_error') {
+                    // Handle Auth Error (Invalid Token)
+                    list.innerHTML = `
+                        <div class="text-center py-6 px-4">
+                            <div class="text-red-500 text-4xl mb-3"><i class="fas fa-exclamation-triangle"></i></div>
+                            <h4 class="text-gray-800 font-bold mb-2">Connection Expired</h4>
+                            <p class="text-sm text-gray-600 mb-4">${result.message}</p>
+                            <button onclick="closeModal('templateSelectorModal'); showView('settings', event); setTimeout(() => showSettingsTab('channels', {currentTarget: document.querySelector('[onclick*=\'channels\']')}), 500);" class="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-violet-700 transition-colors shadow-sm">
+                                Go to Settings
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    list.innerHTML = `<div class="text-center text-red-500 py-4"><p>Sync Failed: ${result ? result.message : 'Unknown error'}</p><button onclick="openTemplateSelector()" class="mt-2 text-sm underline">Try Again</button></div>`;
+                }
+            } catch (e) {
+                list.innerHTML = `<div class="text-center text-red-500 py-4"><p>Sync Error.</p><button onclick="openTemplateSelector()" class="mt-2 text-sm underline">Try Again</button></div>`;
+            }
+        }
         function selectTemplateContent(body) {
             closeModal('templateSelectorModal');
             const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
@@ -7308,21 +7344,21 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
         function addNode(type, parentId, branch = null) { const newId = (currentWorkflow.workflow_data.nodes.length > 0 ? Math.max(...currentWorkflow.workflow_data.nodes.map(n => n.id)) : 0) + 1; currentWorkflow.workflow_data.nodes.push({id: newId, type, content: 'New Action', parentId, branch}); renderWorkflow(); openNodeConfig(newId); }
 
-        function deleteNode(nodeId) { 
+        function deleteNode(nodeId) {
             if (nodeId === 1) {
                 alert('Cannot delete the Trigger node.');
                 return;
             }
-            if (!confirm('Delete this node and all below it?')) return; 
-            let nodesToDelete = [nodeId]; 
-            let i=0; 
-            while(i<nodesToDelete.length){ 
-                const children = currentWorkflow.workflow_data.nodes.filter(n => n.parentId === nodesToDelete[i]); 
-                children.forEach(c => nodesToDelete.push(c.id)); 
-                i++; 
-            } 
-            currentWorkflow.workflow_data.nodes = currentWorkflow.workflow_data.nodes.filter(n => !nodesToDelete.includes(n.id)); 
-            renderWorkflow(); 
+            if (!confirm('Delete this node and all below it?')) return;
+            let nodesToDelete = [nodeId];
+            let i=0;
+            while(i<nodesToDelete.length){
+                const children = currentWorkflow.workflow_data.nodes.filter(n => n.parentId === nodesToDelete[i]);
+                children.forEach(c => nodesToDelete.push(c.id));
+                i++;
+            }
+            currentWorkflow.workflow_data.nodes = currentWorkflow.workflow_data.nodes.filter(n => !nodesToDelete.includes(n.id));
+            renderWorkflow();
         }
 
         function openNodeConfig(nodeId) {
