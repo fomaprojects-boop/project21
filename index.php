@@ -2802,7 +2802,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                     </select>
                                 </div>
                             </div>
-
+                            
                             <div class="p-3 bg-gray-50 border rounded-md">
                                 <label for="templateHeaderType" class="block text-sm font-medium text-gray-700 mb-2">Header Type</label>
                                 <select id="templateHeaderType" class="w-full px-3 py-2 text-gray-700 border rounded-md mb-3" onchange="toggleHeaderFields()">
@@ -2843,7 +2843,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 <label for="templateFooter" class="block text-sm font-medium text-gray-700">Footer (Optional)</label>
                                 <input id="templateFooter" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="e.g., Thanks for shopping with us!">
                             </div>
-
+                            
                             <!-- Dynamic Buttons Section -->
                             <div class="border-t pt-2 mt-2">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Buttons (Optional)</label>
@@ -4946,7 +4946,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 // C. Body Variables
                 const container = document.getElementById('variable-inputs-container');
                 container.innerHTML = '';
-
+                
                 // Define Auto-Fill System Variables
                 const systemVariables = {
                     'customer_name': document.getElementById('chat-partner-name').textContent || '',
@@ -4958,14 +4958,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                 if (hasBodyVars) {
                     let hasVisibleVars = false;
-
+                    
                     bodyVariables.forEach(variable => {
                         const cleanVar = variable.toLowerCase();
                         if (systemVariables.hasOwnProperty(cleanVar)) {
                             // Auto-fill (Hidden Input)
                             container.innerHTML += `<input type="hidden" name="${variable}" value="${systemVariables[cleanVar]}">`;
                             // Optional: Show badge that it's auto-filled
-                            // container.innerHTML += `<div class="text-xs text-green-600 mb-1"><i class="fas fa-check-circle"></i> Auto-filling {{${variable}}}</div>`;
+                            // container.innerHTML += `<div class="text-xs text-green-600 mb-1"><i class="fas fa-check-circle"></i> Auto-filling {{${variable}}}</div>`; 
                         } else {
                             // Manual Input
                             hasVisibleVars = true;
@@ -7273,7 +7273,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const type = document.getElementById('templateHeaderType').value;
             const textContainer = document.getElementById('header-text-container');
             const mediaHint = document.getElementById('header-media-hint');
-
+            
             if (type === 'TEXT') {
                 textContainer.classList.remove('hidden');
                 mediaHint.classList.add('hidden');
@@ -7295,15 +7295,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 document.getElementById('template-modal-title').textContent = 'Edit Template';
                 form.querySelector('#templateId').value = template.id;
                 form.querySelector('#templateName').value = template.name;
-
+                
                 // Header Logic
                 const headerType = template.header_type || (template.header ? 'TEXT' : 'NONE');
                 document.getElementById('templateHeaderType').value = headerType;
                 form.querySelector('#templateHeader').value = template.header || '';
-
+                
                 form.querySelector('#templateBody').value = template.body;
                 form.querySelector('#templateFooter').value = template.footer || '';
-
+                
                 // Populate Buttons
                 if (template.buttons_data && Array.isArray(template.buttons_data)) {
                     template.buttons_data.forEach(btn => addTemplateButton(btn));
@@ -8739,7 +8739,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
                         const found = bodyText.match(variableRegex) || [];
                         const variables = [...new Set(found.map(v => v.replace(/{{|}}/g, '').trim()))];
-
+                        
                         // Parse Buttons
                         const buttons = [];
                         const buttonRows = form.querySelectorAll('.button-row');
@@ -8754,26 +8754,26 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                         const isUpdating = !!form.querySelector('#templateId').value;
                         const endpoint = isUpdating ? 'update_template.php' : 'add_template.php';
-
+                        
                         // Construct Quick Replies CSV for backward compatibility (Optional, can be empty)
                         const quickRepliesCSV = buttons.filter(b => b.type === 'QUICK_REPLY').map(b => b.text).join(',');
 
-                        result = await fetchApi(endpoint, {
-                            method: 'POST',
-                            body: {
-                                id: form.querySelector('#templateId').value,
-                                name: form.querySelector('#templateName').value,
+                        result = await fetchApi(endpoint, { 
+                            method: 'POST', 
+                            body: { 
+                                id: form.querySelector('#templateId').value, 
+                                name: form.querySelector('#templateName').value, 
                                 category: form.querySelector('#templateCategory').value,
                                 header_type: form.querySelector('#templateHeaderType').value,
-                                header: form.querySelector('#templateHeader').value,
-                                body: bodyText,
-                                footer: form.querySelector('#templateFooter').value,
+                                header: form.querySelector('#templateHeader').value, 
+                                body: bodyText, 
+                                footer: form.querySelector('#templateFooter').value, 
                                 quick_replies: quickRepliesCSV, // Legacy support
                                 buttons: buttons, // New structure
-                                variables: variables
-                            }
+                                variables: variables 
+                            } 
                         });
-
+                        
                         if(result && result.status === 'success') { closeModal('addTemplateModal'); form.reset(); loadTemplates(); } else if (result) { alert('Error: ' + result.message); }
                         break;
                     }
