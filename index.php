@@ -1492,7 +1492,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </div>
 
                     <!-- Steps Container -->
-                    <div id="workflow-steps-container" class="space-y-4 pb-20 max-h-[calc(100vh-300px)] overflow-y-auto pr-2 custom-scrollbar">
+                    <div id="workflow-steps-container" class="space-y-4 pb-20">
                         <!-- Empty State -->
                         <div id="workflow-empty-state" class="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl">
                             <div class="text-gray-400 mb-3 text-4xl"><i class="fas fa-layer-group"></i></div>
@@ -6332,6 +6332,31 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 useWorkflowTemplate(template);
             }
         }
+
+        function useWorkflowTemplate(template) {
+            // Populate currentWorkflow with template data
+            currentWorkflow = {
+                id: null, // New workflow, so ID is null
+                name: template.title || 'New Workflow',
+                trigger_type: template.workflow_data.trigger_type || 'KEYWORD',
+                keywords: template.workflow_data.keywords || '',
+                steps: template.workflow_data.steps || [],
+                is_active: 0
+            };
+
+            // Switch to Editor
+            document.getElementById('workflow-main-view').style.display = 'none';
+            document.getElementById('workflow-editor-view').style.display = 'block';
+
+            // Populate Inputs
+            document.getElementById('workflow-name-input').value = currentWorkflow.name;
+            document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
+            document.getElementById('wf-keywords').value = currentWorkflow.keywords;
+
+            // Refresh UI
+            toggleTriggerInputs();
+            renderLinearSteps();
+        }
         async function loadWorkflows() {
             const list = document.getElementById('workflows-list');
             if (!list) return;
@@ -7796,6 +7821,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
         // --- NEW LINEAR WORKFLOW BUILDER FUNCTIONS ---
         async function openWorkflowEditor(workflowId = null) {
+            // Pre-load approved templates for the selector
+            try {
+                const templates = await fetchApi('get_templates.php?status=APPROVED');
+                window.approvedTemplates = (templates && Array.isArray(templates)) ? templates : [];
+            } catch (e) {
+                console.error("Failed to load templates", e);
+                window.approvedTemplates = [];
+            }
+
             if (workflowId) {
                 const response = await fetchApi(`get_workflow_details.php?id=${workflowId}`);
                 if (response && response.status === 'success') {
@@ -7917,8 +7951,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             </div>
 
                             <div id="msg-input-template-${index}" class="${!isTemplate ? 'hidden' : ''}">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Template Name</label>
-                                <input type="text" oninput="updateStepMeta(${index}, 'template_id', this.value)" value="${meta.template_id || ''}" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" placeholder="e.g. welcome_msg">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Select Template</label>
+                                <select onchange="updateStepMeta(${index}, 'template_id', this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500">
+                                    <option value="">-- Choose a Template --</option>
+                                    ${(window.approvedTemplates || []).map(t => `<option value="${t.name}" ${meta.template_id === t.name ? 'selected' : ''}>${t.name} (${t.language})</option>`).join('')}
+                                </select>
                             </div>
                         </div>`;
 
@@ -8019,8 +8056,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             // Scroll to bottom
             setTimeout(() => {
+                 // Scroll the PARENT container (the right canvas), not the steps container itself
                  const container = document.getElementById('workflow-steps-container');
-                 container.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+                 if (container && container.lastElementChild) {
+                     container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                 }
             }, 50);
         }
 
