@@ -7129,7 +7129,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const contactSelect = document.getElementById('selectContacts'); contactSelect.innerHTML = '';
             if (contacts && Array.isArray(contacts)) { contacts.forEach(c => { contactSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.phone_number})</option>`; }); }
             const templateSelect = document.getElementById('selectTemplate'); templateSelect.innerHTML = '<option value="">Select an approved template...</option>';
-            if (templates && Array.isArray(templates)) { templates.filter(t => t.status === 'Approved').forEach(t => { templateSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`; }); }
+        if (templates && Array.isArray(templates)) { templates.filter(t => t.status.toUpperCase() === 'APPROVED').forEach(t => { templateSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`; }); }
         }
 
         async function openAddCustomerModal() {
@@ -8384,7 +8384,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             conversation_id: currentConversationId,
                             type: 'template', // Explicitly use template type
                             interactive_data: {
-                                name: templateData.name,
+                                name: templateData.meta_template_name || templateData.name, // Use Meta ID if available
                                 language: { code: templateData.language || 'en_US' },
                                 components: []
                             }
