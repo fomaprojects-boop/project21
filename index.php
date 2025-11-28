@@ -26,6 +26,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
     <meta name="user-role" content="<?php echo $userRole; ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatMe - Professional Edition</title>
+    <script>
+        const LOGGED_IN_USER_NAME = '<?php echo htmlspecialchars($userName, ENT_QUOTES); ?>';
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.4/dist/index.min.js"></script>
@@ -2824,10 +2827,18 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 <label for="templateFooter" class="block text-sm font-medium text-gray-700">Footer (Optional)</label>
                                 <input id="templateFooter" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="e.g., Thanks for shopping with us!">
                             </div>
-                             <div>
-                                <label for="templateQuickReplies" class="block text-sm font-medium text-gray-700">Buttons (Optional, comma-separated)</label>
-                                <input id="templateQuickReplies" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="e.g., View Order,Track Shipment">
+
+                            <!-- Dynamic Buttons Section -->
+                            <div class="border-t pt-2 mt-2">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Buttons (Optional)</label>
+                                <div id="template-buttons-container" class="space-y-3 mb-3">
+                                    <!-- Buttons will be added here via JS -->
+                                </div>
+                                <button type="button" onclick="addTemplateButton()" class="text-sm text-violet-600 hover:text-violet-800 font-medium flex items-center">
+                                    <i class="fas fa-plus-circle mr-1"></i> Add Button
+                                </button>
                             </div>
+
                             <div class="items-center pt-4 flex justify-end space-x-2 border-t">
                                 <button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('addTemplateModal')">Cancel</button>
                                 <button type="submit" class="px-4 py-2 bg-violet-600 text-white rounded-md hover:bg-violet-700">Save Template</button>
@@ -4919,16 +4930,48 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 // C. Body Variables
                 const container = document.getElementById('variable-inputs-container');
                 container.innerHTML = '';
+
+                // Define Auto-Fill System Variables
+                const systemVariables = {
+                    'customer_name': document.getElementById('chat-partner-name').textContent || '',
+                    'customer_phone': document.getElementById('chat-partner-phone').textContent || '',
+                    'phone_number': document.getElementById('chat-partner-phone').textContent || '',
+                    'agent_name': LOGGED_IN_USER_NAME,
+                    'company_name': '<?php echo isset($settings['business_name']) ? htmlspecialchars($settings['business_name']) : "Our Company"; ?>' // Fallback if settings not fully loaded in JS context, but ideally fetched
+                };
+
                 if (hasBodyVars) {
-                    container.innerHTML = '<h4 class="text-xs font-bold text-gray-500 uppercase mt-2">Body Variables</h4>';
+                    let hasVisibleVars = false;
+
                     bodyVariables.forEach(variable => {
-                        container.innerHTML += `
-                            <div>
-                                <label for="var-${variable}" class="block text-sm font-medium text-gray-700">Body: {{${variable.replace(/_/g, ' ')}}}</label>
-                                <input type="text" id="var-${variable}" name="${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required>
-                            </div>
-                        `;
+                        const cleanVar = variable.toLowerCase();
+                        if (systemVariables.hasOwnProperty(cleanVar)) {
+                            // Auto-fill (Hidden Input)
+                            container.innerHTML += `<input type="hidden" name="${variable}" value="${systemVariables[cleanVar]}">`;
+                            // Optional: Show badge that it's auto-filled
+                            // container.innerHTML += `<div class="text-xs text-green-600 mb-1"><i class="fas fa-check-circle"></i> Auto-filling {{${variable}}}</div>`;
+                        } else {
+                            // Manual Input
+                            hasVisibleVars = true;
+                            container.innerHTML += `
+                                <div>
+                                    <label for="var-${variable}" class="block text-sm font-medium text-gray-700">Body: {{${variable.replace(/_/g, ' ')}}}</label>
+                                    <input type="text" id="var-${variable}" name="${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required>
+                                </div>
+                            `;
+                        }
                     });
+
+                    if (hasVisibleVars) {
+                        // Prepend header only if visible inputs exist
+                        const header = document.createElement('h4');
+                        header.className = 'text-xs font-bold text-gray-500 uppercase mt-2';
+                        header.textContent = 'Body Variables';
+                        container.prepend(header);
+                    } else {
+                        // All variables auto-filled
+                        container.innerHTML += `<div class="p-3 bg-green-50 text-green-700 text-sm rounded border border-green-200"><i class="fas fa-magic mr-2"></i>All variables will be auto-filled by the system.</div>`;
+                    }
                 }
 
                 // D. Dynamic Buttons
@@ -7129,7 +7172,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const contactSelect = document.getElementById('selectContacts'); contactSelect.innerHTML = '';
             if (contacts && Array.isArray(contacts)) { contacts.forEach(c => { contactSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.phone_number})</option>`; }); }
             const templateSelect = document.getElementById('selectTemplate'); templateSelect.innerHTML = '<option value="">Select an approved template...</option>';
-            if (templates && Array.isArray(templates)) { templates.filter(t => t.status === 'Approved').forEach(t => { templateSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`; }); }
+        if (templates && Array.isArray(templates)) { templates.filter(t => t.status.toUpperCase() === 'APPROVED').forEach(t => { templateSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`; }); }
         }
 
         async function openAddCustomerModal() {
@@ -7158,8 +7201,63 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             document.getElementById('broadcast-custom-message-container').style.display = value === 'custom' ? 'block' : 'none';
             document.getElementById('broadcast-template-select-container').style.display = value === 'template' ? 'block' : 'none';
         }
+        function addTemplateButton(data = null) {
+            const container = document.getElementById('template-buttons-container');
+            const id = Date.now(); // Unique ID for row
+            const type = data ? data.type : 'QUICK_REPLY';
+            const text = data ? data.text : '';
+            const url = data ? data.url : '';
+            const phoneNumber = data ? data.phone_number : '';
+
+            const row = document.createElement('div');
+            row.className = 'flex flex-col gap-2 p-3 bg-gray-50 rounded border border-gray-200 relative button-row';
+            row.id = `btn-row-${id}`;
+            row.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-500 uppercase">Button</span>
+                    <button type="button" onclick="document.getElementById('btn-row-${id}').remove()" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <select class="p-2 border rounded text-sm btn-type" onchange="toggleButtonFields('${id}', this.value)">
+                        <option value="QUICK_REPLY" ${type === 'QUICK_REPLY' ? 'selected' : ''}>Quick Reply</option>
+                        <option value="URL" ${type === 'URL' ? 'selected' : ''}>Visit Website</option>
+                        <option value="PHONE_NUMBER" ${type === 'PHONE_NUMBER' ? 'selected' : ''}>Call Phone</option>
+                    </select>
+                    <input type="text" class="p-2 border rounded text-sm w-full md:col-span-2 btn-text" placeholder="Button Text" value="${text}" required>
+                </div>
+                <div id="btn-url-${id}" class="${type === 'URL' ? '' : 'hidden'}">
+                    <input type="text" class="p-2 border rounded text-sm w-full btn-url" placeholder="URL (e.g. https://example.com or https://site.com/{{1}})" value="${url}">
+                    <p class="text-[10px] text-gray-500 mt-1">Add {{1}} to the end for dynamic link (e.g. tracking).</p>
+                </div>
+                <div id="btn-phone-${id}" class="${type === 'PHONE_NUMBER' ? '' : 'hidden'}">
+                    <input type="text" class="p-2 border rounded text-sm w-full btn-phone" placeholder="Phone Number (with country code)" value="${phoneNumber}">
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        function toggleButtonFields(id, type) {
+            const urlField = document.getElementById(`btn-url-${id}`);
+            const phoneField = document.getElementById(`btn-phone-${id}`);
+            if(type === 'URL') {
+                urlField.classList.remove('hidden');
+                phoneField.classList.add('hidden');
+            } else if(type === 'PHONE_NUMBER') {
+                urlField.classList.add('hidden');
+                phoneField.classList.remove('hidden');
+            } else {
+                urlField.classList.add('hidden');
+                phoneField.classList.add('hidden');
+            }
+        }
+
         function openTemplateModal(template = null) {
             const form = document.getElementById('addTemplateForm');
+            const btnContainer = document.getElementById('template-buttons-container');
+            btnContainer.innerHTML = ''; // Clear existing buttons
+
             if(template) {
                 document.getElementById('template-modal-title').textContent = 'Edit Template';
                 form.querySelector('#templateId').value = template.id;
@@ -7167,7 +7265,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 form.querySelector('#templateHeader').value = template.header || '';
                 form.querySelector('#templateBody').value = template.body;
                 form.querySelector('#templateFooter').value = template.footer || '';
-                form.querySelector('#templateQuickReplies').value = (template.quick_replies || []).join(',');
+
+                // Populate Buttons
+                if (template.buttons_data && Array.isArray(template.buttons_data)) {
+                    template.buttons_data.forEach(btn => addTemplateButton(btn));
+                } else if (template.quick_replies && Array.isArray(template.quick_replies)) {
+                    // Backwards compatibility
+                    template.quick_replies.forEach(reply => addTemplateButton({ type: 'QUICK_REPLY', text: reply }));
+                }
+
             } else {
                 document.getElementById('template-modal-title').textContent = 'Create New Template';
                 form.reset();
@@ -8384,7 +8490,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             conversation_id: currentConversationId,
                             type: 'template', // Explicitly use template type
                             interactive_data: {
-                                name: templateData.name,
+                                name: templateData.meta_template_name || templateData.name, // Use Meta ID if available
                                 language: { code: templateData.language || 'en_US' },
                                 components: []
                             }
@@ -8592,9 +8698,40 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
                         const found = bodyText.match(variableRegex) || [];
                         const variables = [...new Set(found.map(v => v.replace(/{{|}}/g, '').trim()))];
+
+                        // Parse Buttons
+                        const buttons = [];
+                        const buttonRows = form.querySelectorAll('.button-row');
+                        buttonRows.forEach(row => {
+                            const type = row.querySelector('.btn-type').value;
+                            const text = row.querySelector('.btn-text').value;
+                            const btnData = { type: type, text: text };
+                            if(type === 'URL') btnData.url = row.querySelector('.btn-url').value;
+                            if(type === 'PHONE_NUMBER') btnData.phone_number = row.querySelector('.btn-phone').value;
+                            buttons.push(btnData);
+                        });
+
                         const isUpdating = !!form.querySelector('#templateId').value;
                         const endpoint = isUpdating ? 'update_template.php' : 'add_template.php';
-                        result = await fetchApi(endpoint, { method: 'POST', body: { id: form.querySelector('#templateId').value, name: form.querySelector('#templateName').value, header: form.querySelector('#templateHeader').value, body: bodyText, footer: form.querySelector('#templateFooter').value, quick_replies: form.querySelector('#templateQuickReplies').value, variables: variables } });
+
+                        // Construct Quick Replies CSV for backward compatibility (Optional, can be empty)
+                        const quickRepliesCSV = buttons.filter(b => b.type === 'QUICK_REPLY').map(b => b.text).join(',');
+
+                        result = await fetchApi(endpoint, {
+                            method: 'POST',
+                            body: {
+                                id: form.querySelector('#templateId').value,
+                                name: form.querySelector('#templateName').value,
+                                category: form.querySelector('#templateCategory').value,
+                                header: form.querySelector('#templateHeader').value,
+                                body: bodyText,
+                                footer: form.querySelector('#templateFooter').value,
+                                quick_replies: quickRepliesCSV, // Legacy support
+                                buttons: buttons, // New structure
+                                variables: variables
+                            }
+                        });
+
                         if(result && result.status === 'success') { closeModal('addTemplateModal'); form.reset(); loadTemplates(); } else if (result) { alert('Error: ' + result.message); }
                         break;
                     }
