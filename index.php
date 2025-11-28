@@ -6335,32 +6335,6 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
-        async function useWorkflowTemplate(template) {
-            await loadApprovedTemplates();
-
-            // Populate currentWorkflow with template data
-            currentWorkflow = {
-                id: null, // New workflow, so ID is null
-                name: template.title || 'New Workflow',
-                trigger_type: template.workflow_data.trigger_type || 'KEYWORD',
-                keywords: template.workflow_data.keywords || '',
-                steps: template.workflow_data.steps || [],
-                is_active: 0
-            };
-
-            // Switch to Editor
-            document.getElementById('workflow-main-view').style.display = 'none';
-            document.getElementById('workflow-editor-view').style.display = 'block';
-            
-            // Populate Inputs
-            document.getElementById('workflow-name-input').value = currentWorkflow.name;
-            document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
-            document.getElementById('wf-keywords').value = currentWorkflow.keywords;
-
-            // Refresh UI
-            toggleTriggerInputs();
-            renderLinearSteps();
-        }
         async function loadWorkflows() {
             const list = document.getElementById('workflows-list');
             if (!list) return;
@@ -7938,17 +7912,24 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
+
         function renderLinearSteps() {
             const container = document.getElementById('workflow-steps-container');
-            const emptyState = document.getElementById('workflow-empty-state');
             container.innerHTML = ''; // Clear
 
             if (!currentWorkflow.steps || currentWorkflow.steps.length === 0) {
+                // Dynamically recreate Empty State
+                const emptyState = document.createElement('div');
+                emptyState.id = 'workflow-empty-state';
+                emptyState.className = 'text-center py-12 border-2 border-dashed border-gray-300 rounded-xl';
+                emptyState.innerHTML = `
+                    <div class="text-gray-400 mb-3 text-4xl"><i class="fas fa-layer-group"></i></div>
+                    <p class="text-gray-500 font-medium">No steps defined yet.</p>
+                    <p class="text-gray-400 text-sm">Add a step to define what happens when triggered.</p>
+                `;
                 container.appendChild(emptyState);
-                emptyState.style.display = 'block';
                 return;
             }
-            emptyState.style.display = 'none';
 
             // Ensure templates are loaded if list is empty
             if (!window.approvedTemplates || window.approvedTemplates.length === 0) {
@@ -7959,7 +7940,6 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     // For now, assume openWorkflowEditor called it.
                 });
             }
-
             currentWorkflow.steps.forEach((step, index) => {
                 try {
                     // Force editing/expanded state for all steps per user request
