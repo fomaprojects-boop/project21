@@ -1,60 +1,115 @@
 <?php
 // api/add_template.php
 header('Content-Type: application/json');
+// Ensure no output before JSON
+ob_start();
+
+require_once 'db.php';
+require_once 'get_facebook_credentials.php';
+
+// Register shutdown function to catch fatal errors
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && ($error['type'] === E_ERROR || $error['type'] === E_PARSE || $error['type'] === E_CORE_ERROR || $error['type'] === E_COMPILE_ERROR)) {
+        ob_clean(); // Clear buffer
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Server Error: ' . $error['message']]);
+    }
+});
+
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
+    ob_clean();
     http_response_code(401);
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
     exit();
 }
 
-require_once 'db.php';
-require_once 'get_facebook_credentials.php'; // Include the centralized credentials function
-
 $userId = $_SESSION['user_id'];
-$data = json_decode(file_get_contents('php://input'), true);
+$input = file_get_contents('php://input');
+$data = json_decode($input, true);
+
+if (!$data) {
+    ob_clean();
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid JSON payload.']);
+    exit();
+}
 
 $name = trim($data['name'] ?? '');
 $category = trim($data['category'] ?? 'TRANSACTIONAL');
 $body = trim($data['body'] ?? '');
 $header = trim($data['header'] ?? null);
 $footer = trim($data['footer'] ?? null);
+$header_type = trim($data['header_type'] ?? 'NONE'); // Get header type from input
 $quick_replies_raw = trim($data['quick_replies'] ?? '');
+$buttons_input = $data['buttons'] ?? []; // Array of {type, text, url, phone_number}
 $variable_examples = $data['variable_examples'] ?? [];
 
 if (empty($name) || empty($body) || empty($category)) {
+    ob_clean();
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Template name, body, and category are required.']);
     exit();
 }
 
+// Prepare Data for Database
 $quick_replies_json = null;
 $buttons_data_json = null;
 
-if (!empty($quick_replies_raw)) {
-    $replies_array = array_map('trim', explode(',', $quick_replies_raw));
-    $quick_replies_json = json_encode($replies_array);
+// Handle Buttons Logic (Prioritize new 'buttons' array, fallback to 'quick_replies' string)
+$db_buttons = [];
 
-    // Construct buttons_data for new schema support
-    $buttons_data = [];
-    foreach ($replies_array as $reply) {
-        $buttons_data[] = ['type' => 'QUICK_REPLY', 'text' => $reply];
+if (!empty($buttons_input) && is_array($buttons_input)) {
+    // Validate and Clean buttons
+    foreach ($buttons_input as $btn) {
+        $cleanBtn = [
+            'type' => $btn['type'] ?? 'QUICK_REPLY',
+            'text' => trim($btn['text'] ?? '')
+        ];
+        if ($cleanBtn['type'] === 'URL') {
+            $cleanBtn['url'] = trim($btn['url'] ?? '');
+        }
+        if ($cleanBtn['type'] === 'PHONE_NUMBER') {
+            $cleanBtn['phone_number'] = trim($btn['phone_number'] ?? '');
+        }
+        if (!empty($cleanBtn['text'])) {
+            $db_buttons[] = $cleanBtn;
+        }
     }
-    $buttons_data_json = json_encode($buttons_data);
+} elseif (!empty($quick_replies_raw)) {
+    // Fallback legacy logic
+    foreach (explode(',', $quick_replies_raw) as $reply) {
+        if (trim($reply) !== '') {
+            $db_buttons[] = ['type' => 'QUICK_REPLY', 'text' => trim($reply)];
+        }
+    }
 }
 
-// Extract variable names like {{customer_name}} -> customer_name
+if (!empty($db_buttons)) {
+    $buttons_data_json = json_encode($db_buttons);
+    // Populate quick_replies CSV for legacy views (only include QR texts)
+    $qr_texts = array_column(array_filter($db_buttons, function($b) { return $b['type'] === 'QUICK_REPLY'; }), 'text');
+    $quick_replies_raw = implode(',', $qr_texts);
+    $quick_replies_json = json_encode($qr_texts);
+}
+
+// Extract variable names
 preg_match_all('/{{\s*([a-zA-Z0-9_]+)\s*}}/', $body, $matches);
 $variables_json = !empty($matches[1]) ? json_encode($matches[1]) : null;
 
-// Determine Header Type
-$header_type = 'NONE';
-if (!empty($header)) {
-    $header_type = 'TEXT'; // Default to TEXT if header exists from this form
+// Normalize Header Type (Validation)
+if ($header_type === 'TEXT' && empty($header)) {
+    // If user selected TEXT but didn't type anything, revert to NONE
+    $header_type = 'NONE';
+} else if ($header_type !== 'TEXT' && $header_type !== 'NONE') {
+    // If Media, clear any text content just in case
+    $header = null;
 }
 
 try {
+    // --- DB Insertion ---
     $pdo->beginTransaction();
 
     $stmt = $pdo->prepare(
@@ -77,12 +132,14 @@ try {
 
     $last_insert_id = $pdo->lastInsertId();
 
-    // --- Meta API Integration ---
+    // --- Meta API Payload Construction ---
     $credentials = getFacebookCredentials($userId);
+    if (!$credentials) throw new Exception("Facebook credentials not found for user.");
+
     $waba_id = $credentials['waba_id'];
     $access_token = $credentials['access_token'];
 
-    // Replace {{variable_name}} with {{1}}, {{2}} etc. for Meta's format
+    // Format Body Variables: {{customer_name}} -> {{1}}
     $meta_body = preg_replace_callback('/{{\s*([a-zA-Z0-9_]+)\s*}}/', function($match) {
         static $i = 1;
         return '{{' . $i++ . '}}';
@@ -90,8 +147,8 @@ try {
 
     $components = [['type' => 'BODY', 'text' => $meta_body]];
 
-    // Add header with variable examples if they exist
-    if (!empty($header)) {
+    // Header Component Logic
+    if ($header_type === 'TEXT' && !empty($header)) {
         $header_component = ['type' => 'HEADER', 'format' => 'TEXT', 'text' => $header];
         if (strpos($header, '{{1}}') !== false && !empty($variable_examples)) {
             $header_component['example'] = [
@@ -99,42 +156,62 @@ try {
             ];
         }
         $components[] = $header_component;
+    } elseif (in_array($header_type, ['IMAGE', 'VIDEO', 'DOCUMENT'])) {
+        $components[] = ['type' => 'HEADER', 'format' => $header_type];
+        // Note: Creating a media template without an example might fail on Meta's side.
+        // We proceed, and if Meta requires an example, the API error will be caught below.
     }
 
+    // Footer
     if (!empty($footer)) {
         $components[] = ['type' => 'FOOTER', 'text' => $footer];
     }
 
-    if (!empty($quick_replies_raw)) {
-        $buttons = [];
-        foreach (explode(',', $quick_replies_raw) as $reply) {
-            if(trim($reply) !== '') {
-                $buttons[] = ['type' => 'QUICK_REPLY', 'text' => trim($reply)];
+    // Buttons
+    if (!empty($db_buttons)) {
+        $meta_buttons = [];
+        foreach ($db_buttons as $btn) {
+            if ($btn['type'] === 'QUICK_REPLY') {
+                $meta_buttons[] = ['type' => 'QUICK_REPLY', 'text' => $btn['text']];
+            } elseif ($btn['type'] === 'URL') {
+                $meta_buttons[] = ['type' => 'URL', 'text' => $btn['text'], 'url' => $btn['url']];
+            } elseif ($btn['type'] === 'PHONE_NUMBER') {
+                $meta_buttons[] = ['type' => 'PHONE_NUMBER', 'text' => $btn['text'], 'phone_number' => $btn['phone_number']];
             }
         }
-        if(!empty($buttons)) {
-            $components[] = ['type' => 'BUTTONS', 'buttons' => $buttons];
+
+        if (!empty($meta_buttons)) {
+            $components[] = ['type' => 'BUTTONS', 'buttons' => $meta_buttons];
         }
     }
 
-    // Add body examples if variables are present
-    foreach ($components as &$component) {
-        if ($component['type'] === 'BODY' && !empty($variable_examples)) {
-            $component['example'] = [
-                'body_text' => [array_values($variable_examples)]
-            ];
+    // Body Examples
+    // This is tricky. If body has {{1}}, {{2}}, Meta REQUIRES examples.
+    // We rely on $variable_examples passed from frontend (key-value)
+    // We need to order them based on occurrence in body.
+    if (!empty($matches[1])) {
+        $body_example_values = [];
+        foreach ($matches[1] as $var_name) {
+            $body_example_values[] = $variable_examples[$var_name] ?? 'sample';
+        }
+
+        // Find body component and add example
+        foreach ($components as &$c) {
+            if ($c['type'] === 'BODY') {
+                $c['example'] = ['body_text' => [$body_example_values]];
+                break;
+            }
         }
     }
-    unset($component);
-
 
     $payload = [
-        'name' => strtolower(str_replace(' ', '_', $name)),
+        'name' => strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $name)), // Strict name sanitization
         'language' => 'en_US',
         'category' => $category,
         'components' => $components
     ];
 
+    // --- Meta API Request ---
     $url = "https://graph.facebook.com/v21.0/{$waba_id}/message_templates";
 
     $ch = curl_init();
@@ -155,9 +232,10 @@ try {
     if ($http_code < 200 || $http_code >= 300) {
         $error_response = json_decode($response, true);
         $errorMessage = $error_response['error']['message'] ?? 'Unknown Meta API error';
-        if ($curl_error) {
-            $errorMessage = "cURL Error: " . $curl_error;
-        }
+
+        // Log detailed error for debugging
+        error_log("Meta Template Creation Failed: " . $response);
+
         throw new Exception("Meta API Error: " . $errorMessage);
     }
 
@@ -165,7 +243,7 @@ try {
     if (isset($meta_response['id'])) {
         $update_stmt = $pdo->prepare(
             "UPDATE message_templates
-             SET meta_template_id = ?, meta_template_name = ?, status = 'PENDING_APPROVAL'
+             SET meta_template_id = ?, meta_template_name = ?, status = 'PENDING'
              WHERE id = ?"
         );
         $update_stmt->execute([
@@ -176,14 +254,17 @@ try {
     }
 
     $pdo->commit();
+    ob_clean();
     echo json_encode(['status' => 'success', 'message' => "Template '{$name}' created and submitted for approval."]);
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
+    ob_clean();
     http_response_code(500);
-    error_log("Add Template Error: " . $e->getMessage() . " Payload: " . json_encode($payload ?? []));
+    error_log("Add Template Exception: " . $e->getMessage());
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
+ob_end_flush();
 ?>
