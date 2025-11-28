@@ -78,7 +78,7 @@ try {
             }
 
             processWorkflows($pdo, $workflowUserId, $conversation_id, [
-                'event_type' => 'conversation_closed'
+                'event_type' => 'CONVERSATION_CLOSED'
             ]);
         }
 
