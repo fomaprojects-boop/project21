@@ -8384,7 +8384,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             conversation_id: currentConversationId,
                             type: 'template', // Explicitly use template type
                             interactive_data: {
-                                name: templateData.name,
+                                name: templateData.meta_template_name || templateData.name, // Use Meta ID if available
                                 language: { code: templateData.language || 'en_US' },
                                 components: []
                             }
