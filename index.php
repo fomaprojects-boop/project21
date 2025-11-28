@@ -26,6 +26,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
     <meta name="user-role" content="<?php echo $userRole; ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatMe - Professional Edition</title>
+    <script>
+        const LOGGED_IN_USER_NAME = '<?php echo htmlspecialchars($userName, ENT_QUOTES); ?>';
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.4/dist/index.min.js"></script>
@@ -4919,16 +4922,48 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 // C. Body Variables
                 const container = document.getElementById('variable-inputs-container');
                 container.innerHTML = '';
+
+                // Define Auto-Fill System Variables
+                const systemVariables = {
+                    'customer_name': document.getElementById('chat-partner-name').textContent || '',
+                    'customer_phone': document.getElementById('chat-partner-phone').textContent || '',
+                    'phone_number': document.getElementById('chat-partner-phone').textContent || '',
+                    'agent_name': LOGGED_IN_USER_NAME,
+                    'company_name': '<?php echo isset($settings['business_name']) ? htmlspecialchars($settings['business_name']) : "Our Company"; ?>' // Fallback if settings not fully loaded in JS context, but ideally fetched
+                };
+
                 if (hasBodyVars) {
-                    container.innerHTML = '<h4 class="text-xs font-bold text-gray-500 uppercase mt-2">Body Variables</h4>';
+                    let hasVisibleVars = false;
+
                     bodyVariables.forEach(variable => {
-                        container.innerHTML += `
-                            <div>
-                                <label for="var-${variable}" class="block text-sm font-medium text-gray-700">Body: {{${variable.replace(/_/g, ' ')}}}</label>
-                                <input type="text" id="var-${variable}" name="${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required>
-                            </div>
-                        `;
+                        const cleanVar = variable.toLowerCase();
+                        if (systemVariables.hasOwnProperty(cleanVar)) {
+                            // Auto-fill (Hidden Input)
+                            container.innerHTML += `<input type="hidden" name="${variable}" value="${systemVariables[cleanVar]}">`;
+                            // Optional: Show badge that it's auto-filled
+                            // container.innerHTML += `<div class="text-xs text-green-600 mb-1"><i class="fas fa-check-circle"></i> Auto-filling {{${variable}}}</div>`;
+                        } else {
+                            // Manual Input
+                            hasVisibleVars = true;
+                            container.innerHTML += `
+                                <div>
+                                    <label for="var-${variable}" class="block text-sm font-medium text-gray-700">Body: {{${variable.replace(/_/g, ' ')}}}</label>
+                                    <input type="text" id="var-${variable}" name="${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required>
+                                </div>
+                            `;
+                        }
                     });
+
+                    if (hasVisibleVars) {
+                        // Prepend header only if visible inputs exist
+                        const header = document.createElement('h4');
+                        header.className = 'text-xs font-bold text-gray-500 uppercase mt-2';
+                        header.textContent = 'Body Variables';
+                        container.prepend(header);
+                    } else {
+                        // All variables auto-filled
+                        container.innerHTML += `<div class="p-3 bg-green-50 text-green-700 text-sm rounded border border-green-200"><i class="fas fa-magic mr-2"></i>All variables will be auto-filled by the system.</div>`;
+                    }
                 }
 
                 // D. Dynamic Buttons
@@ -7129,7 +7164,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const contactSelect = document.getElementById('selectContacts'); contactSelect.innerHTML = '';
             if (contacts && Array.isArray(contacts)) { contacts.forEach(c => { contactSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.phone_number})</option>`; }); }
             const templateSelect = document.getElementById('selectTemplate'); templateSelect.innerHTML = '<option value="">Select an approved template...</option>';
-            if (templates && Array.isArray(templates)) { templates.filter(t => t.status === 'Approved').forEach(t => { templateSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`; }); }
+        if (templates && Array.isArray(templates)) { templates.filter(t => t.status.toUpperCase() === 'APPROVED').forEach(t => { templateSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`; }); }
         }
 
         async function openAddCustomerModal() {
@@ -8384,7 +8419,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             conversation_id: currentConversationId,
                             type: 'template', // Explicitly use template type
                             interactive_data: {
-                                name: templateData.name,
+                                name: templateData.meta_template_name || templateData.name, // Use Meta ID if available
                                 language: { code: templateData.language || 'en_US' },
                                 components: []
                             }
