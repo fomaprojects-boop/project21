@@ -210,6 +210,19 @@ try {
         }
     }
 
+    // --- Schema Auto-Fix: Add DELAY to action_type ENUM ---
+    // This is separated because previous migration might have run without DELAY
+    $schema_lock_workflow_enum = __DIR__ . '/schema_workflow_enum_delay.lock';
+    if (!file_exists($schema_lock_workflow_enum)) {
+        try {
+            $pdo->exec("ALTER TABLE workflow_steps MODIFY COLUMN action_type ENUM('SEND_MESSAGE', 'ASSIGN_AGENT', 'ADD_TAG', 'ASK_QUESTION', 'DELAY') NOT NULL");
+            file_put_contents($schema_lock_workflow_enum, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            // Ignore if already done or fails safely
+            file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Workflow Enum Fix Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+        }
+    }
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');
