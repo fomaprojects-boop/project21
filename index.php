@@ -1460,33 +1460,39 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 <div class="max-w-2xl mx-auto">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-bold text-gray-800">Workflow Steps</h3>
-                        <div class="relative group">
-                            <button class="bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 font-semibold shadow-sm flex items-center transition-all">
+                        <div class="relative">
+                            <button onclick="toggleAddStepMenu()" class="bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 font-semibold shadow-sm flex items-center transition-all">
                                 <i class="fas fa-plus mr-2"></i> Add Step
                             </button>
                             <!-- Dropdown -->
-                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 hidden group-hover:block z-50 overflow-hidden">
-                                <button onclick="addWorkflowStep('SEND_MESSAGE')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
-                                    <i class="fas fa-comment-alt w-5 mr-2 text-violet-400"></i> Send Message
+                            <div id="add-step-menu" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 hidden z-50 overflow-hidden transform transition-all origin-top-right">
+                                <div class="bg-gray-50 px-4 py-2 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">Select Action</div>
+                                <button onclick="addWorkflowStep('SEND_MESSAGE')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-50 flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center mr-3 text-violet-600"><i class="fas fa-comment-alt"></i></div>
+                                    Send Message
                                 </button>
-                                <button onclick="addWorkflowStep('ASSIGN_AGENT')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
-                                    <i class="fas fa-user-tag w-5 mr-2 text-blue-400"></i> Assign Agent
+                                <button onclick="addWorkflowStep('ASSIGN_AGENT')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-50 flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 text-blue-600"><i class="fas fa-user-tag"></i></div>
+                                    Assign Agent
                                 </button>
-                                <button onclick="addWorkflowStep('ADD_TAG')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
-                                    <i class="fas fa-tag w-5 mr-2 text-pink-400"></i> Add Tag
+                                <button onclick="addWorkflowStep('ADD_TAG')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-50 flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center mr-3 text-pink-600"><i class="fas fa-tag"></i></div>
+                                    Add Tag
                                 </button>
-                                <button onclick="addWorkflowStep('ASK_QUESTION')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
-                                    <i class="fas fa-question-circle w-5 mr-2 text-amber-400"></i> Ask Question (Interactive)
+                                <button onclick="addWorkflowStep('ASK_QUESTION')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-50 flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center mr-3 text-amber-600"><i class="fas fa-question-circle"></i></div>
+                                    Ask Question
                                 </button>
-                                <button onclick="addWorkflowStep('DELAY')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors">
-                                    <i class="fas fa-hourglass-half w-5 mr-2 text-gray-400"></i> Delay / Wait
+                                <button onclick="addWorkflowStep('DELAY')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3 text-gray-600"><i class="fas fa-hourglass-half"></i></div>
+                                    Delay / Wait
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Steps Container -->
-                    <div id="workflow-steps-container" class="space-y-4 pb-20">
+                    <div id="workflow-steps-container" class="space-y-4 pb-20 max-h-[calc(100vh-300px)] overflow-y-auto pr-2 custom-scrollbar">
                         <!-- Empty State -->
                         <div id="workflow-empty-state" class="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl">
                             <div class="text-gray-400 mb-3 text-4xl"><i class="fas fa-layer-group"></i></div>
@@ -7871,153 +7877,125 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             currentWorkflow.steps.forEach((step, index) => {
                 try {
-                    // Initialize editing state
-                    if (typeof step.is_editing === 'undefined') {
-                        step.is_editing = false;
-                    }
+                    // Force editing/expanded state for all steps per user request
+                    step.is_editing = true;
 
                     const stepEl = document.createElement('div');
-                    stepEl.className = `bg-white border ${step.is_editing ? 'border-violet-400 ring-2 ring-violet-50' : 'border-gray-200'} rounded-lg shadow-sm relative group mb-4 transition-all`;
+                    stepEl.className = `bg-white border border-violet-200 rounded-lg shadow-sm relative group mb-4 transition-all`;
 
                     let contentHtml = '';
                     let iconClass = '';
                     let bgIconClass = '';
-                    let summaryText = '';
 
                     const actionType = step.action_type || 'UNKNOWN';
 
-                    // Determine Icon & Summary
+                    // Determine Icon
                     if (actionType === 'SEND_MESSAGE') {
                         iconClass = 'fa-comment-alt text-violet-600';
                         bgIconClass = 'bg-violet-100';
                         const meta = step.meta_data || {};
                         const isTemplate = meta.type === 'template';
-                        summaryText = isTemplate ? `Template: ${meta.template_id || 'N/A'}` : `"${step.content || 'Empty message'}"`;
+                        const textBody = step.content || '';
 
-                        if (step.is_editing) {
-                            const textBody = step.content || '';
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <div class="flex space-x-4 mb-3">
-                                    <label class="inline-flex items-center cursor-pointer">
-                                        <input type="radio" name="msg_type_${index}" value="text" ${!isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'text')" class="form-radio h-4 w-4 text-violet-600">
-                                        <span class="ml-2 text-sm font-medium text-gray-700">Custom Text</span>
-                                    </label>
-                                    <label class="inline-flex items-center cursor-pointer">
-                                        <input type="radio" name="msg_type_${index}" value="template" ${isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'template')" class="form-radio h-4 w-4 text-violet-600">
-                                        <span class="ml-2 text-sm font-medium text-gray-700">Template</span>
-                                    </label>
-                                </div>
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <div class="flex space-x-4 mb-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="msg_type_${index}" value="text" ${!isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'text')" class="form-radio h-4 w-4 text-violet-600">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Custom Text</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="msg_type_${index}" value="template" ${isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'template')" class="form-radio h-4 w-4 text-violet-600">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Template</span>
+                                </label>
+                            </div>
 
-                                <div id="msg-input-text-${index}" class="${isTemplate ? 'hidden' : ''}">
-                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Message Body</label>
-                                    <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="3" placeholder="Type message... Use {{customer_name}} or {{agent_name}}">${textBody}</textarea>
-                                    <p class="text-[10px] text-gray-400 mt-1">Variables: {{customer_name}}, {{agent_name}}</p>
-                                </div>
+                            <div id="msg-input-text-${index}" class="${isTemplate ? 'hidden' : ''}">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Message Body</label>
+                                <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="3" placeholder="Type message... Use {{customer_name}} or {{agent_name}}">${textBody}</textarea>
+                                <p class="text-[10px] text-gray-400 mt-1">Variables: {{customer_name}}, {{agent_name}}</p>
+                            </div>
 
-                                <div id="msg-input-template-${index}" class="${!isTemplate ? 'hidden' : ''}">
-                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Template Name</label>
-                                    <input type="text" oninput="updateStepMeta(${index}, 'template_id', this.value)" value="${meta.template_id || ''}" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" placeholder="e.g. welcome_msg">
-                                </div>
-                            </div>`;
-                        }
+                            <div id="msg-input-template-${index}" class="${!isTemplate ? 'hidden' : ''}">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Template Name</label>
+                                <input type="text" oninput="updateStepMeta(${index}, 'template_id', this.value)" value="${meta.template_id || ''}" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" placeholder="e.g. welcome_msg">
+                            </div>
+                        </div>`;
+
                     } else if (actionType === 'ASK_QUESTION') {
                         iconClass = 'fa-question-circle text-amber-500';
                         bgIconClass = 'bg-amber-100';
                         const meta = step.meta_data || {};
-                        summaryText = `Question: "${step.content || ''}" (Options: ${meta.options || 'None'})`;
 
-                        if (step.is_editing) {
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Question Text</label>
-                                <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="2" placeholder="e.g. Are you interested? Use {{customer_name}}">${step.content || ''}</textarea>
-                                <p class="text-[10px] text-gray-400 mt-1 mb-3">Variables: {{customer_name}}</p>
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Question Text</label>
+                            <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="2" placeholder="e.g. Are you interested? Use {{customer_name}}">${step.content || ''}</textarea>
+                            <p class="text-[10px] text-gray-400 mt-1 mb-3">Variables: {{customer_name}}</p>
 
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Options (Buttons)</label>
-                                <input type="text" oninput="updateStepMeta(${index}, 'options', this.value)" value="${meta.options || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Yes, No, Maybe">
-                                <p class="text-[10px] text-gray-400 mt-1">Comma separated. Max 3 buttons.</p>
-                            </div>`;
-                        }
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Options (Buttons)</label>
+                            <input type="text" oninput="updateStepMeta(${index}, 'options', this.value)" value="${meta.options || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Yes, No, Maybe">
+                            <p class="text-[10px] text-gray-400 mt-1">Comma separated. Max 3 buttons.</p>
+                        </div>`;
+
                     } else if (actionType === 'DELAY') {
                         iconClass = 'fa-hourglass-half text-gray-500';
                         bgIconClass = 'bg-gray-200';
-                        summaryText = `Wait for ${step.content || '0'} minutes`;
 
-                        if (step.is_editing) {
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Wait Time (Minutes)</label>
-                                <input type="number" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. 5">
-                            </div>`;
-                        }
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Wait Time (Minutes)</label>
+                            <input type="number" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. 5">
+                        </div>`;
+
                     } else if (actionType === 'ASSIGN_AGENT') {
                         iconClass = 'fa-user-tag text-blue-600';
                         bgIconClass = 'bg-blue-100';
-                        summaryText = `Logic: ${step.content || 'Round Robin'}`;
 
-                        if (step.is_editing) {
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Assignment Logic</label>
-                                <select onchange="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded">
-                                    <option value="Round Robin" ${step.content === 'Round Robin' ? 'selected' : ''}>Round Robin</option>
-                                    <option value="Fewest Conversations" ${step.content === 'Fewest Conversations' ? 'selected' : ''}>Fewest Conversations</option>
-                                </select>
-                            </div>`;
-                        }
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Assignment Logic</label>
+                            <select onchange="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded">
+                                <option value="Round Robin" ${step.content === 'Round Robin' ? 'selected' : ''}>Round Robin</option>
+                                <option value="Fewest Conversations" ${step.content === 'Fewest Conversations' ? 'selected' : ''}>Fewest Conversations</option>
+                            </select>
+                        </div>`;
+
                     } else if (actionType === 'ADD_TAG') {
                         iconClass = 'fa-tag text-pink-600';
                         bgIconClass = 'bg-pink-100';
-                        summaryText = `Tag: ${step.content || 'None'}`;
 
-                        if (step.is_editing) {
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tag Name</label>
-                                <input type="text" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Lead, VIP">
-                            </div>`;
-                        }
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tag Name</label>
+                            <input type="text" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Lead, VIP">
+                        </div>`;
                     }
 
-                    // Build Action Buttons
-                    let actionButtons = '';
-                    if (step.is_editing) {
-                        actionButtons = `
-                            <button onclick="toggleStepEdit(${index}, false)" class="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-md font-semibold hover:bg-violet-700 transition-colors shadow-sm mr-2">
-                                <i class="fas fa-check mr-1"></i> Save Step
-                            </button>
-                            <button onclick="removeWorkflowStep(${index})" class="text-xs bg-white border border-red-200 text-red-500 px-3 py-1.5 rounded-md font-semibold hover:bg-red-50 transition-colors">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        `;
-                    } else {
-                        actionButtons = `
-                            <button onclick="toggleStepEdit(${index}, true)" class="text-gray-400 hover:text-violet-600 transition-colors p-1">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button onclick="removeWorkflowStep(${index})" class="text-gray-400 hover:text-red-500 transition-colors p-1 ml-1">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        `;
-                    }
+                    // Build Action Buttons (Simplified)
+                    let actionButtons = `
+                        <button onclick="removeWorkflowStep(${index})" class="text-xs bg-white border border-red-200 text-red-500 px-3 py-1.5 rounded-md font-semibold hover:bg-red-50 transition-colors shadow-sm">
+                            <i class="fas fa-trash-alt mr-1"></i> Remove
+                        </button>
+                    `;
 
                     stepEl.innerHTML = `
-                        <div class="flex justify-between items-center ${step.is_editing ? 'border-b border-gray-100 pb-3' : 'p-3'}">
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-3 p-3 bg-gray-50 rounded-t-lg">
                             <div class="flex items-center">
                                 <div class="w-8 h-8 rounded-full ${bgIconClass} flex items-center justify-center mr-3 shrink-0">
                                     <i class="fas ${iconClass}"></i>
                                 </div>
                                 <div>
                                     <span class="font-bold text-gray-800 text-sm block">Step ${index + 1}: ${actionType.replace('_', ' ')}</span>
-                                    ${!step.is_editing ? `<span class="text-xs text-gray-500 truncate max-w-[200px] block">${summaryText}</span>` : ''}
                                 </div>
                             </div>
                             <div class="flex items-center">
                                 ${actionButtons}
                             </div>
                         </div>
-                        ${contentHtml}
+                        <div class="p-3">
+                            ${contentHtml}
+                        </div>
                     `;
                     container.appendChild(stepEl);
                 } catch(e) {
@@ -8027,16 +8005,17 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         function addWorkflowStep(type) {
-            // Collapse all existing steps first
-            currentWorkflow.steps.forEach(s => s.is_editing = false);
-
+            // No auto-collapse, user wants all steps visible
             currentWorkflow.steps.push({
                 action_type: type,
                 content: '',
                 meta_data: {},
-                is_editing: true // New step starts in edit mode
+                is_editing: true
             });
             renderLinearSteps();
+
+            // Toggle menu off after adding
+            toggleAddStepMenu(false);
 
             // Scroll to bottom
             setTimeout(() => {
@@ -8046,14 +8025,29 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         function toggleStepEdit(index, isEditing) {
-            if (isEditing) {
-                // Close others if opening one
-                currentWorkflow.steps.forEach((s, i) => {
-                    if (i !== index) s.is_editing = false;
-                });
+            // Function deprecated as steps are always editable, but kept empty to prevent errors if referenced
+        }
+
+        function toggleAddStepMenu(show) {
+            const menu = document.getElementById('add-step-menu');
+            if (!menu) return;
+
+            if (show === undefined) {
+                // Toggle
+                if (menu.classList.contains('hidden')) {
+                    menu.classList.remove('hidden');
+                    setTimeout(() => menu.classList.add('scale-100', 'opacity-100'), 10);
+                } else {
+                    menu.classList.remove('scale-100', 'opacity-100');
+                    setTimeout(() => menu.classList.add('hidden'), 200);
+                }
+            } else if (show) {
+                menu.classList.remove('hidden');
+                setTimeout(() => menu.classList.add('scale-100', 'opacity-100'), 10);
+            } else {
+                menu.classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => menu.classList.add('hidden'), 200);
             }
-            currentWorkflow.steps[index].is_editing = isEditing;
-            renderLinearSteps();
         }
 
         function removeWorkflowStep(index) {
