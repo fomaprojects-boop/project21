@@ -3993,6 +3993,81 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             togglePlacementField();
         }
 
+        async function handleYoutubeReportFormSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Generating...';
+
+            const formData = new FormData(form);
+
+            const data = {
+                advertiser_id: formData.get('advertiser_id'),
+                report_name: formData.get('report_name'),
+                video_ids: []
+            };
+
+            // Handle checkboxes
+            form.querySelectorAll('input[name="video_ids[]"]:checked').forEach(cb => {
+                data.video_ids.push(cb.value);
+            });
+
+            try {
+                const result = await fetchApi('modules/youtube_ads/controllers/generate_report.php', {
+                    method: 'POST',
+                    body: data
+                });
+
+                if (result && result.status === 'success') {
+                    alert('Report generated successfully!');
+                    form.reset();
+                    loadYouTubeReportsTable();
+                } else {
+                    alert('Error: ' + (result ? result.message : 'Unknown error'));
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred while generating the report.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        }
+
+        async function loadYouTubeReportsTable(initialData = null) {
+            const tableBody = document.getElementById('youtube-reports-table-body');
+            if (!tableBody) return;
+
+            if (!initialData) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Loading reports...</td></tr>';
+                initialData = await fetchApi('modules/youtube_ads/controllers/get_reports.php');
+            }
+
+            tableBody.innerHTML = '';
+            if (initialData && initialData.status === 'success' && initialData.reports && initialData.reports.length > 0) {
+                initialData.reports.forEach(report => {
+                    const viewBtn = report.pdf_path ?
+                        `<a href="${BASE_URL}/${report.pdf_path}" target="_blank" class="text-violet-600 hover:text-violet-800 font-semibold text-sm">View PDF</a>` :
+                        '<span class="text-gray-400">Processing...</span>';
+
+                    const reportName = report.report_name || report.ad_title || 'Report';
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td class="p-4">${reportName}</td>
+                            <td class="p-4">${report.advertiser_name || 'N/A'}</td>
+                            <td class="p-4">${new Date(report.generated_at || report.created_at).toLocaleDateString()}</td>
+                            <td class="p-4">${viewBtn}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">No generated reports found.</td></tr>';
+            }
+        }
+
         async function loadGeneratedReports(page = 1) {
             const listDiv = document.getElementById('generated-reports-list');
             listDiv.innerHTML = '<p class="text-gray-500 p-4">Loading reports...</p>';
@@ -6335,32 +6410,6 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
-        async function useWorkflowTemplate(template) {
-            await loadApprovedTemplates();
-
-            // Populate currentWorkflow with template data
-            currentWorkflow = {
-                id: null, // New workflow, so ID is null
-                name: template.title || 'New Workflow',
-                trigger_type: template.workflow_data.trigger_type || 'KEYWORD',
-                keywords: template.workflow_data.keywords || '',
-                steps: template.workflow_data.steps || [],
-                is_active: 0
-            };
-
-            // Switch to Editor
-            document.getElementById('workflow-main-view').style.display = 'none';
-            document.getElementById('workflow-editor-view').style.display = 'block';
-
-            // Populate Inputs
-            document.getElementById('workflow-name-input').value = currentWorkflow.name;
-            document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
-            document.getElementById('wf-keywords').value = currentWorkflow.keywords;
-
-            // Refresh UI
-            toggleTriggerInputs();
-            renderLinearSteps();
-        }
         async function loadWorkflows() {
             const list = document.getElementById('workflows-list');
             if (!list) return;
@@ -7880,15 +7929,29 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         async function useWorkflowTemplate(template) {
             await loadApprovedTemplates();
 
+            // --- FIX: Lazimisha Data ziwe Object ---
+            let wfData = template.workflow_data;
+            // Kama imekuja kama maandishi (String), ibadilishe iwe Object
+            if (typeof wfData === 'string') {
+                try {
+                    wfData = JSON.parse(wfData);
+                } catch (e) {
+                    console.error("Error parsing workflow data:", e);
+                    wfData = {}; // Fallback ili isivunje system
+                }
+            }
+            // ---------------------------------------
+
             // Deep copy steps to avoid reference issues
-            const stepsCopy = template.workflow_data.steps ? JSON.parse(JSON.stringify(template.workflow_data.steps)) : [];
+            // Sasa tunatumia 'wfData' badala ya 'template.workflow_data'
+            const stepsCopy = wfData.steps ? JSON.parse(JSON.stringify(wfData.steps)) : [];
 
             // Populate currentWorkflow with template data
             currentWorkflow = {
                 id: null, // New workflow, so ID is null
                 name: template.title || 'New Workflow',
-                trigger_type: template.workflow_data.trigger_type || 'KEYWORD',
-                keywords: template.workflow_data.keywords || '',
+                trigger_type: wfData.trigger_type || 'KEYWORD',
+                keywords: wfData.keywords || '',
                 steps: stepsCopy,
                 is_active: 0
             };

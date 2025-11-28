@@ -25,7 +25,7 @@ if ($db->connect_error) {
 // Assuming it should fetch ad_reports, similar to get_ad_reports.php
 require_once __DIR__ . '/../models/AdReport.php';
 $adReportModel = new \Modules\YouTubeAds\Models\AdReport($db);
-$reports = $adReportModel->getReportsByTenantId($_SESSION['user_id']);
+$result = $adReportModel->getByTenant($_SESSION['user_id']);
 
 
-echo json_encode(['status' => 'success', 'reports' => $reports]);
+echo json_encode(['status' => 'success', 'reports' => $result['data'], 'total' => $result['total']]);
