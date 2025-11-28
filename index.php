@@ -1402,10 +1402,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         </div>
     </div>
 
-    <!-- Workflow Editor View (Hidden by default) -->
-    <div id="workflow-editor-view" class="hidden bg-gray-50 h-full flex flex-col relative workflow-canvas-bg">
+    <!-- Workflow Editor View (Refactored Linear Builder) -->
+    <div id="workflow-editor-view" class="hidden bg-gray-50 h-full flex flex-col relative">
         <!-- Editor Header -->
-        <div class="flex justify-between items-center px-6 py-3 bg-white border-b shadow-sm z-20">
+        <div class="flex justify-between items-center px-6 py-4 bg-white border-b shadow-sm z-20">
             <div class="flex items-center gap-4">
                 <button onclick="closeWorkflowEditor()" class="text-gray-400 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-100">
                     <i class="fas fa-arrow-left text-lg"></i>
@@ -1416,12 +1416,6 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 </div>
             </div>
             <div class="flex gap-3">
-                <button onclick="exportWorkflowJSON()" class="text-gray-500 hover:text-violet-600 bg-gray-100 hover:bg-violet-50 px-4 py-2 rounded-lg text-sm font-semibold transition-colors" title="Export to JSON">
-                    <i class="fas fa-download mr-2"></i>Export
-                </button>
-                <button onclick="importWorkflowJSON()" class="text-gray-500 hover:text-violet-600 bg-gray-100 hover:bg-violet-50 px-4 py-2 rounded-lg text-sm font-semibold transition-colors" title="Import from JSON">
-                    <i class="fas fa-upload mr-2"></i>Import
-                </button>
                 <button onclick="saveWorkflow(0)" class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 font-semibold shadow-sm transition-all mr-2">
                     Save Draft
                 </button>
@@ -1431,9 +1425,77 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             </div>
         </div>
 
-        <!-- Editor Canvas -->
-        <div class="workflow-canvas flex-1 overflow-auto relative p-10">
-            <div id="workflow-editor-canvas" class="min-w-full min-h-full flex justify-center items-start pt-10 pb-40"></div>
+        <!-- Editor Content (Two Columns) -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Left: Settings & Trigger -->
+            <div class="w-1/3 bg-white border-r border-gray-200 p-6 overflow-y-auto">
+                <h3 class="text-lg font-bold text-gray-800 mb-6">Trigger Settings</h3>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Trigger Type</label>
+                    <select id="wf-trigger-type" onchange="toggleTriggerInputs()" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500">
+                        <option value="KEYWORD">Message Received (Keyword)</option>
+                        <option value="CONVERSATION_STARTED">Conversation Started</option>
+                        <option value="CONVERSATION_CLOSED">Conversation Closed</option>
+                        <option value="PAYMENT_RECEIVED">Payment Received</option>
+                        <option value="TAG_ADDED">Tag Added</option>
+                        <option value="ORDER_STATUS_CHANGED" disabled>Order Status Changed (Coming Soon)</option>
+                    </select>
+                </div>
+
+                <div class="mb-6" id="wf-keywords-container">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" id="wf-keywords-label">Keywords</label>
+                    <p class="text-xs text-gray-500 mb-2" id="wf-keywords-help">Comma separated. Case insensitive. Partial match supported.</p>
+                    <textarea id="wf-keywords" rows="4" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500" placeholder="e.g. price, cost, how much"></textarea>
+                </div>
+
+                <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <h4 class="text-blue-800 font-semibold text-sm mb-1"><i class="fas fa-info-circle mr-1"></i> How it works</h4>
+                    <p class="text-xs text-blue-600">When a user sends a message containing any of these keywords, the steps on the right will be executed in order.</p>
+                </div>
+            </div>
+
+            <!-- Right: Steps Canvas -->
+            <div class="w-2/3 bg-slate-50 p-8 overflow-y-auto relative">
+                <div class="max-w-2xl mx-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-gray-800">Workflow Steps</h3>
+                        <div class="relative group">
+                            <button class="bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 font-semibold shadow-sm flex items-center transition-all">
+                                <i class="fas fa-plus mr-2"></i> Add Step
+                            </button>
+                            <!-- Dropdown -->
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 hidden group-hover:block z-50 overflow-hidden">
+                                <button onclick="addWorkflowStep('SEND_MESSAGE')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
+                                    <i class="fas fa-comment-alt w-5 mr-2 text-violet-400"></i> Send Message
+                                </button>
+                                <button onclick="addWorkflowStep('ASSIGN_AGENT')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
+                                    <i class="fas fa-user-tag w-5 mr-2 text-blue-400"></i> Assign Agent
+                                </button>
+                                <button onclick="addWorkflowStep('ADD_TAG')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
+                                    <i class="fas fa-tag w-5 mr-2 text-pink-400"></i> Add Tag
+                                </button>
+                                <button onclick="addWorkflowStep('ASK_QUESTION')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
+                                    <i class="fas fa-question-circle w-5 mr-2 text-amber-400"></i> Ask Question (Interactive)
+                                </button>
+                                <button onclick="addWorkflowStep('DELAY')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors">
+                                    <i class="fas fa-hourglass-half w-5 mr-2 text-gray-400"></i> Delay / Wait
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Steps Container -->
+                    <div id="workflow-steps-container" class="space-y-4 pb-20">
+                        <!-- Empty State -->
+                        <div id="workflow-empty-state" class="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl">
+                            <div class="text-gray-400 mb-3 text-4xl"><i class="fas fa-layer-group"></i></div>
+                            <p class="text-gray-500 font-medium">No steps defined yet.</p>
+                            <p class="text-gray-400 text-sm">Add a step to define what happens when triggered.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>`, reports: `<div class="p-8"><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white p-6 rounded-lg shadow-md border"><h4 class="text-gray-500 font-semibold">New Conversations</h4><p id="report-new-conv" class="text-4xl font-bold mt-2">N/A</p></div><div class="bg-white p-6 rounded-lg shadow-md border"><h4 class="text-gray-500 font-semibold">Messages Sent</h4><p id="report-msg-sent" class="text-4xl font-bold mt-2">N/A</p></div><div class="bg-white p-6 rounded-lg shadow-md border"><h4 class="text-gray-500 font-semibold">Avg. Response Time</h4><p id="report-avg-time" class="text-4xl font-bold mt-2">N/A</p></div></div><div class="bg-white p-6 rounded-lg shadow-md border"><h4 class="font-bold text-lg mb-4">Conversations Overview</h4><div class="h-96 relative"><canvas id="reportsChart"></canvas><div id="reports-chart-overlay" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 hidden"><p class="text-gray-500 font-semibold">No data available to display chart.</p></div></div></div></div>`,
@@ -7726,332 +7788,257 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
-        // --- WORKFLOW EDITOR FUNCTIONS ---
+        // --- NEW LINEAR WORKFLOW BUILDER FUNCTIONS ---
         async function openWorkflowEditor(workflowId = null) {
             if (workflowId) {
-                const workflows = await fetchApi('get_workflows.php');
-                const wf = workflows.find(w => w.id == workflowId);
-                currentWorkflow = { id: wf.id, name: wf.name, trigger_type: wf.trigger_type, workflow_data: wf.workflow_data || { nodes: [] } };
-            } else {
-                openModal('selectTriggerModal'); return;
-            }
-            document.getElementById('workflow-main-view').style.display = 'none';
-            document.getElementById('workflow-editor-view').style.display = 'block';
-            document.getElementById('workflow-name-input').value = currentWorkflow.name;
-            renderWorkflow();
-        }
-        function selectTrigger(triggerContent) {
-            closeModal('selectTriggerModal');
-            currentWorkflow = { id: null, name: 'Untitled Workflow', trigger_type: triggerContent, is_active: 0, workflow_data: { nodes: [{id: 1, type: 'trigger', content: triggerContent, parentId: null}] } };
-            document.getElementById('workflow-main-view').style.display = 'none';
-            document.getElementById('workflow-editor-view').style.display = 'block';
-            document.getElementById('workflow-name-input').value = currentWorkflow.name;
-            renderWorkflow();
-        }
-        function useWorkflowTemplate(template) {
-            currentWorkflow = { id: null, name: template.title, trigger_type: template.workflow_data.nodes[0].content, workflow_data: template.workflow_data };
-            document.getElementById('workflow-main-view').style.display = 'none';
-            document.getElementById('workflow-editor-view').style.display = 'block';
-            document.getElementById('workflow-name-input').value = currentWorkflow.name;
-            renderWorkflow();
-        }
-        function closeWorkflowEditor() { document.getElementById('workflow-main-view').style.display = 'block'; document.getElementById('workflow-editor-view').style.display = 'none'; loadWorkflows(); }
-        function renderWorkflow() {
-            const canvas = document.getElementById('workflow-editor-canvas'); canvas.innerHTML = '';
-            const nodes = currentWorkflow.workflow_data.nodes;
-            const icons = {
-                trigger: 'fa-play-circle',
-                ai_objective: 'fa-robot',
-                action: 'fa-paper-plane',
-                condition: 'fa-code-branch',
-                question: 'fa-question-circle',
-                message: 'fa-comment-alt',
-                assign: 'fa-users',
-                add_tag: 'fa-tag',
-                update_contact: 'fa-user-edit'
-            };
-            const colors = {
-                trigger: 'text-rose-500',
-                ai_objective: 'text-violet-500',
-                action: 'text-green-500',
-                condition: 'text-amber-500',
-                question: 'text-blue-500',
-                message: 'text-gray-600',
-                assign: 'text-purple-500',
-                add_tag: 'text-pink-500',
-                update_contact: 'text-cyan-600'
-            };
-
-            const buildHtmlForNode = (node) => {
-                let actions = `<div class="absolute top-2 right-2 flex gap-2"><button onclick="deleteNode(${node.id})" class="text-gray-400 hover:text-red-500 text-xs"><i class="fas fa-times"></i></button><button onclick="openNodeConfig(${node.id})" class="text-gray-400 hover:text-violet-500 text-xs"><i class="fas fa-pencil-alt"></i></button></div>`;
-                if (node.type === 'trigger') actions = '';
-
-                let extraHtml = '';
-                if (node.type === 'question' && node.options && node.options.length > 0) {
-                    extraHtml = `<div class="mt-2 flex flex-wrap gap-1">` +
-                        node.options.map(opt => `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full border border-blue-200">${opt}</span>`).join('') +
-                    `</div>`;
-                }
-
-                let nodeHtml = `<div class="workflow-node ${node.type}">${actions}<div class="flex items-center"><i class="fas ${icons[node.type] || 'fa-circle'} ${colors[node.type] || 'text-gray-500'} text-lg mr-3"></i><div><h4 class="font-semibold text-sm">${node.content}</h4>${extraHtml}</div></div></div>`;
-
-                let childrenHtml = ''; const children = nodes.filter(n => n.parentId === node.id);
-
-                if (children.length === 0) {
-                    // Logic for nodes with no children yet
-                    if (node.type === 'condition') {
-                         childrenHtml += `<div class="workflow-branch"><div class="branch-path"><div class="branch-label">YES</div><div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, 'YES')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div></div><div class="branch-path"><div class="branch-label">NO</div><div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, 'NO')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div></div></div>`;
-                    } else if (node.type === 'question' && node.options && node.options.length > 0) {
-                         // For questions with options, show branches for each option automatically
-                         childrenHtml += `<div class="workflow-branch">` + node.options.map(opt => {
-                             return `<div class="branch-path"><div class="branch-label">${opt}</div><div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, '${opt}')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div></div>`;
-                         }).join('') + `</div>`;
-                    } else {
-                        nodeHtml += `<div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id})" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div>`;
-                    }
+                const response = await fetchApi(`get_workflow_details.php?id=${workflowId}`);
+                if (response && response.status === 'success') {
+                    currentWorkflow = {
+                        id: response.data.id,
+                        name: response.data.name,
+                        trigger_type: response.data.trigger_type || 'KEYWORD',
+                        keywords: response.data.keywords || '',
+                        steps: response.data.steps || []
+                    };
                 } else {
-                    // Logic for nodes with children
-                    if (node.type === 'condition' || (node.type === 'question' && node.options && node.options.length > 0)) {
-                        // Determine branches based on node options or YES/NO for condition
-                        let branches = [];
-                        if (node.type === 'question' && node.options) {
-                            branches = node.options;
-                        } else {
-                            branches = ['YES', 'NO'];
-                        }
-
-                        childrenHtml += `<div class="workflow-branch">` + branches.map(branchName => {
-                            const childNode = children.find(c => c.branch === branchName);
-                            return `<div class="branch-path"><div class="branch-label">${branchName}</div>${childNode ? buildHtmlForNode(childNode) : `<div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${node.id}, '${branchName}')" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div>`}</div>`;
-                        }).join('') + `</div>`;
-                        // Prepend connector to the branch container
-                        childrenHtml = `<div class="workflow-connector"></div>` + childrenHtml;
-                    } else {
-                        // Single path
-                        children.forEach(child => { childrenHtml += `<div class="workflow-connector"><div class="add-node-btn"><button onclick="addNode('action', ${child.parentId})" class="bg-white rounded-full h-8 w-8 shadow border flex items-center justify-center hover:bg-gray-100"><i class="fas fa-plus text-gray-500"></i></button></div></div>` + buildHtmlForNode(child); });
-                    }
+                    alert('Failed to load workflow.');
+                    return;
                 }
-                return `<div class="flex flex-col items-center">${nodeHtml}${childrenHtml}</div>`;
-            };
-            const rootNode = nodes.find(n => !n.parentId); if (rootNode) canvas.innerHTML = buildHtmlForNode(rootNode);
+            } else {
+                // New Workflow
+                currentWorkflow = {
+                    id: null,
+                    name: 'Untitled Workflow',
+                    trigger_type: 'KEYWORD',
+                    keywords: '',
+                    steps: []
+                };
+            }
+
+            // Populate Fields
+            document.getElementById('workflow-main-view').style.display = 'none';
+            document.getElementById('workflow-editor-view').style.display = 'block';
+            document.getElementById('workflow-name-input').value = currentWorkflow.name;
+            document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
+            document.getElementById('wf-keywords').value = currentWorkflow.keywords;
+
+            // Initial UI state update
+            toggleTriggerInputs();
+
+            renderLinearSteps();
         }
 
-        function addNode(type, parentId, branch = null) { const newId = (currentWorkflow.workflow_data.nodes.length > 0 ? Math.max(...currentWorkflow.workflow_data.nodes.map(n => n.id)) : 0) + 1; currentWorkflow.workflow_data.nodes.push({id: newId, type, content: 'New Action', parentId, branch}); renderWorkflow(); openNodeConfig(newId); }
+        function closeWorkflowEditor() {
+            document.getElementById('workflow-main-view').style.display = 'block';
+            document.getElementById('workflow-editor-view').style.display = 'none';
+            loadWorkflows();
+        }
 
-        function deleteNode(nodeId) {
-            if (nodeId === 1) {
-                alert('Cannot delete the Trigger node.');
+        function toggleTriggerInputs() {
+            const type = document.getElementById('wf-trigger-type').value;
+            const container = document.getElementById('wf-keywords-container');
+            const label = document.getElementById('wf-keywords-label');
+            const help = document.getElementById('wf-keywords-help');
+            const input = document.getElementById('wf-keywords');
+
+            if (type === 'KEYWORD') {
+                container.style.display = 'block';
+                label.textContent = 'Keywords';
+                help.textContent = 'Comma separated. Case insensitive. Partial match supported.';
+                input.placeholder = 'e.g. price, cost, how much';
+            } else if (type === 'TAG_ADDED') {
+                container.style.display = 'block';
+                label.textContent = 'Tag Name';
+                help.textContent = 'Exact tag name that triggers this workflow.';
+                input.placeholder = 'e.g. VIP';
+            } else {
+                // Global triggers like CONVERSATION_CLOSED, CONVERSATION_STARTED (unless we add filters later)
+                container.style.display = 'none';
+            }
+        }
+
+        function renderLinearSteps() {
+            const container = document.getElementById('workflow-steps-container');
+            const emptyState = document.getElementById('workflow-empty-state');
+            container.innerHTML = ''; // Clear
+
+            if (!currentWorkflow.steps || currentWorkflow.steps.length === 0) {
+                container.appendChild(emptyState);
+                emptyState.style.display = 'block';
                 return;
             }
-            if (!confirm('Delete this node and all below it?')) return;
-            let nodesToDelete = [nodeId];
-            let i=0;
-            while(i<nodesToDelete.length){
-                const children = currentWorkflow.workflow_data.nodes.filter(n => n.parentId === nodesToDelete[i]);
-                children.forEach(c => nodesToDelete.push(c.id));
-                i++;
+            emptyState.style.display = 'none';
+
+            currentWorkflow.steps.forEach((step, index) => {
+                const stepEl = document.createElement('div');
+                stepEl.className = 'bg-white border border-gray-200 rounded-lg p-4 shadow-sm relative group';
+
+                let contentHtml = '';
+                let iconClass = '';
+                let bgIconClass = '';
+
+                // Step Header
+                if (step.action_type === 'SEND_MESSAGE') {
+                    iconClass = 'fa-comment-alt text-violet-600';
+                    bgIconClass = 'bg-violet-100';
+
+                    const meta = step.meta_data || {};
+                    const isTemplate = meta.type === 'template';
+                    const textBody = step.content || '';
+
+                    contentHtml = `
+                        <div class="mt-3">
+                            <div class="flex space-x-4 mb-2">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="msg_type_${index}" value="text" ${!isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'text')" class="form-radio h-4 w-4 text-violet-600">
+                                    <span class="ml-2 text-xs font-bold text-gray-600 uppercase">Custom Text</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="msg_type_${index}" value="template" ${isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'template')" class="form-radio h-4 w-4 text-violet-600">
+                                    <span class="ml-2 text-xs font-bold text-gray-600 uppercase">Template</span>
+                                </label>
+                            </div>
+
+                            <div id="msg-input-text-${index}" class="${isTemplate ? 'hidden' : ''}">
+                                <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="3" placeholder="Type message...">${textBody}</textarea>
+                            </div>
+
+                            <div id="msg-input-template-${index}" class="${!isTemplate ? 'hidden' : ''}">
+                                <input type="text" oninput="updateStepMeta(${index}, 'template_id', this.value)" value="${meta.template_id || ''}" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" placeholder="Enter Template Name (e.g. welcome_msg)">
+                                <p class="text-[10px] text-gray-400 mt-1">Enter the exact template name approved by Meta.</p>
+                            </div>
+                        </div>`;
+                } else if (step.action_type === 'ASK_QUESTION') {
+                    iconClass = 'fa-question-circle text-amber-500';
+                    bgIconClass = 'bg-amber-100';
+                    const meta = step.meta_data || {};
+                    contentHtml = `
+                        <div class="mt-3">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Question Text</label>
+                            <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="2" placeholder="e.g. Are you interested?">${step.content || ''}</textarea>
+
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1 mt-2">Options (Buttons)</label>
+                            <input type="text" oninput="updateStepMeta(${index}, 'options', this.value)" value="${meta.options || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Yes, No, Maybe">
+                            <p class="text-[10px] text-gray-400 mt-1">Comma separated. Max 3 buttons.</p>
+                        </div>`;
+                } else if (step.action_type === 'DELAY') {
+                    iconClass = 'fa-hourglass-half text-gray-500';
+                    bgIconClass = 'bg-gray-200';
+                    contentHtml = `
+                        <div class="mt-3">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Wait Time (Minutes)</label>
+                            <input type="number" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. 5">
+                        </div>`;
+                } else if (step.action_type === 'ASSIGN_AGENT') {
+                    iconClass = 'fa-user-tag text-blue-600';
+                    bgIconClass = 'bg-blue-100';
+                    contentHtml = `
+                        <div class="mt-3">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Logic</label>
+                            <select onchange="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded">
+                                <option value="Round Robin" ${step.content === 'Round Robin' ? 'selected' : ''}>Round Robin</option>
+                                <option value="Fewest Conversations" ${step.content === 'Fewest Conversations' ? 'selected' : ''}>Fewest Conversations</option>
+                            </select>
+                        </div>`;
+                } else if (step.action_type === 'ADD_TAG') {
+                    iconClass = 'fa-tag text-pink-600';
+                    bgIconClass = 'bg-pink-100';
+                    contentHtml = `
+                        <div class="mt-3">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tag Name</label>
+                            <input type="text" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Lead, VIP">
+                        </div>`;
+                }
+
+                stepEl.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full ${bgIconClass} flex items-center justify-center mr-3">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <span class="font-bold text-gray-700 text-sm">Step ${index + 1}: ${step.action_type.replace('_', ' ')}</span>
+                        </div>
+                        <button onclick="removeWorkflowStep(${index})" class="text-gray-300 hover:text-red-500 transition-colors">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    ${contentHtml}
+                `;
+                container.appendChild(stepEl);
+            });
+        }
+
+        function addWorkflowStep(type) {
+            currentWorkflow.steps.push({
+                action_type: type,
+                content: '',
+                meta_data: {}
+            });
+            renderLinearSteps();
+        }
+
+        function removeWorkflowStep(index) {
+            currentWorkflow.steps.splice(index, 1);
+            renderLinearSteps();
+        }
+
+        function updateStepContent(index, value) {
+            currentWorkflow.steps[index].content = value;
+        }
+
+        function updateStepMeta(index, key, value) {
+            if (!currentWorkflow.steps[index].meta_data) {
+                currentWorkflow.steps[index].meta_data = {};
             }
-            currentWorkflow.workflow_data.nodes = currentWorkflow.workflow_data.nodes.filter(n => !nodesToDelete.includes(n.id));
-            renderWorkflow();
-        }
+            currentWorkflow.steps[index].meta_data[key] = value;
 
-        function openNodeConfig(nodeId) {
-            configuringNodeId = nodeId;
-            const node = currentWorkflow.workflow_data.nodes.find(n => n.id === nodeId);
-            document.getElementById('configure-node-title').textContent = `Configure Node`;
-            const body = document.getElementById('configure-node-body');
-
-            const nodeTypes = [
-                {value: 'message', label: 'Send Message'},
-                {value: 'question', label: 'Ask Question / Quick Reply'},
-                {value: 'condition', label: 'Branch (Yes/No)'},
-                {value: 'assign', label: 'Assign to Team'},
-                {value: 'add_tag', label: 'Add Tag to Contact'},
-                {value: 'update_contact', label: 'Update Contact Field'}
-            ];
-
-            let typeOptions = nodeTypes.map(t => `<option value="${t.value}" ${node.type === t.value ? 'selected' : ''}>${t.label}</option>`).join('');
-
-            let contentHtml = `
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Node Type</label>
-                    <select id="node-type-select" onchange="renderNodeConfigFields(this.value)" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-                        ${typeOptions}
-                    </select>
-                </div>
-                <div id="node-config-fields"></div>
-            `;
-
-            body.innerHTML = contentHtml;
-            setTimeout(() => renderNodeConfigFields(node.type, node), 0);
-            openModal('configureNodeModal');
-        }
-
-        function renderNodeConfigFields(type, nodeData = null) {
-             const container = document.getElementById('node-config-fields');
-             if(!container) return;
-
-             let content = nodeData ? nodeData.content : '';
-             // Default content for new types
-             if (!nodeData && type === 'condition') content = 'Condition Check';
-             if (!nodeData && type === 'question') content = 'How can we help?';
-
-             let options = nodeData && nodeData.options ? nodeData.options.join(',') : '';
-
-             let html = '';
-
-             if (type === 'message' || type === 'action') {
-                 html = `
-                    <label class="block text-sm font-medium text-gray-700">Message Text</label>
-                    <textarea id="config-content" class="w-full p-2 border rounded-md mt-1" rows="4">${content}</textarea>
-                 `;
-             } else if (type === 'question') {
-                 html = `
-                    <label class="block text-sm font-medium text-gray-700">Question Text</label>
-                    <textarea id="config-content" class="w-full p-2 border rounded-md mt-1" rows="3">${content}</textarea>
-                    <label class="block text-sm font-medium text-gray-700 mt-3">Quick Answers / Buttons (Comma separated)</label>
-                    <input type="text" id="config-options" class="w-full p-2 border rounded-md mt-1" value="${options}" placeholder="Yes, No, Maybe">
-                 `;
-             } else if (type === 'condition') {
-                 html = `
-                    <div class="bg-yellow-50 p-3 rounded text-sm text-yellow-800 mb-2">
-                        This node splits the flow into <strong>YES</strong> and <strong>NO</strong> branches based on AI analysis or user intent.
-                    </div>
-                    <label class="block text-sm font-medium text-gray-700 mt-3">Condition Description</label>
-                    <input type="text" id="config-content" class="w-full p-2 border rounded-md mt-1" value="${content}" placeholder="e.g. User replied 'Yes'">
-                 `;
-             } else if (type === 'assign') {
-                 let logic = 'Round Robin';
-                 if (content.includes('Fewest')) logic = 'Fewest Conversations';
-                 if (content.includes('Online')) logic = 'Online Only';
-
-                 html = `
-                    <label class="block text-sm font-medium text-gray-700">Assignment Logic</label>
-                    <select id="config-logic" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-                        <option value="Round Robin" ${logic === 'Round Robin' ? 'selected' : ''}>Round Robin</option>
-                        <option value="Fewest Conversations" ${logic === 'Fewest Conversations' ? 'selected' : ''}>Fewest Conversations</option>
-                        <option value="Online Only" ${logic === 'Online Only' ? 'selected' : ''}>Online Only</option>
-                    </select>
-                 `;
-             } else if (type === 'add_tag') {
-                 let tag = content.replace('Add Tag: ', '');
-                 if(tag === 'New Node') tag = '';
-                 html = `
-                    <label class="block text-sm font-medium text-gray-700">Tag Name</label>
-                    <input type="text" id="config-content" class="w-full p-2 border rounded-md mt-1" value="${tag}" placeholder="e.g. VIP, Lead, Interested">
-                 `;
-             } else if (type === 'update_contact') {
-                 html = `
-                    <div class="bg-blue-50 p-3 rounded text-sm text-blue-800 mb-2">
-                        Updates a field in the contact's CRM profile.
-                    </div>
-                    <label class="block text-sm font-medium text-gray-700">Field to Update</label>
-                    <select id="config-field" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border mb-2">
-                        <option value="email">Email Address</option>
-                        <option value="name">Full Name</option>
-                        <option value="notes">Notes</option>
-                    </select>
-                    <label class="block text-sm font-medium text-gray-700">Value</label>
-                    <input type="text" id="config-value" class="w-full p-2 border rounded-md mt-1" placeholder="Value to set (or leave empty)">
-                 `;
-             }
-
-             container.innerHTML = html;
-        }
-
-        function updateNodeContent() {
-            const node = currentWorkflow.workflow_data.nodes.find(n => n.id === configuringNodeId);
-            const type = document.getElementById('node-type-select').value;
-
-            node.type = type;
-
-            if (type === 'assign') {
-                const logic = document.getElementById('config-logic').value;
-                node.content = `Assign to Team: Sales (${logic})`;
-                delete node.options;
-            } else if (type === 'add_tag') {
-                const tag = document.getElementById('config-content').value;
-                node.content = `Add Tag: ${tag}`;
-                delete node.options;
-            } else if (type === 'update_contact') {
-                const field = document.getElementById('config-field').value;
-                const value = document.getElementById('config-value').value;
-                node.data = { field: field, value: value };
-                node.content = `Update ${field} to '${value}'`;
-                delete node.options;
-            } else {
-                const contentEl = document.getElementById('config-content');
-                node.content = contentEl ? contentEl.value : 'New Node';
-
-                if (type === 'question') {
-                    const optionsVal = document.getElementById('config-options').value;
-                    node.options = optionsVal ? optionsVal.split(',').map(s => s.trim()).filter(s => s) : [];
+            // UI Refresh Logic for Radio Buttons (Template vs Text)
+            if (key === 'type') {
+                const textInput = document.getElementById(`msg-input-text-${index}`);
+                const templateInput = document.getElementById(`msg-input-template-${index}`);
+                if (value === 'template') {
+                    textInput.classList.add('hidden');
+                    templateInput.classList.remove('hidden');
                 } else {
-                    delete node.options;
+                    textInput.classList.remove('hidden');
+                    templateInput.classList.add('hidden');
                 }
             }
-
-            closeModal('configureNodeModal');
-            renderWorkflow();
         }
 
-        function exportWorkflowJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentWorkflow, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", currentWorkflow.name.replace(/ /g, '_') + ".json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        }
-
-        function importWorkflowJSON() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = e => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.readAsText(file, 'UTF-8');
-                reader.onload = readerEvent => {
-                    try {
-                        let content = JSON.parse(readerEvent.target.result);
-                        // Handle cases where export wrapped it differently or just nodes were exported
-                        if (!content.workflow_data && content.nodes) {
-                            content = { name: 'Imported Workflow', trigger_type: 'Manual', workflow_data: content };
-                        }
-
-                        if (content.workflow_data && content.workflow_data.nodes) {
-                            currentWorkflow = content;
-                            currentWorkflow.id = null;
-                            document.getElementById('workflow-name-input').value = currentWorkflow.name;
-                            renderWorkflow();
-                            alert('Workflow imported successfully! Click Save to persist.');
-                        } else {
-                            console.error('Invalid JSON:', content);
-                            alert('Invalid workflow JSON format. Expected object with "workflow_data.nodes".');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert('Error parsing JSON.');
-                    }
-                }
-            }
-            input.click();
-        }
         async function saveWorkflow(isActive = 0) {
+            // Gather Data
             currentWorkflow.name = document.getElementById('workflow-name-input').value;
+            currentWorkflow.trigger_type = document.getElementById('wf-trigger-type').value;
+            currentWorkflow.keywords = document.getElementById('wf-keywords').value;
             currentWorkflow.is_active = isActive;
+
+            // Validate
+            if (!currentWorkflow.name) return alert('Please enter a workflow name.');
+            if (currentWorkflow.trigger_type === 'KEYWORD' && !currentWorkflow.keywords) return alert('Please enter at least one keyword.');
+            if (currentWorkflow.steps.length === 0) return alert('Please add at least one step.');
+
             const result = await fetchApi('save_workflow.php', { method: 'POST', body: currentWorkflow });
+
             if(result && result.status === 'success') {
                 const statusMsg = isActive ? 'published and active' : 'saved as draft';
                 alert(`Workflow ${statusMsg}!`);
                 closeWorkflowEditor();
+            } else {
+                alert('Error: ' + (result ? result.message : 'Unknown error'));
+            }
+        }
+
+        async function deleteWorkflow(id, name) {
+            if (!confirm(`Delete workflow '${name}'?`)) return;
+            const result = await fetchApi('delete_workflow.php', { method: 'POST', body: { id } });
+            if (result && result.status === 'success') {
+                alert('Workflow deleted!');
+                loadWorkflows();
             } else if (result) {
                 alert('Error: ' + result.message);
             }
         }
-        async function deleteWorkflow(id, name) { if (!confirm(`Delete workflow '${name}'?`)) return; const result = await fetchApi('delete_workflow.php', { method: 'POST', body: { id } }); if (result && result.status === 'success') { alert('Workflow deleted!'); loadWorkflows(); } else if (result) { alert('Error: ' + result.message); } }
 
     // Function ya kuongeza mstari mpya wa item
         let itemCounter = 0;
