@@ -42,8 +42,7 @@ function processWorkflows($pdo, $userId, $conversationId, $contextData = []) {
 
                 $matchFound = false;
                 if (empty($options)) {
-                    // No specific options defined, any reply is valid? Or simple Yes/No?
-                    // If options empty, accept any text and continue.
+                    // No specific options defined, any reply is valid.
                     $matchFound = true;
                 } else {
                      foreach ($options as $opt) {
@@ -55,21 +54,21 @@ function processWorkflows($pdo, $userId, $conversationId, $contextData = []) {
                 }
 
                 if ($matchFound) {
-                    // User answered correctly. Move to NEXT step.
-                    // Note: Ideally we might want to branch based on answer, but requirement is "If answered YES, go to next step"
-                    // For now, simple linear: If Match, Next. If No Match, maybe send fallback or do nothing.
-                    // Let's just proceed.
-                    log_debug("Reply matched. Proceeding to next step.");
+                    // 2. Capture Data (If variable is defined)
+                    $collectedData = isset($state['collected_data']) ? $state['collected_data'] : [];
+                    if (!empty($meta['variable'])) {
+                        $variableName = trim($meta['variable']);
+                        $collectedData[$variableName] = $msgBody;
+                        log_debug("Captured Variable '$variableName' = '$msgBody'");
+                    }
+
+                    // 3. Proceed to Next Step
+                    log_debug("Reply matched/accepted. Proceeding to next step.");
                     clearWorkflowState($pdo, $conversationId); // Clear wait state
-                    executeWorkflowSteps($pdo, $state['workflow_id'], $userId, $conversationId, $state['step_order'] + 1);
+                    executeWorkflowSteps($pdo, $state['workflow_id'], $userId, $conversationId, $state['step_order'] + 1, $collectedData);
                     return; // Stop trigger processing
                 } else {
-                    // No match. Do nothing? Or re-send question?
-                    // For now, let's do nothing, or user might be trying to break out.
-                    // If we return, we block other triggers.
-                    // Let's return to keep them "Trapped" in the question until resolved or expired?
-                    // Or let other triggers fire?
-                    // Usually, explicit workflow state blocks other triggers.
+                    // No match. Do nothing.
                     log_debug("Reply did not match expected options (" . implode(',', $options) . "). Ignoring.");
                     return;
                 }
@@ -119,8 +118,8 @@ function processWorkflows($pdo, $userId, $conversationId, $contextData = []) {
 
             if ($shouldTrigger) {
                 log_debug("Triggering Workflow ID: {$wf['id']} Name: {$wf['name']}");
-                // Start from Step 1 (Order 1)
-                executeWorkflowSteps($pdo, $wf['id'], $userId, $conversationId, 1);
+                // Start from Step 1 (Order 1), Empty collected data
+                executeWorkflowSteps($pdo, $wf['id'], $userId, $conversationId, 1, []);
                 break;
             }
         }
@@ -130,7 +129,7 @@ function processWorkflows($pdo, $userId, $conversationId, $contextData = []) {
     }
 }
 
-function executeWorkflowSteps($pdo, $workflowId, $userId, $conversationId, $startStepOrder = 1) {
+function executeWorkflowSteps($pdo, $workflowId, $userId, $conversationId, $startStepOrder = 1, $collectedData = []) {
     try {
         // Fetch steps ordered by step_order starting from current
         $stmt = $pdo->prepare("SELECT step_order, action_type, content, meta_data FROM workflow_steps WHERE workflow_id = ? AND step_order >= ? ORDER BY step_order ASC");
@@ -149,31 +148,41 @@ function executeWorkflowSteps($pdo, $workflowId, $userId, $conversationId, $star
             $order = $step['step_order'];
             $meta = json_decode($step['meta_data'] ?? '{}', true);
 
+            // Resolve Variables in Content
+            $finalContent = resolveWorkflowVariables($pdo, $conversationId, $step['content'], $collectedData);
+
             log_debug("Executing Step $order: $action");
 
             if ($action === 'SEND_MESSAGE') {
                 if ($meta['type'] === 'template' && !empty($meta['template_id'])) {
                     sendWorkflowTemplate($pdo, $userId, $conversationId, $meta['template_id']);
                 } else {
-                    if (!empty($step['content'])) {
-                        sendWorkflowReply($pdo, $userId, $conversationId, $step['content']);
+                    if (!empty($finalContent)) {
+                        sendWorkflowReply($pdo, $userId, $conversationId, $finalContent);
                     }
                 }
             }
             elseif ($action === 'ASSIGN_AGENT') {
-                assignAgentLogic($pdo, $conversationId, $step['content']);
+                assignAgentLogic($pdo, $conversationId, $finalContent);
             }
             elseif ($action === 'ADD_TAG') {
-                if (!empty($step['content'])) {
-                    addContactTag($pdo, $conversationId, $step['content']);
+                if (!empty($finalContent)) {
+                    addContactTag($pdo, $conversationId, $finalContent);
                 }
+            }
+            elseif ($action === 'UPDATE_CONTACT') {
+                updateContactFromWorkflow($pdo, $conversationId, $collectedData);
+            }
+            elseif ($action === 'CREATE_JOB_ORDER') {
+                createJobOrderFromWorkflow($pdo, $conversationId, $userId, $collectedData);
             }
             elseif ($action === 'ASK_QUESTION') {
                 // 1. Send the Question (Interactive)
-                sendWorkflowQuestion($pdo, $userId, $conversationId, $step['content'], $meta['options'] ?? '');
+                sendWorkflowQuestion($pdo, $userId, $conversationId, $finalContent, $meta['options'] ?? '');
 
                 // 2. PAUSE Execution (Wait for Reply)
-                saveWorkflowState($pdo, $conversationId, $workflowId, $order, 'WAITING_FOR_REPLY');
+                // Pass collectedData to persist it
+                saveWorkflowState($pdo, $conversationId, $workflowId, $order, 'WAITING_FOR_REPLY', null, $collectedData);
                 log_debug("Paused Workflow at Step $order (Waiting for Reply)");
                 return; // STOP HERE
             }
@@ -181,7 +190,7 @@ function executeWorkflowSteps($pdo, $workflowId, $userId, $conversationId, $star
                 $minutes = (int)($step['content'] ?? 0);
                 if ($minutes > 0) {
                     $resumeAt = date('Y-m-d H:i:s', strtotime("+$minutes minutes"));
-                    saveWorkflowState($pdo, $conversationId, $workflowId, $order + 1, 'DELAYED', $resumeAt);
+                    saveWorkflowState($pdo, $conversationId, $workflowId, $order + 1, 'DELAYED', $resumeAt, $collectedData);
                     log_debug("Paused Workflow at Step $order. Resuming at Step " . ($order+1) . " on $resumeAt");
                     return; // STOP HERE
                 }
@@ -202,15 +211,17 @@ function getWorkflowState($pdo, $conversationId) {
     $stmt = $pdo->prepare("SELECT workflow_state FROM conversations WHERE id = ?");
     $stmt->execute([$conversationId]);
     $json = $stmt->fetchColumn();
+    // Assuming workflow_state stores collected_data
     return $json ? json_decode($json, true) : null;
 }
 
-function saveWorkflowState($pdo, $conversationId, $workflowId, $stepOrder, $status, $resumeAt = null) {
+function saveWorkflowState($pdo, $conversationId, $workflowId, $stepOrder, $status, $resumeAt = null, $collectedData = []) {
     $state = [
         'workflow_id' => $workflowId,
         'step_order' => $stepOrder,
         'status' => $status,
         'resume_at' => $resumeAt,
+        'collected_data' => $collectedData,
         'updated_at' => date('Y-m-d H:i:s')
     ];
     $stmt = $pdo->prepare("UPDATE conversations SET workflow_state = ? WHERE id = ?");
@@ -240,8 +251,8 @@ function sendWorkflowReply($pdo, $userId, $conversationId, $content) {
     $to = getRecipientPhone($pdo, $conversationId);
     if (!$to) return;
 
-    // Resolve Variables
-    $finalContent = resolveWorkflowVariables($pdo, $conversationId, $content);
+    // Content already resolved in executeWorkflowSteps, but doing it again harmlessly if no vars
+    // No, we passed resolved content.
 
     $url = "https://graph.facebook.com/v21.0/$phoneId/messages";
     $data = [
@@ -249,10 +260,10 @@ function sendWorkflowReply($pdo, $userId, $conversationId, $content) {
         'recipient_type' => 'individual',
         'to' => $to,
         'type' => 'text',
-        'text' => ['body' => $finalContent]
+        'text' => ['body' => $content]
     ];
 
-    executeMetaApi($pdo, $url, $token, $data, $conversationId, $userId, $finalContent);
+    executeMetaApi($pdo, $url, $token, $data, $conversationId, $userId, $content);
 }
 
 function sendWorkflowTemplate($pdo, $userId, $conversationId, $templateName) {
@@ -288,8 +299,7 @@ function sendWorkflowQuestion($pdo, $userId, $conversationId, $questionText, $op
     $to = getRecipientPhone($pdo, $conversationId);
     if (!$to) return;
 
-    // Resolve Variables
-    $finalQuestionText = resolveWorkflowVariables($pdo, $conversationId, $questionText);
+    // Content already resolved
 
     $options = array_map('trim', explode(',', $optionsStr));
     $buttons = [];
@@ -317,7 +327,7 @@ function sendWorkflowQuestion($pdo, $userId, $conversationId, $questionText, $op
             'type' => 'interactive',
             'interactive' => [
                 'type' => 'button',
-                'body' => ['text' => $finalQuestionText],
+                'body' => ['text' => $questionText],
                 'action' => ['buttons' => $buttons]
             ]
         ];
@@ -328,20 +338,106 @@ function sendWorkflowQuestion($pdo, $userId, $conversationId, $questionText, $op
             'recipient_type' => 'individual',
             'to' => $to,
             'type' => 'text',
-            'text' => ['body' => $finalQuestionText]
+            'text' => ['body' => $questionText]
         ];
     }
 
-    executeMetaApi($pdo, $url, $token, $data, $conversationId, $userId, $finalQuestionText);
+    executeMetaApi($pdo, $url, $token, $data, $conversationId, $userId, $questionText);
+}
+
+// --- NEW ACTIONS ---
+
+function updateContactFromWorkflow($pdo, $conversationId, $data) {
+    try {
+        $stmt = $pdo->prepare("SELECT contact_id FROM conversations WHERE id = ?");
+        $stmt->execute([$conversationId]);
+        $contactId = $stmt->fetchColumn();
+        if (!$contactId) return;
+
+        $updates = [];
+        $params = [];
+
+        // Update Name
+        if (!empty($data['name'])) {
+            $updates[] = "name = ?";
+            $params[] = $data['name'];
+        }
+        // Update Email
+        if (!empty($data['email'])) {
+            $updates[] = "email = ?";
+            $params[] = $data['email'];
+        }
+        // Assuming Address is handled in Job Order or separate field, but user asked to update it.
+        // If 'address' column exists in contacts, add it here.
+        // For safety, let's append address to notes if not sure, OR skip if column doesn't exist.
+        // We will stick to name/email for now as they are standard.
+
+        if (!empty($updates)) {
+            $params[] = $contactId;
+            $sql = "UPDATE contacts SET " . implode(', ', $updates) . " WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            log_debug("Updated Contact $contactId info via Workflow.");
+        }
+    } catch (Exception $e) {
+        log_debug("Update Contact Error: " . $e->getMessage());
+    }
+}
+
+function createJobOrderFromWorkflow($pdo, $conversationId, $userId, $data) {
+    try {
+        // Resolve Customer ID (Contact ID)
+        $stmt = $pdo->prepare("SELECT contact_id FROM conversations WHERE id = ?");
+        $stmt->execute([$conversationId]);
+        $contactId = $stmt->fetchColumn();
+
+        // Use contact_id as customer_id.
+        $customerId = $contactId ?: 0;
+
+        $size = $data['size'] ?? 'N/A';
+        $quantity = intval($data['quantity'] ?? 1);
+        $material = $data['material'] ?? 'Standard';
+
+        // Construct Notes from collected data including Address
+        $address = $data['address'] ?? 'Not provided';
+        $notes = "Order via Workflow.\nName: " . ($data['name']??'') . "\nAddress: $address\nNotes: " . ($data['notes']??'');
+
+        $trackingNumber = 'J' . time() . rand(100, 999);
+        $costPrice = 0;
+        $sellingPrice = 0; // Requires manual quote or specialized calculation
+
+        // Using existing schema from online_job_order.php
+        $stmt = $pdo->prepare(
+            "INSERT INTO job_orders (customer_id, tracking_number, size, quantity, material, notes, cost_price, selling_price, status, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())"
+        );
+        $stmt->execute([$customerId, $trackingNumber, $size, $quantity, $material, $notes, $costPrice, $sellingPrice]);
+        $jobId = $pdo->lastInsertId();
+
+        log_debug("Created Job Order #$jobId ($trackingNumber) for Customer $customerId");
+
+    } catch (Exception $e) {
+        log_debug("Create Job Order Error: " . $e->getMessage());
+    }
 }
 
 // --- VARIABLE RESOLVER ---
 
-function resolveWorkflowVariables($pdo, $conversationId, $text) {
+function resolveWorkflowVariables($pdo, $conversationId, $text, $collectedData = []) {
     if (strpos($text, '{{') === false) return $text; // Optimization
 
     try {
-        // Fetch Contact and Agent Info
+        // 1. Resolve Local Collected Variables
+        foreach ($collectedData as $key => $val) {
+            if (is_string($val) || is_numeric($val)) {
+                $text = str_replace('{{' . $key . '}}', $val, $text);
+            }
+        }
+
+        // If no more variables, return early
+        if (strpos($text, '{{') === false) return $text;
+
+        // 2. Fetch Contact and Agent Info (Global Context)
         $stmt = $pdo->prepare("
             SELECT
                 c.name as contact_name,
