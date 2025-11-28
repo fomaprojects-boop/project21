@@ -332,7 +332,7 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
                         try {
                             // Check if there is only 1 message in this conversation (the one just inserted)
                             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE conversation_id = ?");
-                            $stmt_count->execute([$conversationId]);
+                            $stmt_count->execute([$conversation_id]);
                             if ($stmt_count->fetchColumn() <= 1) {
                                 $eventType = 'conversation_started';
                             }
@@ -340,7 +340,7 @@ if (isset($payload['object']) && $payload['object'] === 'whatsapp_business_accou
 
                         // Call global helper function
                         if (function_exists('processWorkflows')) {
-                            processWorkflows($pdo, $user_id, $conversationId, [
+                            processWorkflows($pdo, $user_id, $conversation_id, [
                                 'msg_body' => $msg_body,
                                 'event_type' => $eventType
                             ]);
