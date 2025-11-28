@@ -1,40 +1,22 @@
-<?php
-require_once 'api/config.php';
-require_once 'api/db.php';
 
-
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-$userId = $_SESSION['user_id'];
-$userName = isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_name']) : 'User';
-$userRole = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'Staff';
-$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-$path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-$baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="base-url" content="<?php echo $baseUrl; ?>">
-    <meta name="user-id" content="<?php echo $userId; ?>">
-    <meta name="user-role" content="<?php echo $userRole; ?>">
+    <meta name="base-url" content="">
+    <meta name="user-id" content="">
+    <meta name="user-role" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatMe - Professional Edition</title>
     <script>
-        const LOGGED_IN_USER_NAME = '<?php echo htmlspecialchars($userName, ENT_QUOTES); ?>';
+        const LOGGED_IN_USER_NAME = '';
         // Global State Objects for Auto-Fill Context
         window.systemSettings = {};
         window.currentContact = {};
         window.currentUser = {
-            id: <?php echo $userId; ?>,
-            full_name: '<?php echo htmlspecialchars($userName, ENT_QUOTES); ?>',
-            role: '<?php echo $userRole; ?>'
+            id: ,
+            full_name: '',
+            role: ''
         };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -551,10 +533,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
         window.fbAsyncInit = function() {
             // Debugging: Log App ID to console
-            console.log('Initializing Facebook SDK with App ID:', '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>');
+            console.log('Initializing Facebook SDK with App ID:', '');
 
             FB.init({
-            appId            : '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>',
+            appId            : '',
             autoLogAppEvents : true,
             xfbml            : true,
             version          : 'v21.0'
@@ -620,7 +602,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <i id="business-menu-icon" class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div id="business-menu" class="hidden pl-8 space-y-2 py-2">
-                        <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+
                         <a href="#" onclick="showView('vendors', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-store w-6 mr-3"></i><span>Vendors</span></a>
                         <a href="#" onclick="showView('invoices', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-file-invoice-dollar w-6 mr-3"></i><span>Invoices</span></a>
                         <a href="#" onclick="showView('assets', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-box-open w-6 mr-3"></i><span>Assets</span></a>
@@ -628,15 +610,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <a href="#" onclick="showView('tax_payments', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-landmark w-6 mr-3"></i><span>Tax Payments</span></a>
                         <a href="#" onclick="showView('financials', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-chart-pie w-6 mr-3"></i><span>Financial Statements</span></a>
                         <a href="#" onclick="showView('payroll', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-money-bill-wave w-6 mr-3"></i><span>Wages and Salaries</span></a>
-                        <?php endif; ?>
+
                     </div>
                 </div>
 
                 <a href="#" onclick="showView('youtube-ads', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fab fa-youtube w-6 mr-3"></i><span>YouTube Ads</span></a>
 
-                <?php if (FEATURE_ENHANCED_EXPENSE_WORKFLOW): ?>
+
                 <a href="#" onclick="showView('expenses', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-cash-register w-6 mr-3"></i><span>Expenses</span></a>
-                <?php endif; ?>
+
 
                 <!-- Whatsapp Dropdown -->
                 <div>
@@ -656,9 +638,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </div>
                 </div>
 
-                <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+
                 <a href="#" onclick="showView('users', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-users w-6 mr-3"></i><span>Users</span></a>
-                <?php endif; ?>
+
 
                 <!-- Print & Design Workflow Dropdown -->
                 <div>
@@ -670,20 +652,20 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <i id="print-design-menu-icon" class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div id="print-design-menu" class="hidden pl-8 space-y-2 py-2">
-                        <?php if ($userRole === 'Admin' || $userRole === 'Staff' || $userRole === 'Accountant'): ?>
+
                             <a href="#" onclick="showView('analytics', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-chart-pie w-6 mr-3"></i><span>Analytics</span></a>
-                            <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+
                                 <a href="#" onclick="showView('costs', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-dollar-sign w-6 mr-3"></i><span>Material Costs</span></a>
-                            <?php endif; ?>
+
                             <a href="#" onclick="showView('online-job-order', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-clipboard-list w-6 mr-3"></i><span>Job Orders</span></a>
                             <a href="#" onclick="showView('pricing-calculator', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-calculator w-6 mr-3"></i><span>Pricing Calculator</span></a>
                             <a href="#" onclick="showView('file-upload', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-file-upload w-6 mr-3"></i><span>File Upload</span></a>
                             <a href="#" onclick="showView('digital-proofing', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-check-double w-6 mr-3"></i><span>Digital Proofing</span></a>
-                        <?php endif; ?>
-                        <?php if ($userRole === 'Client'): ?>
+
+
                             <a href="#" onclick="showView('customer-dashboard', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-user-circle w-6 mr-3"></i><span>My Dashboard</span></a>
                             <a href="#" onclick="showView('online-job-order', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-clipboard-list w-6 mr-3"></i><span>New Job Order</span></a>
-                        <?php endif; ?>
+
                     </div>
                 </div>
             </nav>
@@ -696,7 +678,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     <button id="theme-switcher" class="hover:text-violet-200" title="Toggle Dark Mode">
                         <i class="fas fa-moon text-xl"></i>
                     </button>
-                    <span class="font-semibold">Welcome, <?php echo $userName; ?>!</span>
+                    <span class="font-semibold">Welcome, !</span>
                     <button onclick="showView('settings', event)" class="hover:text-violet-200" title="Settings"><i class="fas fa-cog text-xl"></i></button>
                     <a href="api/logout.php" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold" title="Logout"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
                 </div>
@@ -3772,7 +3754,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
 
             FB.login(fbLoginCallback, {
-                config_id: '<?php echo defined('FACEBOOK_CONFIG_ID') ? FACEBOOK_CONFIG_ID : ''; ?>',
+                config_id: '',
                 response_type: 'code',
                 override_default_response_type: true,
                 extras: {
@@ -7870,159 +7852,153 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             emptyState.style.display = 'none';
 
             currentWorkflow.steps.forEach((step, index) => {
-                try {
-                    // Initialize editing state
-                    if (typeof step.is_editing === 'undefined') {
-                        step.is_editing = false;
-                    }
+                // Initialize editing state if not set (default to false for existing, true for new handled in add)
+                if (typeof step.is_editing === 'undefined') {
+                    step.is_editing = false;
+                }
 
-                    const stepEl = document.createElement('div');
-                    stepEl.className = `bg-white border ${step.is_editing ? 'border-violet-400 ring-2 ring-violet-50' : 'border-gray-200'} rounded-lg shadow-sm relative group mb-4 transition-all`;
+                const stepEl = document.createElement('div');
+                stepEl.className = `bg-white border ${step.is_editing ? 'border-violet-400 ring-2 ring-violet-50' : 'border-gray-200'} rounded-lg shadow-sm relative group mb-4 transition-all`;
 
-                    let contentHtml = '';
-                    let iconClass = '';
-                    let bgIconClass = '';
-                    let summaryText = '';
+                let contentHtml = '';
+                let iconClass = '';
+                let bgIconClass = '';
+                let summaryText = '';
 
-                    const actionType = step.action_type || 'UNKNOWN';
+                // Determine Icon & Summary
+                if (step.action_type === 'SEND_MESSAGE') {
+                    iconClass = 'fa-comment-alt text-violet-600';
+                    bgIconClass = 'bg-violet-100';
+                    const meta = step.meta_data || {};
+                    const isTemplate = meta.type === 'template';
+                    summaryText = isTemplate ? `Template: ${meta.template_id || 'N/A'}` : `"${step.content || 'Empty message'}"`;
 
-                    // Determine Icon & Summary
-                    if (actionType === 'SEND_MESSAGE') {
-                        iconClass = 'fa-comment-alt text-violet-600';
-                        bgIconClass = 'bg-violet-100';
-                        const meta = step.meta_data || {};
-                        const isTemplate = meta.type === 'template';
-                        summaryText = isTemplate ? `Template: ${meta.template_id || 'N/A'}` : `"${step.content || 'Empty message'}"`;
-
-                        if (step.is_editing) {
-                            const textBody = step.content || '';
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <div class="flex space-x-4 mb-3">
-                                    <label class="inline-flex items-center cursor-pointer">
-                                        <input type="radio" name="msg_type_${index}" value="text" ${!isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'text')" class="form-radio h-4 w-4 text-violet-600">
-                                        <span class="ml-2 text-sm font-medium text-gray-700">Custom Text</span>
-                                    </label>
-                                    <label class="inline-flex items-center cursor-pointer">
-                                        <input type="radio" name="msg_type_${index}" value="template" ${isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'template')" class="form-radio h-4 w-4 text-violet-600">
-                                        <span class="ml-2 text-sm font-medium text-gray-700">Template</span>
-                                    </label>
-                                </div>
-
-                                <div id="msg-input-text-${index}" class="${isTemplate ? 'hidden' : ''}">
-                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Message Body</label>
-                                    <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="3" placeholder="Type message... Use {{customer_name}} or {{agent_name}}">${textBody}</textarea>
-                                    <p class="text-[10px] text-gray-400 mt-1">Variables: {{customer_name}}, {{agent_name}}</p>
-                                </div>
-
-                                <div id="msg-input-template-${index}" class="${!isTemplate ? 'hidden' : ''}">
-                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Template Name</label>
-                                    <input type="text" oninput="updateStepMeta(${index}, 'template_id', this.value)" value="${meta.template_id || ''}" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" placeholder="e.g. welcome_msg">
-                                </div>
-                            </div>`;
-                        }
-                    } else if (actionType === 'ASK_QUESTION') {
-                        iconClass = 'fa-question-circle text-amber-500';
-                        bgIconClass = 'bg-amber-100';
-                        const meta = step.meta_data || {};
-                        summaryText = `Question: "${step.content || ''}" (Options: ${meta.options || 'None'})`;
-
-                        if (step.is_editing) {
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Question Text</label>
-                                <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="2" placeholder="e.g. Are you interested? Use {{customer_name}}">${step.content || ''}</textarea>
-                                <p class="text-[10px] text-gray-400 mt-1 mb-3">Variables: {{customer_name}}</p>
-
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Options (Buttons)</label>
-                                <input type="text" oninput="updateStepMeta(${index}, 'options', this.value)" value="${meta.options || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Yes, No, Maybe">
-                                <p class="text-[10px] text-gray-400 mt-1">Comma separated. Max 3 buttons.</p>
-                            </div>`;
-                        }
-                    } else if (actionType === 'DELAY') {
-                        iconClass = 'fa-hourglass-half text-gray-500';
-                        bgIconClass = 'bg-gray-200';
-                        summaryText = `Wait for ${step.content || '0'} minutes`;
-
-                        if (step.is_editing) {
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Wait Time (Minutes)</label>
-                                <input type="number" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. 5">
-                            </div>`;
-                        }
-                    } else if (actionType === 'ASSIGN_AGENT') {
-                        iconClass = 'fa-user-tag text-blue-600';
-                        bgIconClass = 'bg-blue-100';
-                        summaryText = `Logic: ${step.content || 'Round Robin'}`;
-
-                        if (step.is_editing) {
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Assignment Logic</label>
-                                <select onchange="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded">
-                                    <option value="Round Robin" ${step.content === 'Round Robin' ? 'selected' : ''}>Round Robin</option>
-                                    <option value="Fewest Conversations" ${step.content === 'Fewest Conversations' ? 'selected' : ''}>Fewest Conversations</option>
-                                </select>
-                            </div>`;
-                        }
-                    } else if (actionType === 'ADD_TAG') {
-                        iconClass = 'fa-tag text-pink-600';
-                        bgIconClass = 'bg-pink-100';
-                        summaryText = `Tag: ${step.content || 'None'}`;
-
-                        if (step.is_editing) {
-                            contentHtml = `
-                            <div class="mt-4 p-1">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tag Name</label>
-                                <input type="text" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Lead, VIP">
-                            </div>`;
-                        }
-                    }
-
-                    // Build Action Buttons
-                    let actionButtons = '';
                     if (step.is_editing) {
-                        actionButtons = `
-                            <button onclick="toggleStepEdit(${index}, false)" class="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-md font-semibold hover:bg-violet-700 transition-colors shadow-sm mr-2">
-                                <i class="fas fa-check mr-1"></i> Save Step
-                            </button>
-                            <button onclick="removeWorkflowStep(${index})" class="text-xs bg-white border border-red-200 text-red-500 px-3 py-1.5 rounded-md font-semibold hover:bg-red-50 transition-colors">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        `;
-                    } else {
-                        actionButtons = `
-                            <button onclick="toggleStepEdit(${index}, true)" class="text-gray-400 hover:text-violet-600 transition-colors p-1">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button onclick="removeWorkflowStep(${index})" class="text-gray-400 hover:text-red-500 transition-colors p-1 ml-1">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        `;
-                    }
-
-                    stepEl.innerHTML = `
-                        <div class="flex justify-between items-center ${step.is_editing ? 'border-b border-gray-100 pb-3' : 'p-3'}">
-                            <div class="flex items-center">
-                                <div class="w-8 h-8 rounded-full ${bgIconClass} flex items-center justify-center mr-3 shrink-0">
-                                    <i class="fas ${iconClass}"></i>
-                                </div>
-                                <div>
-                                    <span class="font-bold text-gray-800 text-sm block">Step ${index + 1}: ${actionType.replace('_', ' ')}</span>
-                                    ${!step.is_editing ? `<span class="text-xs text-gray-500 truncate max-w-[200px] block">${summaryText}</span>` : ''}
-                                </div>
+                        const textBody = step.content || '';
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <div class="flex space-x-4 mb-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="msg_type_${index}" value="text" ${!isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'text')" class="form-radio h-4 w-4 text-violet-600">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Custom Text</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="msg_type_${index}" value="template" ${isTemplate ? 'checked' : ''} onchange="updateStepMeta(${index}, 'type', 'template')" class="form-radio h-4 w-4 text-violet-600">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Template</span>
+                                </label>
                             </div>
-                            <div class="flex items-center">
-                                ${actionButtons}
+
+                            <div id="msg-input-text-${index}" class="${isTemplate ? 'hidden' : ''}">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Message Body</label>
+                                <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="3" placeholder="Type message... Use {{customer_name}} or {{agent_name}}">${textBody}</textarea>
+                                <p class="text-[10px] text-gray-400 mt-1">Variables: {{customer_name}}, {{agent_name}}</p>
+                            </div>
+
+                            <div id="msg-input-template-${index}" class="${!isTemplate ? 'hidden' : ''}">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Template Name</label>
+                                <input type="text" oninput="updateStepMeta(${index}, 'template_id', this.value)" value="${meta.template_id || ''}" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" placeholder="e.g. welcome_msg">
+                            </div>
+                        </div>`;
+                    }
+                } else if (step.action_type === 'ASK_QUESTION') {
+                    iconClass = 'fa-question-circle text-amber-500';
+                    bgIconClass = 'bg-amber-100';
+                    const meta = step.meta_data || {};
+                    summaryText = `Question: "${step.content || ''}" (Options: ${meta.options || 'None'})`;
+
+                    if (step.is_editing) {
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Question Text</label>
+                            <textarea oninput="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" rows="2" placeholder="e.g. Are you interested? Use {{customer_name}}">${step.content || ''}</textarea>
+                            <p class="text-[10px] text-gray-400 mt-1 mb-3">Variables: {{customer_name}}</p>
+
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Options (Buttons)</label>
+                            <input type="text" oninput="updateStepMeta(${index}, 'options', this.value)" value="${meta.options || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Yes, No, Maybe">
+                            <p class="text-[10px] text-gray-400 mt-1">Comma separated. Max 3 buttons.</p>
+                        </div>`;
+                    }
+                } else if (step.action_type === 'DELAY') {
+                    iconClass = 'fa-hourglass-half text-gray-500';
+                    bgIconClass = 'bg-gray-200';
+                    summaryText = `Wait for ${step.content || '0'} minutes`;
+
+                    if (step.is_editing) {
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Wait Time (Minutes)</label>
+                            <input type="number" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. 5">
+                        </div>`;
+                    }
+                } else if (step.action_type === 'ASSIGN_AGENT') {
+                    iconClass = 'fa-user-tag text-blue-600';
+                    bgIconClass = 'bg-blue-100';
+                    summaryText = `Logic: ${step.content || 'Round Robin'}`;
+
+                    if (step.is_editing) {
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Assignment Logic</label>
+                            <select onchange="updateStepContent(${index}, this.value)" class="w-full text-sm p-2 border border-gray-300 rounded">
+                                <option value="Round Robin" ${step.content === 'Round Robin' ? 'selected' : ''}>Round Robin</option>
+                                <option value="Fewest Conversations" ${step.content === 'Fewest Conversations' ? 'selected' : ''}>Fewest Conversations</option>
+                            </select>
+                        </div>`;
+                    }
+                } else if (step.action_type === 'ADD_TAG') {
+                    iconClass = 'fa-tag text-pink-600';
+                    bgIconClass = 'bg-pink-100';
+                    summaryText = `Tag: ${step.content || 'None'}`;
+
+                    if (step.is_editing) {
+                        contentHtml = `
+                        <div class="mt-4 p-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tag Name</label>
+                            <input type="text" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Lead, VIP">
+                        </div>`;
+                    }
+                }
+
+                // Build Action Buttons (Edit vs Save)
+                let actionButtons = '';
+                if (step.is_editing) {
+                    actionButtons = `
+                        <button onclick="toggleStepEdit(${index}, false)" class="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-md font-semibold hover:bg-violet-700 transition-colors shadow-sm mr-2">
+                            <i class="fas fa-check mr-1"></i> Save Step
+                        </button>
+                        <button onclick="removeWorkflowStep(${index})" class="text-xs bg-white border border-red-200 text-red-500 px-3 py-1.5 rounded-md font-semibold hover:bg-red-50 transition-colors">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `;
+                } else {
+                    actionButtons = `
+                        <button onclick="toggleStepEdit(${index}, true)" class="text-gray-400 hover:text-violet-600 transition-colors p-1">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <button onclick="removeWorkflowStep(${index})" class="text-gray-400 hover:text-red-500 transition-colors p-1 ml-1">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `;
+                }
+
+                stepEl.innerHTML = `
+                    <div class="flex justify-between items-center ${step.is_editing ? 'border-b border-gray-100 pb-3' : ''}">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full ${bgIconClass} flex items-center justify-center mr-3 shrink-0">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div>
+                                <span class="font-bold text-gray-800 text-sm block">Step ${index + 1}: ${step.action_type.replace('_', ' ')}</span>
+                                ${!step.is_editing ? `<span class="text-xs text-gray-500 truncate max-w-[200px] block">${summaryText}</span>` : ''}
                             </div>
                         </div>
-                        ${contentHtml}
-                    `;
-                    container.appendChild(stepEl);
-                } catch(e) {
-                    console.error('Error rendering step ' + index, e);
-                }
+                        <div class="flex items-center">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                    ${contentHtml}
+                `;
+                container.appendChild(stepEl);
             });
         }
 

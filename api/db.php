@@ -175,6 +175,41 @@ try {
         }
     }
 
+    // --- Schema Auto-Fix: Refactor Workflows (Linear Engine) ---
+    $schema_lock_workflows_refactor = __DIR__ . '/schema_workflows_refactor_v1.lock';
+    if (!file_exists($schema_lock_workflows_refactor)) {
+        try {
+            // 1. Alter workflows table
+            try { $pdo->exec("ALTER TABLE workflows ADD COLUMN trigger_type VARCHAR(50) DEFAULT 'KEYWORD'"); } catch (Exception $e) {}
+            try { $pdo->exec("ALTER TABLE workflows ADD COLUMN keywords TEXT NULL"); } catch (Exception $e) {}
+
+            // 2. Create workflow_steps table
+            $pdo->exec("CREATE TABLE IF NOT EXISTS workflow_steps (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                workflow_id INT NOT NULL,
+                step_order INT NOT NULL DEFAULT 1,
+                action_type ENUM('SEND_MESSAGE', 'ASSIGN_AGENT', 'ADD_TAG', 'ASK_QUESTION', 'DELAY') NOT NULL,
+                content TEXT NULL,
+                meta_data JSON NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            // 2.1 Alter table to add DELAY if missing (Schema evolution)
+            try {
+                $pdo->exec("ALTER TABLE workflow_steps MODIFY COLUMN action_type ENUM('SEND_MESSAGE', 'ASSIGN_AGENT', 'ADD_TAG', 'ASK_QUESTION', 'DELAY') NOT NULL");
+            } catch (Exception $e) {}
+
+            // 3. Indexes
+            try { $pdo->exec("CREATE INDEX idx_workflow_steps_workflow_id ON workflow_steps(workflow_id)"); } catch (Exception $e) {}
+            try { $pdo->exec("CREATE INDEX idx_workflow_steps_order ON workflow_steps(step_order)"); } catch (Exception $e) {}
+
+            file_put_contents($schema_lock_workflows_refactor, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Workflows Refactor Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+        }
+    }
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');

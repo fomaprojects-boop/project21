@@ -149,6 +149,22 @@ try {
         }
     }
 
+    // Trigger Workflow (Payment Received)
+    // Find the conversation related to this invoice if possible (via contact_id)
+    if (file_exists(__DIR__ . '/workflow_helper.php') && $invoice['contact_id']) {
+        require_once __DIR__ . '/workflow_helper.php';
+
+        $stmt_conv = $pdo->prepare("SELECT id FROM conversations WHERE contact_id = ? LIMIT 1");
+        $stmt_conv->execute([$invoice['contact_id']]);
+        $conversation_id = $stmt_conv->fetchColumn();
+
+        if ($conversation_id) {
+            processWorkflows($pdo, $_SESSION['user_id'], $conversation_id, [
+                'event_type' => 'PAYMENT_RECEIVED'
+            ]);
+        }
+    }
+
     // 4. Kamilisha Transaction
     $pdo->commit();
 
