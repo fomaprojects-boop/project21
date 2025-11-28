@@ -22,8 +22,8 @@ try {
     $stmt_adopt->execute([$userId]);
 
     // Step 2: Fetch templates
-    // Added header_type and buttons_data to selection
-    $sql = "SELECT id, name, body, header, header_type, footer, quick_replies, buttons_data, status, variables, category FROM message_templates WHERE user_id = ?";
+    // Added header_type, buttons_data, meta_template_name, and language to selection
+    $sql = "SELECT id, name, meta_template_name, language, body, header, header_type, footer, quick_replies, buttons_data, status, variables, category FROM message_templates WHERE user_id = ?";
     $params = [$userId];
 
     if ($status_filter) {
