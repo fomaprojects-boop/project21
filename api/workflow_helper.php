@@ -1,6 +1,9 @@
 <?php
 // api/workflow_helper.php
 
+require_once __DIR__ . '/invoice_helper.php';
+// require_once __DIR__ . '/calculate_price.php'; // Optional if we want real pricing logic later
+
 // Helper function for logging debug messages related to workflows
 if (!function_exists('log_debug')) {
     function log_debug($message) {
@@ -400,11 +403,14 @@ function createJobOrderFromWorkflow($pdo, $conversationId, $userId, $data) {
         $notes = "Order via Workflow.\nName: " . ($data['name']??'') . "\nAddress: $address\nNotes: " . ($data['notes']??'');
 
         $trackingNumber = 'J' . time() . rand(100, 999);
-        $costPrice = 0;
-        $sellingPrice = 0;
+
+        // Default Price for Workflow orders (Pending Quote)
+        // Since we don't have exact specs calculator here, we put 0 or base price.
+        // Or we could implement simple logic if material matches known types.
+        $sellingPrice = 0.00;
+        $costPrice = 0.00;
 
         // 3. Assign to a Staff Member (Random Round Robin)
-        // This ensures the order has an 'assigned_to' user, visible in dashboards
         $staffStmt = $pdo->prepare("SELECT id FROM users WHERE role = 'Staff' ORDER BY RAND() LIMIT 1");
         $staffStmt->execute();
         $assignedToId = $staffStmt->fetchColumn();
@@ -434,6 +440,19 @@ function createJobOrderFromWorkflow($pdo, $conversationId, $userId, $data) {
         ]);
 
         $jobId = $pdo->lastInsertId();
+
+        // 5. Create Invoice (Automated)
+        $jobDetails = "Job Order #{$trackingNumber}: {$quantity} x {$size} {$material}";
+        $invoiceId = createInvoiceForJobOrder($pdo, $jobId, $customerId, $sellingPrice, $jobDetails);
+
+        if ($invoiceId) {
+            // Update Job Order with Invoice ID and status
+            $upd = $pdo->prepare("UPDATE job_orders SET invoice_id = ?, status = 'In Progress' WHERE id = ?");
+            $upd->execute([$invoiceId, $jobId]);
+            log_debug("Generated Invoice #$invoiceId for Job #$jobId. Status set to 'In Progress'.");
+        } else {
+            log_debug("Warning: Failed to generate invoice for Job #$jobId");
+        }
 
         log_debug("SUCCESS: Created Job Order #$jobId ($trackingNumber) for Customer $customerId");
 
