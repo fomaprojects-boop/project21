@@ -6351,7 +6351,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             // Switch to Editor
             document.getElementById('workflow-main-view').style.display = 'none';
             document.getElementById('workflow-editor-view').style.display = 'block';
-
+            
             // Populate Inputs
             document.getElementById('workflow-name-input').value = currentWorkflow.name;
             document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
@@ -7896,7 +7896,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             // Switch to Editor
             document.getElementById('workflow-main-view').style.display = 'none';
             document.getElementById('workflow-editor-view').style.display = 'block';
-
+            
             // Populate Inputs
             document.getElementById('workflow-name-input').value = currentWorkflow.name;
             document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
