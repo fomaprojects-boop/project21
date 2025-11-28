@@ -367,10 +367,6 @@ function updateContactFromWorkflow($pdo, $conversationId, $data) {
             $updates[] = "email = ?";
             $params[] = $data['email'];
         }
-        // Assuming Address is handled in Job Order or separate field, but user asked to update it.
-        // If 'address' column exists in contacts, add it here.
-        // For safety, let's append address to notes if not sure, OR skip if column doesn't exist.
-        // We will stick to name/email for now as they are standard.
 
         if (!empty($updates)) {
             $params[] = $contactId;
@@ -386,35 +382,60 @@ function updateContactFromWorkflow($pdo, $conversationId, $data) {
 
 function createJobOrderFromWorkflow($pdo, $conversationId, $userId, $data) {
     try {
-        // Resolve Customer ID (Contact ID)
+        log_debug("Starting CREATE_JOB_ORDER for Conversation $conversationId");
+
+        // 1. Resolve Contact ID
         $stmt = $pdo->prepare("SELECT contact_id FROM conversations WHERE id = ?");
         $stmt->execute([$conversationId]);
         $contactId = $stmt->fetchColumn();
 
-        // Use contact_id as customer_id.
+        // Use contact_id as customer_id
         $customerId = $contactId ?: 0;
 
+        // 2. Resolve Data
         $size = $data['size'] ?? 'N/A';
         $quantity = intval($data['quantity'] ?? 1);
         $material = $data['material'] ?? 'Standard';
-
-        // Construct Notes from collected data including Address
         $address = $data['address'] ?? 'Not provided';
         $notes = "Order via Workflow.\nName: " . ($data['name']??'') . "\nAddress: $address\nNotes: " . ($data['notes']??'');
 
         $trackingNumber = 'J' . time() . rand(100, 999);
         $costPrice = 0;
-        $sellingPrice = 0; // Requires manual quote or specialized calculation
+        $sellingPrice = 0;
 
-        // Using existing schema from online_job_order.php
+        // 3. Assign to a Staff Member (Random Round Robin)
+        // This ensures the order has an 'assigned_to' user, visible in dashboards
+        $staffStmt = $pdo->prepare("SELECT id FROM users WHERE role = 'Staff' ORDER BY RAND() LIMIT 1");
+        $staffStmt->execute();
+        $assignedToId = $staffStmt->fetchColumn();
+
+        // If no staff found, assign to current user (likely admin) or 0
+        if (!$assignedToId) {
+             $assignedToId = $userId;
+        }
+
+        log_debug("Assigning Job $trackingNumber to Staff ID: $assignedToId");
+
+        // 4. Insert into Job Orders
+        // Explicitly setting assigned_to and status
         $stmt = $pdo->prepare(
-            "INSERT INTO job_orders (customer_id, tracking_number, size, quantity, material, notes, cost_price, selling_price, status, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())"
+            "INSERT INTO job_orders (
+                customer_id, tracking_number, size, quantity, material, notes,
+                cost_price, selling_price, status, assigned_to, created_at
+            ) VALUES (
+                ?, ?, ?, ?, ?, ?,
+                ?, ?, 'Pending', ?, NOW()
+            )"
         );
-        $stmt->execute([$customerId, $trackingNumber, $size, $quantity, $material, $notes, $costPrice, $sellingPrice]);
+
+        $stmt->execute([
+            $customerId, $trackingNumber, $size, $quantity, $material, $notes,
+            $costPrice, $sellingPrice, $assignedToId
+        ]);
+
         $jobId = $pdo->lastInsertId();
 
-        log_debug("Created Job Order #$jobId ($trackingNumber) for Customer $customerId");
+        log_debug("SUCCESS: Created Job Order #$jobId ($trackingNumber) for Customer $customerId");
 
     } catch (Exception $e) {
         log_debug("Create Job Order Error: " . $e->getMessage());
