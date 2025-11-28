@@ -1,17 +1,17 @@
 <?php
 // api/add_template.php
 header('Content-Type: application/json');
-// Ensure no output before JSON
 ob_start();
 
-require_once 'db.php';
-require_once 'get_facebook_credentials.php';
+// 1. Load Dependencies
+require_once 'config.php'; 
+require_once 'db.php';     
 
-// Register shutdown function to catch fatal errors
+// Error Handler
 register_shutdown_function(function() {
     $error = error_get_last();
-    if ($error && ($error['type'] === E_ERROR || $error['type'] === E_PARSE || $error['type'] === E_CORE_ERROR || $error['type'] === E_COMPILE_ERROR)) {
-        ob_clean(); // Clear buffer
+    if ($error && ($error['type'] === E_ERROR || $error['type'] === E_PARSE)) {
+        ob_clean();
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'Server Error: ' . $error['message']]);
     }
@@ -19,6 +19,7 @@ register_shutdown_function(function() {
 
 session_start();
 
+// 2. Auth Check
 if (!isset($_SESSION['user_id'])) {
     ob_clean();
     http_response_code(401);
@@ -37,14 +38,15 @@ if (!$data) {
     exit();
 }
 
+// 3. Sanitize Inputs
 $name = trim($data['name'] ?? '');
-$category = trim($data['category'] ?? 'TRANSACTIONAL');
+$category = trim($data['category'] ?? 'TRANSACTIONAL'); 
 $body = trim($data['body'] ?? '');
 $header = trim($data['header'] ?? null);
 $footer = trim($data['footer'] ?? null);
-$header_type = trim($data['header_type'] ?? 'NONE'); // Get header type from input
+$header_type = trim($data['header_type'] ?? 'NONE');
 $quick_replies_raw = trim($data['quick_replies'] ?? '');
-$buttons_input = $data['buttons'] ?? []; // Array of {type, text, url, phone_number}
+$buttons_input = $data['buttons'] ?? []; 
 $variable_examples = $data['variable_examples'] ?? [];
 
 if (empty($name) || empty($body) || empty($category)) {
@@ -54,120 +56,95 @@ if (empty($name) || empty($body) || empty($category)) {
     exit();
 }
 
-// Prepare Data for Database
-$quick_replies_json = null;
-$buttons_data_json = null;
-
-// Handle Buttons Logic (Prioritize new 'buttons' array, fallback to 'quick_replies' string)
+// 4. Process Buttons
 $db_buttons = [];
-
 if (!empty($buttons_input) && is_array($buttons_input)) {
-    // Validate and Clean buttons
     foreach ($buttons_input as $btn) {
-        $cleanBtn = [
-            'type' => $btn['type'] ?? 'QUICK_REPLY',
-            'text' => trim($btn['text'] ?? '')
-        ];
-        if ($cleanBtn['type'] === 'URL') {
-            $cleanBtn['url'] = trim($btn['url'] ?? '');
-        }
-        if ($cleanBtn['type'] === 'PHONE_NUMBER') {
-            $cleanBtn['phone_number'] = trim($btn['phone_number'] ?? '');
-        }
-        if (!empty($cleanBtn['text'])) {
-            $db_buttons[] = $cleanBtn;
-        }
+        $cleanBtn = ['type' => $btn['type'] ?? 'QUICK_REPLY', 'text' => trim($btn['text'] ?? '')];
+        if ($cleanBtn['type'] === 'URL') $cleanBtn['url'] = trim($btn['url'] ?? '');
+        if ($cleanBtn['type'] === 'PHONE_NUMBER') $cleanBtn['phone_number'] = trim($btn['phone_number'] ?? '');
+        if (!empty($cleanBtn['text'])) $db_buttons[] = $cleanBtn;
     }
 } elseif (!empty($quick_replies_raw)) {
-    // Fallback legacy logic
     foreach (explode(',', $quick_replies_raw) as $reply) {
-        if (trim($reply) !== '') {
-            $db_buttons[] = ['type' => 'QUICK_REPLY', 'text' => trim($reply)];
-        }
+        if (trim($reply) !== '') $db_buttons[] = ['type' => 'QUICK_REPLY', 'text' => trim($reply)];
     }
 }
 
-if (!empty($db_buttons)) {
-    $buttons_data_json = json_encode($db_buttons);
-    // Populate quick_replies CSV for legacy views (only include QR texts)
-    $qr_texts = array_column(array_filter($db_buttons, function($b) { return $b['type'] === 'QUICK_REPLY'; }), 'text');
-    $quick_replies_raw = implode(',', $qr_texts);
-    $quick_replies_json = json_encode($qr_texts);
-}
+$buttons_data_json = !empty($db_buttons) ? json_encode($db_buttons) : null;
+$quick_replies_json = null; 
 
-// Extract variable names
+// Extract Variables
 preg_match_all('/{{\s*([a-zA-Z0-9_]+)\s*}}/', $body, $matches);
 $variables_json = !empty($matches[1]) ? json_encode($matches[1]) : null;
 
-// Normalize Header Type (Validation)
-if ($header_type === 'TEXT' && empty($header)) {
-    // If user selected TEXT but didn't type anything, revert to NONE
-    $header_type = 'NONE';
-} else if ($header_type !== 'TEXT' && $header_type !== 'NONE') {
-    // If Media, clear any text content just in case
-    $header = null;
-}
+// Normalize Header
+if ($header_type === 'TEXT' && empty($header)) $header_type = 'NONE';
+if ($header_type !== 'TEXT' && $header_type !== 'NONE') $header = null;
 
 try {
-    // --- DB Insertion ---
+    // --- HAPA NDIPO KULIPOKUWA NA TATIZO ---
+    // Tumeondoa function ya nje, tunaweka SQL query hapa hapa
+    
+    $stmtCreds = $pdo->prepare("SELECT whatsapp_business_account_id, whatsapp_access_token FROM users WHERE id = ?");
+    $stmtCreds->execute([$userId]);
+    $userCreds = $stmtCreds->fetch(PDO::FETCH_ASSOC);
+
+    // Kama credentials hazipo
+    if (!$userCreds || empty($userCreds['whatsapp_access_token']) || empty($userCreds['whatsapp_business_account_id'])) {
+        throw new Exception("WhatsApp Account not connected. Please connect in Settings.");
+    }
+
+    $waba_id = $userCreds['whatsapp_business_account_id'];
+    $access_token = $userCreds['whatsapp_access_token'];
+    // ----------------------------------------
+
     $pdo->beginTransaction();
 
+    // --- STEP B: Save to Local Database ---
     $stmt = $pdo->prepare(
         "INSERT INTO message_templates (user_id, name, category, body, header, footer, quick_replies, variables, status, language, header_type, buttons_data)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'en_US', ?, ?)"
     );
     
     $stmt->execute([
-        $userId,
-        $name,
-        $category,
-        $body,
-        empty($header) ? null : $header,
-        empty($footer) ? null : $footer,
-        $quick_replies_json,
-        $variables_json,
-        $header_type,
-        $buttons_data_json
+        $userId, $name, $category, $body, 
+        empty($header) ? null : $header, 
+        empty($footer) ? null : $footer, 
+        $quick_replies_json, $variables_json, 
+        $header_type, $buttons_data_json
     ]);
-
     $last_insert_id = $pdo->lastInsertId();
 
-    // --- Meta API Payload Construction ---
-    $credentials = getFacebookCredentials($userId);
-    if (!$credentials) throw new Exception("Facebook credentials not found for user.");
-
-    $waba_id = $credentials['waba_id'];
-    $access_token = $credentials['access_token'];
-
-    // Format Body Variables: {{customer_name}} -> {{1}}
+    // --- STEP C: Prepare Meta API Payload ---
     $meta_body = preg_replace_callback('/{{\s*([a-zA-Z0-9_]+)\s*}}/', function($match) {
-        static $i = 1;
-        return '{{' . $i++ . '}}';
+        static $i = 1; return '{{' . $i++ . '}}';
     }, $body);
 
     $components = [['type' => 'BODY', 'text' => $meta_body]];
 
-    // Header Component Logic
-    if ($header_type === 'TEXT' && !empty($header)) {
-        $header_component = ['type' => 'HEADER', 'format' => 'TEXT', 'text' => $header];
-        if (strpos($header, '{{1}}') !== false && !empty($variable_examples)) {
-            $header_component['example'] = [
-                'header_text' => [array_values($variable_examples)[0]]
-            ];
+    if (!empty($matches[1])) {
+        $body_example_values = [];
+        foreach ($matches[1] as $var_name) {
+            $body_example_values[] = $variable_examples[$var_name] ?? 'sample';
         }
-        $components[] = $header_component;
-    } elseif (in_array($header_type, ['IMAGE', 'VIDEO', 'DOCUMENT'])) {
-        $components[] = ['type' => 'HEADER', 'format' => $header_type];
-        // Note: Creating a media template without an example might fail on Meta's side.
-        // We proceed, and if Meta requires an example, the API error will be caught below.
+        $components[0]['example'] = ['body_text' => [$body_example_values]];
     }
 
-    // Footer
+    if ($header_type === 'TEXT' && !empty($header)) {
+        $header_comp = ['type' => 'HEADER', 'format' => 'TEXT', 'text' => $header];
+        if (strpos($header, '{{1}}') !== false && !empty($variable_examples)) {
+            $header_comp['example'] = ['header_text' => [array_values($variable_examples)[0]]];
+        }
+        $components[] = $header_comp;
+    } elseif (in_array($header_type, ['IMAGE', 'VIDEO', 'DOCUMENT'])) {
+        $components[] = ['type' => 'HEADER', 'format' => $header_type];
+    }
+
     if (!empty($footer)) {
         $components[] = ['type' => 'FOOTER', 'text' => $footer];
     }
 
-    // Buttons
     if (!empty($db_buttons)) {
         $meta_buttons = [];
         foreach ($db_buttons as $btn) {
@@ -179,39 +156,19 @@ try {
                 $meta_buttons[] = ['type' => 'PHONE_NUMBER', 'text' => $btn['text'], 'phone_number' => $btn['phone_number']];
             }
         }
-
         if (!empty($meta_buttons)) {
             $components[] = ['type' => 'BUTTONS', 'buttons' => $meta_buttons];
         }
     }
 
-    // Body Examples
-    // This is tricky. If body has {{1}}, {{2}}, Meta REQUIRES examples.
-    // We rely on $variable_examples passed from frontend (key-value)
-    // We need to order them based on occurrence in body.
-    if (!empty($matches[1])) {
-        $body_example_values = [];
-        foreach ($matches[1] as $var_name) {
-            $body_example_values[] = $variable_examples[$var_name] ?? 'sample';
-        }
-
-        // Find body component and add example
-        foreach ($components as &$c) {
-            if ($c['type'] === 'BODY') {
-                $c['example'] = ['body_text' => [$body_example_values]];
-                break;
-            }
-        }
-    }
-
     $payload = [
-        'name' => strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $name)), // Strict name sanitization
+        'name' => strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $name)), 
         'language' => 'en_US',
         'category' => $category,
         'components' => $components
     ];
 
-    // --- Meta API Request ---
+    // --- STEP D: Send to Meta API ---
     $url = "https://graph.facebook.com/v21.0/{$waba_id}/message_templates";
 
     $ch = curl_init();
@@ -226,25 +183,19 @@ try {
 
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curl_error = curl_error($ch);
     curl_close($ch);
 
     if ($http_code < 200 || $http_code >= 300) {
         $error_response = json_decode($response, true);
         $errorMessage = $error_response['error']['message'] ?? 'Unknown Meta API error';
-
-        // Log detailed error for debugging
-        error_log("Meta Template Creation Failed: " . $response);
-
-        throw new Exception("Meta API Error: " . $errorMessage);
+        throw new Exception("Meta Rejected: " . $errorMessage);
     }
 
+    // --- STEP E: Update Local DB ---
     $meta_response = json_decode($response, true);
     if (isset($meta_response['id'])) {
         $update_stmt = $pdo->prepare(
-            "UPDATE message_templates
-             SET meta_template_id = ?, meta_template_name = ?, status = 'PENDING'
-             WHERE id = ?"
+            "UPDATE message_templates SET meta_template_id = ?, meta_template_name = ?, status = 'PENDING' WHERE id = ?"
         );
         $update_stmt->execute([
             $meta_response['id'],
@@ -255,15 +206,14 @@ try {
 
     $pdo->commit();
     ob_clean();
-    echo json_encode(['status' => 'success', 'message' => "Template '{$name}' created and submitted for approval."]);
+    echo json_encode(['status' => 'success', 'message' => "Template '{$name}' created and submitted successfully!"]);
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
     ob_clean();
-    http_response_code(500);
-    error_log("Add Template Exception: " . $e->getMessage());
+    http_response_code(400); 
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
 ob_end_flush();
