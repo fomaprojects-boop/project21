@@ -28,6 +28,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
     <title>ChatMe - Professional Edition</title>
     <script>
         const LOGGED_IN_USER_NAME = '<?php echo htmlspecialchars($userName, ENT_QUOTES); ?>';
+        // Global State Objects for Auto-Fill Context
+        window.systemSettings = {};
+        window.currentContact = {};
+        window.currentUser = {
+            id: <?php echo $userId; ?>,
+            full_name: '<?php echo htmlspecialchars($userName, ENT_QUOTES); ?>',
+            role: '<?php echo $userRole; ?>'
+        };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -2522,39 +2530,89 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             </div>`,
         };
         const modalTemplates = {
-            fillTemplateVariablesModal: `<div id="fillTemplateVariablesModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
-                <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
-                    <div class="mt-3">
-                        <h3 class="text-lg text-center leading-6 font-medium text-gray-900">Fill Template Variables</h3>
-                        <form id="fillVariablesForm" class="mt-4 space-y-4 p-4 text-left">
-                            <input type="hidden" id="templateBodyToFill">
+                        fillTemplateVariablesModal: `<div id="fillTemplateVariablesModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 h-full w-full hidden items-center justify-center z-50 backdrop-blur-sm">
+                <div class="relative mx-auto p-0 border-0 w-full max-w-5xl shadow-2xl rounded-xl bg-white overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
 
-                            <!-- Header Media Section -->
-                            <div id="header-media-container" class="hidden space-y-2 mb-4 p-3 bg-gray-50 rounded border">
-                                <label id="header-media-label" class="block text-sm font-bold text-gray-700">Header Media</label>
-                                <input type="file" id="header-media-file" name="header_file" class="w-full text-sm">
-                                <p class="text-xs text-gray-500">Upload the media file for the header.</p>
+                    <!-- LEFT COLUMN: Inputs -->
+                    <div class="w-full md:w-1/2 flex flex-col bg-white border-r border-gray-100">
+                        <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">Customize Message</h3>
+                                <p class="text-xs text-gray-500">Review and edit auto-filled values.</p>
+                            </div>
+                            <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors" onclick="closeModal('fillTemplateVariablesModal')">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto p-6">
+                            <form id="fillVariablesForm" class="space-y-6">
+                                <input type="hidden" id="templateBodyToFill">
+
+                                <!-- Header Media Section -->
+                                <div id="header-media-container" class="hidden space-y-2 p-4 bg-violet-50 rounded-lg border border-violet-100">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-paperclip text-violet-600"></i>
+                                        <label id="header-media-label" class="block text-sm font-bold text-gray-800">Header Media</label>
+                                    </div>
+                                    <input type="file" id="header-media-file" name="header_file" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-100 file:text-violet-700 hover:file:bg-violet-200 transition-all">
+                                    <p class="text-xs text-gray-500 mt-1">Upload the media file to display at the top of the message.</p>
+                                </div>
+
+                                <!-- Header Text Variables -->
+                                <div id="header-vars-container" class="space-y-4"></div>
+
+                                <!-- Body Text Variables -->
+                                <div id="variable-inputs-container" class="space-y-4">
+                                    <!-- Dynamic inputs will be injected here -->
+                                </div>
+
+                                <!-- Button Dynamic URL Variables -->
+                                <div id="button-vars-container" class="hidden space-y-4 pt-4 border-t border-dashed border-gray-200">
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dynamic Links</h4>
+                                    <!-- Dynamic button inputs injected here -->
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                            <button type="button" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm" onclick="closeModal('fillTemplateVariablesModal')">Cancel</button>
+                            <button type="submit" form="fillVariablesForm" class="px-6 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 font-bold shadow-md transition-all transform hover:scale-[1.02] flex items-center">
+                                <i class="fas fa-paper-plane mr-2"></i> Send Message
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Preview -->
+                    <div class="w-full md:w-1/2 bg-[#E5DDD5] p-8 flex flex-col justify-center items-center relative overflow-hidden">
+                        <!-- WhatsApp Background Pattern -->
+                        <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: 400px;"></div>
+
+                        <div class="relative w-full max-w-sm">
+                            <div class="text-center mb-4 opacity-70">
+                                <span class="bg-[#dcf8c6] text-gray-600 text-xs px-2 py-1 rounded shadow-sm">Preview</span>
                             </div>
 
-                            <!-- Header Text Variables -->
-                            <div id="header-vars-container" class="space-y-3"></div>
+                            <!-- Live Preview Bubble -->
+                            <div class="message-bubble message-agent shadow-md !max-w-full !mr-0 !text-sm leading-relaxed relative bg-white text-gray-800 rounded-lg p-3">
+                                <!-- Tail -->
+                                <span class="absolute top-0 -right-2 w-0 h-0 border-[8px] border-transparent border-t-white border-l-white transform rotate-0 drop-shadow-sm"></span>
 
-                            <!-- Body Text Variables -->
-                            <div id="variable-inputs-container" class="space-y-3 max-h-60 overflow-y-auto">
-                                <!-- Dynamic inputs will be injected here -->
+                                <div id="preview-header-media" class="hidden mb-2 rounded-lg bg-gray-200 h-32 flex items-center justify-center text-gray-500 overflow-hidden">
+                                    <i class="fas fa-image text-3xl"></i>
+                                </div>
+                                <div id="preview-header-text" class="font-bold text-gray-900 mb-1 hidden"></div>
+                                <div id="preview-body-text" class="whitespace-pre-wrap text-gray-800"></div>
+                                <div id="preview-footer-text" class="text-xs text-gray-400 mt-2"></div>
+
+                                <div class="text-[10px] text-gray-400 text-right mt-1 flex justify-end items-center gap-1">
+                                    <span>Now</span> <i class="fas fa-check text-gray-400"></i>
+                                </div>
                             </div>
 
-                            <!-- Button Dynamic URL Variables -->
-                            <div id="button-vars-container" class="space-y-3 pt-2 border-t border-dashed border-gray-300 mt-2 hidden">
-                                <h4 class="text-xs font-bold text-gray-500 uppercase">Button Links</h4>
-                                <!-- Dynamic button inputs injected here -->
-                            </div>
-
-                            <div class="items-center pt-4 flex justify-end space-x-2 border-t mt-6">
-                                <button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('fillTemplateVariablesModal')">Cancel</button>
-                                <button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Send Message</button>
-                            </div>
-                        </form>
+                            <!-- Buttons Preview -->
+                            <div id="preview-buttons-container" class="mt-2 space-y-1 w-full"></div>
+                        </div>
                     </div>
                 </div>
             </div>`,
@@ -2802,7 +2860,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div class="p-3 bg-gray-50 border rounded-md">
                                 <label for="templateHeaderType" class="block text-sm font-medium text-gray-700 mb-2">Header Type</label>
                                 <select id="templateHeaderType" class="w-full px-3 py-2 text-gray-700 border rounded-md mb-3" onchange="toggleHeaderFields()">
@@ -2843,7 +2901,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 <label for="templateFooter" class="block text-sm font-medium text-gray-700">Footer (Optional)</label>
                                 <input id="templateFooter" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="e.g., Thanks for shopping with us!">
                             </div>
-                            
+
                             <!-- Dynamic Buttons Section -->
                             <div class="border-t pt-2 mt-2">
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Buttons (Optional)</label>
@@ -3179,24 +3237,40 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         let displayedMessageIds = new Set();
 
         // --- ONGEZA FUNCTION HII MPYA HAPA ---
-        async function initializeAppSettings() {
-            // Tunaita 'get_settings.php' mapema
-            const settings = await fetchApi('get_settings.php');
-            if (settings && settings.default_currency) {
-                // Tunaweka currency sahihi kwenye variable ya global
-                DEFAULT_CURRENCY = settings.default_currency;
-                console.log('App Currency set to:', DEFAULT_CURRENCY);
-            }
-            // Check for Free Tier Limit
-            if (settings && settings.free_tier_limit_reached) {
-                const banner = document.getElementById('global-alert-banner');
-                if (banner) {
-                    banner.classList.remove('hidden');
+        // --- INITIALIZATION FUNCTIONS ---
+        async function initializeAppSettings() {
+            const settings = await fetchApi('get_settings.php');
+            if (settings) {
+                window.systemSettings = settings; // Store globally for Auto-Fill
+
+                if (settings.default_currency) {
+                    DEFAULT_CURRENCY = settings.default_currency;
+                    console.log('App Currency set to:', DEFAULT_CURRENCY);
+                }
+
+                // Check for Free Tier Limit
+                if (settings.free_tier_limit_reached) {
+                    const banner = document.getElementById('global-alert-banner');
+                    if (banner) banner.classList.remove('hidden');
                 }
             }
-            // Hatuna haja ya kujaza fomu ya settings hapa, tunachukua currency tu.
-        }
-        // --- MWISHO WA FUNCTION MPYA ---
+        }
+
+        async function initializeUser() {
+            // Fetch full user details for Auto-Fill
+            try {
+                const users = await fetchApi('get_users.php');
+                if (users && Array.isArray(users)) {
+                    const me = users.find(u => u.id === LOGGED_IN_USER_ID);
+                    if (me) {
+                        window.currentUser = { ...window.currentUser, ...me };
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not load detailed user info for auto-fill');
+            }
+        }
+        // --- END INITIALIZATION ---
 
         async function openTaxHistory(type) {
             openModal('taxHistoryModal');
@@ -3472,6 +3546,51 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 });
             }
         }
+
+        // --- AUTO-FILL & LOGIC ENGINE ---
+        function resolveVariable(variableName) {
+            if (!variableName) return null;
+            const varName = variableName.toLowerCase().trim();
+            const contact = window.currentContact || {};
+            const user = window.currentUser || {};
+            const settings = window.systemSettings || {};
+
+            // 1. Time & Logic
+            if (['date', 'today'].includes(varName)) return new Date().toLocaleDateString('en-GB'); // DD/MM/YYYY
+            if (['time', 'now'].includes(varName)) return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            if (varName === 'greeting') {
+                const hour = new Date().getHours();
+                if (hour < 12) return 'Good Morning';
+                if (hour < 18) return 'Good Afternoon';
+                return 'Good Evening';
+            }
+
+            // 2. Customer Context
+            if (['customer_name', 'name', 'client', 'contact_name', 'client_name'].includes(varName)) return contact.name || '';
+            if (['first_name', 'customer_first_name'].includes(varName)) return (contact.name || '').split(' ')[0];
+            if (['phone', 'mobile', 'contact_number', 'customer_phone'].includes(varName)) return contact.phone_number || '';
+            if (['email', 'contact_email', 'customer_email'].includes(varName)) return contact.email || '';
+            if (['notes', 'note'].includes(varName)) return contact.notes || '';
+            // Future-proofing: these fields might be added to API later
+            if (['city', 'location', 'town'].includes(varName)) return contact.city || '';
+            if (['address'].includes(varName)) return contact.address || '';
+
+            // 3. Agent Context
+            const agentName = user.full_name || user.name || LOGGED_IN_USER_NAME || 'Agent';
+            if (['agent_name', 'my_name', 'sender_name'].includes(varName)) return agentName;
+            if (['agent_first_name'].includes(varName)) return agentName.split(' ')[0];
+            if (['agent_email'].includes(varName)) return user.email || '';
+            if (['agent_phone'].includes(varName)) return user.phone || '';
+
+            // 4. Company Context
+            if (['company_name', 'business_name'].includes(varName)) return settings.business_name || '';
+            if (['website', 'url', 'company_website'].includes(varName)) return settings.website || '';
+            if (['support_phone', 'company_phone'].includes(varName)) return settings.support_phone || '';
+            if (['currency', 'currency_code'].includes(varName)) return DEFAULT_CURRENCY;
+
+            return null; // Not found
+        }
+
         function safeDate(dateStr) {
             if (!dateStr) return new Date();
             // Replace space with T for ISO format compatibility (Safari/older browsers)
@@ -4831,16 +4950,41 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             // Filter status at API level to prevent showing unapproved templates
             const templates = await fetchApi('get_templates.php?status=APPROVED');
             if (templates && Array.isArray(templates)) {
-                const approvedTemplates = templates; // Already filtered by API
+                // Deduplicate and Process Templates
+                const uniqueTemplatesMap = new Map();
+
+                templates.forEach(t => {
+                    // Ensure variables is an array
+                    let variables = t.variables || [];
+                    if (typeof variables === 'string') {
+                        try { variables = JSON.parse(variables); } catch(e) { variables = []; }
+                    }
+                    t.variables = variables;
+
+                    // Translate Body {{N}} -> {{name}} for Display
+                    let displayBody = t.body;
+                    if (variables.length > 0) {
+                        displayBody = displayBody.replace(/{{\s*(\d+)\s*}}/g, (match, n) => {
+                            const index = parseInt(n) - 1;
+                            return variables[index] ? `{{${variables[index]}}}` : match;
+                        });
+                    }
+                    t.displayBody = displayBody;
+
+                    // Deduplication: Key by name to remove duplicates
+                    uniqueTemplatesMap.set(t.name, t);
+                });
+
+                const approvedTemplates = Array.from(uniqueTemplatesMap.values());
 
                 if (approvedTemplates.length > 0) {
                     list.innerHTML = approvedTemplates.map(t => `
-                        <div onclick='selectTemplateContent(${JSON.stringify(t)})' class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
+                        <div onclick='selectTemplateContent(${JSON.stringify(t).replace(/'/g, "&apos;")})' class="p-3 border rounded-lg hover:border-violet-500 hover:bg-violet-50 cursor-pointer transition-all group">
                             <div class="flex justify-between mb-1">
                                 <span class="font-semibold text-sm text-gray-800 group-hover:text-violet-700">${t.name}</span>
                                 <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Approved</span>
                             </div>
-                            <p class="text-xs text-gray-500 line-clamp-2">${t.body}</p>
+                            <p class="text-xs text-gray-500 line-clamp-2">${t.displayBody}</p>
                         </div>
                     `).join('');
                 } else {
@@ -4886,6 +5030,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 list.innerHTML = `<div class="text-center text-red-500 py-4"><p>Sync Error.</p><button onclick="openTemplateSelector()" class="mt-2 text-sm underline">Try Again</button></div>`;
             }
         }
+
+        // --- TEMPLATE PARSING & AUTO-FILL ---
         function selectTemplateContent(template) {
             closeModal('templateSelectorModal');
 
@@ -4894,13 +5040,16 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const header = template.header || '';
             const buttonsData = template.buttons_data || [];
             const headerType = template.header_type || 'TEXT';
+            const variablesMap = template.variables || []; // Array of variable names from DB (['name', 'amount'])
 
             // 1. Body Variables
-            const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
-            const bodyVariables = [...new Set(Array.from(body.matchAll(variableRegex), m => m[1]))];
+            const variableRegex = /{{\s*([0-9]+|[a-zA-Z0-9_]+)\s*}}/g;
+            const bodyMatches = [...body.matchAll(variableRegex)];
+            const bodyVariables = [...new Set(bodyMatches.map(m => m[1]))];
 
             // 2. Header Variables (Text)
-            const headerVariables = [...new Set(Array.from(header.matchAll(variableRegex), m => m[1]))];
+            const headerMatches = [...header.matchAll(variableRegex)];
+            const headerVariables = [...new Set(headerMatches.map(m => m[1]))];
 
             // 3. Dynamic URL Buttons
             const dynamicButtons = buttonsData.filter(btn => btn.type === 'URL' && btn.url && btn.url.includes('{{1}}'));
@@ -4913,9 +5062,38 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             if (hasBodyVars || hasHeaderVars || hasMediaHeader || hasDynamicButtons) {
                 // Open the Complex Modal
-                document.getElementById('templateBodyToFill').value = JSON.stringify(template); // Store full object for submission handler
+                const modal = document.getElementById('fillTemplateVariablesModal');
+                const form = document.getElementById('fillVariablesForm');
 
-                // A. Header Media
+                // Store full object for submission handler & preview updates
+                document.getElementById('templateBodyToFill').value = JSON.stringify(template);
+
+                // --- RESET PREVIEW ---
+                document.getElementById('preview-header-text').textContent = header;
+                document.getElementById('preview-header-text').classList.toggle('hidden', !header);
+                document.getElementById('preview-body-text').textContent = body;
+                document.getElementById('preview-footer-text').textContent = template.footer || '';
+                document.getElementById('preview-header-media').classList.toggle('hidden', !hasMediaHeader);
+
+                // Reset Buttons Preview
+                const btnPreviewContainer = document.getElementById('preview-buttons-container');
+                btnPreviewContainer.innerHTML = '';
+                if (buttonsData) {
+                    buttonsData.forEach(btn => {
+                        const btnDiv = document.createElement('div');
+                        btnDiv.className = "bg-white text-center py-2 px-3 rounded-lg shadow-sm text-violet-600 font-medium text-sm cursor-pointer hover:bg-gray-50 border border-gray-100";
+                        if (btn.type === 'URL') {
+                            btnDiv.innerHTML = `<i class="fas fa-external-link-alt mr-1"></i> ${btn.text}`;
+                        } else if (btn.type === 'PHONE_NUMBER') {
+                            btnDiv.innerHTML = `<i class="fas fa-phone mr-1"></i> ${btn.text}`;
+                        } else {
+                            btnDiv.innerHTML = `<i class="fas fa-reply mr-1"></i> ${btn.text}`;
+                        }
+                        btnPreviewContainer.appendChild(btnDiv);
+                    });
+                }
+
+                // A. Header Media Input
                 const mediaContainer = document.getElementById('header-media-container');
                 const mediaLabel = document.getElementById('header-media-label');
                 const mediaInput = document.getElementById('header-media-file');
@@ -4929,80 +5107,101 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     mediaInput.required = false;
                 }
 
-                // B. Header Text Variables
+                // B. Header Text Variables Input
                 const headerContainer = document.getElementById('header-vars-container');
                 headerContainer.innerHTML = '';
                 if (hasHeaderVars) {
-                    headerContainer.innerHTML = '<h4 class="text-xs font-bold text-gray-500 uppercase">Header Variables</h4>';
+                    headerContainer.innerHTML = '<h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Header Variables</h4>';
                     headerVariables.forEach(variable => {
+                        // Check if it's a number {{1}} and map to DB variable name
+                        let label = `Variable {{${variable}}}`;
+                        let lookupKey = variable;
+
+                        if (!isNaN(variable) && variablesMap.length > 0) {
+                            // Meta uses 1-based index, array is 0-based.
+                            // BUT Meta header vars might not be in the main variables array.
+                            // Usually main array corresponds to BODY vars.
+                            // We will use "Header Variable N" unless we have specific mapping.
+                            label = `Header Variable ${variable}`;
+                        }
+
+                        // Try Auto-Fill
+                        const autoFillValue = resolveVariable(lookupKey);
+                        const isAutoFilled = autoFillValue !== null && autoFillValue !== '';
+                        const inputClass = isAutoFilled ? "bg-green-50 border-green-300 text-green-800" : "border-gray-300 text-gray-700 focus:ring-violet-500 focus:border-violet-500";
+                        const iconHtml = isAutoFilled ? `<i class="fas fa-check-circle text-green-500 absolute right-3 top-3.5"></i>` : '';
+
                         headerContainer.innerHTML += `
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Header: {{${variable}}}</label>
-                                <input type="text" name="header_var_${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required placeholder="Value for header">
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${label}</label>
+                                <input type="text" name="header_var_${variable}" value="${autoFillValue || ''}"
+                                    class="block w-full rounded-md shadow-sm sm:text-sm p-2.5 border ${inputClass}"
+                                    required placeholder="Enter value..." oninput="updateTemplatePreview()">
+                                ${iconHtml}
                             </div>`;
                     });
                 }
 
-                // C. Body Variables
+                // C. Body Variables Input
                 const container = document.getElementById('variable-inputs-container');
                 container.innerHTML = '';
-                
-                // Define Auto-Fill System Variables
-                const systemVariables = {
-                    'customer_name': document.getElementById('chat-partner-name').textContent || '',
-                    'customer_phone': document.getElementById('chat-partner-phone').textContent || '',
-                    'phone_number': document.getElementById('chat-partner-phone').textContent || '',
-                    'agent_name': LOGGED_IN_USER_NAME,
-                    'company_name': '<?php echo isset($settings['business_name']) ? htmlspecialchars($settings['business_name']) : "Our Company"; ?>' // Fallback if settings not fully loaded in JS context, but ideally fetched
-                };
 
                 if (hasBodyVars) {
-                    let hasVisibleVars = false;
-                    
-                    bodyVariables.forEach(variable => {
-                        const cleanVar = variable.toLowerCase();
-                        if (systemVariables.hasOwnProperty(cleanVar)) {
-                            // Auto-fill (Hidden Input)
-                            container.innerHTML += `<input type="hidden" name="${variable}" value="${systemVariables[cleanVar]}">`;
-                            // Optional: Show badge that it's auto-filled
-                            // container.innerHTML += `<div class="text-xs text-green-600 mb-1"><i class="fas fa-check-circle"></i> Auto-filling {{${variable}}}</div>`; 
-                        } else {
-                            // Manual Input
-                            hasVisibleVars = true;
-                            container.innerHTML += `
-                                <div>
-                                    <label for="var-${variable}" class="block text-sm font-medium text-gray-700">Body: {{${variable.replace(/_/g, ' ')}}}</label>
-                                    <input type="text" id="var-${variable}" name="${variable}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required>
-                                </div>
-                            `;
-                        }
-                    });
+                    const header = document.createElement('h4');
+                    header.className = 'text-xs font-bold text-gray-400 uppercase tracking-wider';
+                    header.textContent = 'Message Variables';
+                    container.prepend(header);
 
-                    if (hasVisibleVars) {
-                        // Prepend header only if visible inputs exist
-                        const header = document.createElement('h4');
-                        header.className = 'text-xs font-bold text-gray-500 uppercase mt-2';
-                        header.textContent = 'Body Variables';
-                        container.prepend(header);
-                    } else {
-                        // All variables auto-filled
-                        container.innerHTML += `<div class="p-3 bg-green-50 text-green-700 text-sm rounded border border-green-200"><i class="fas fa-magic mr-2"></i>All variables will be auto-filled by the system.</div>`;
-                    }
+                    bodyVariables.forEach(variable => {
+                        // Meta-to-Human Mapping
+                        let label = variable; // Default to {{customer_name}}
+                        let lookupKey = variable;
+
+                        if (!isNaN(variable)) {
+                            // It's {{1}}, {{2}}. Map to variables array from DB.
+                            const index = parseInt(variable) - 1;
+                            if (variablesMap && variablesMap[index]) {
+                                label = variablesMap[index]; // e.g., "customer_name"
+                                lookupKey = label; // Use mapped name for auto-fill lookup
+                            } else {
+                                label = `Variable ${variable}`;
+                            }
+                        }
+
+                        // Human-readable Label Formatting (e.g. customer_name -> Customer Name)
+                        const readableLabel = label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                        // Auto-Fill Logic
+                        const autoFillValue = resolveVariable(lookupKey);
+                        const isAutoFilled = autoFillValue !== null && autoFillValue !== '';
+                        const inputClass = isAutoFilled ? "bg-green-50 border-green-300 text-green-800 font-medium" : "border-gray-300 text-gray-700 focus:ring-violet-500 focus:border-violet-500";
+                        const iconHtml = isAutoFilled ? `<div class="absolute right-3 top-9 text-green-500" title="Auto-filled from context"><i class="fas fa-check-circle"></i></div>` : '';
+
+                        container.innerHTML += `
+                            <div class="relative group">
+                                <label for="var-${variable}" class="block text-sm font-semibold text-gray-700 mb-1">${readableLabel}</label>
+                                <input type="text" id="var-${variable}" name="${variable}" value="${autoFillValue || ''}"
+                                    class="block w-full rounded-md shadow-sm sm:text-sm p-2.5 border transition-all ${inputClass}"
+                                    required oninput="updateTemplatePreview()">
+                                ${iconHtml}
+                                ${isAutoFilled ? `<p class="text-[10px] text-green-600 mt-1">Auto-filled. You can edit this.</p>` : ''}
+                            </div>
+                        `;
+                    });
                 }
 
-                // D. Dynamic Buttons
+                // D. Dynamic Buttons Input
                 const btnContainer = document.getElementById('button-vars-container');
                 btnContainer.innerHTML = '';
                 if (hasDynamicButtons) {
                     btnContainer.classList.remove('hidden');
-                    btnContainer.innerHTML = '<h4 class="text-xs font-bold text-gray-500 uppercase">Button Links</h4>';
+                    btnContainer.innerHTML = '<h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dynamic Links</h4>';
                     dynamicButtons.forEach((btn, index) => {
-                        // Assuming only one variable {{1}} at the end usually
                         btnContainer.innerHTML += `
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Link Suffix for: "${btn.text}"</label>
-                                <p class="text-xs text-gray-400 truncate mb-1">${btn.url}</p>
-                                <input type="text" name="button_var_${index}" class="mt-1 w-full p-2 border border-gray-300 rounded-md" required placeholder="e.g. 12345 (replaces {{1}})">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Link Suffix for: "${btn.text}"</label>
+                                <p class="text-xs text-gray-400 truncate mb-1 bg-gray-50 p-1 rounded font-mono">${btn.url}</p>
+                                <input type="text" name="button_var_${index}" class="block w-full rounded-md border-gray-300 shadow-sm sm:text-sm p-2.5 focus:ring-violet-500 focus:border-violet-500" required placeholder="e.g. 12345 (replaces {{1}})">
                             </div>`;
                     });
                 } else {
@@ -5010,16 +5209,70 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 }
 
                 openModal('fillTemplateVariablesModal');
+
+                // Trigger initial preview update to show placeholders or auto-filled values
+                setTimeout(updateTemplatePreview, 100);
+
             } else {
                 // Simple Text-Only Template
-                // No variables, just fill the input
+                // No variables, just fill the input directly in the chat bar
                 const input = document.getElementById('messageInput');
                 input.value = body;
                 input.focus();
                 input.style.height = 'auto';
                 input.style.height = input.scrollHeight + 'px';
+                // Also trigger preview in chat bar if needed? No, standard behavior.
             }
         }
+
+        function updateTemplatePreview() {
+            // Get raw template data
+            const templateData = JSON.parse(document.getElementById('templateBodyToFill').value || '{}');
+            const formData = new FormData(document.getElementById('fillVariablesForm'));
+
+            // 1. Update Body
+            let bodyText = templateData.body || '';
+            const variableRegex = /{{\s*([0-9]+|[a-zA-Z0-9_]+)\s*}}/g;
+
+            // Find unique variables in body
+            const bodyMatches = [...bodyText.matchAll(variableRegex)];
+            const bodyVariables = [...new Set(bodyMatches.map(m => m[1]))];
+            const variablesMap = templateData.variables || [];
+
+            bodyVariables.forEach(v => {
+                let val = formData.get(v); // Get value from input
+
+                // If empty, use a placeholder name
+                if (!val) {
+                    if (!isNaN(v) && variablesMap[v-1]) {
+                        val = `[${variablesMap[v-1].replace(/_/g, ' ')}]`;
+                    } else {
+                        val = `{{${v}}}`;
+                    }
+                }
+
+                // Replace all occurrences (global replace)
+                // Escape special regex chars in 'v' just in case, though usually alphanumeric
+                bodyText = bodyText.split(`{{${v}}}`).join(val);
+                // Handle cases where spacing might vary slightly if regex was loose, but split uses exact string
+            });
+            document.getElementById('preview-body-text').textContent = bodyText;
+
+            // 2. Update Header (if Text)
+            if ((templateData.header_type || 'TEXT') === 'TEXT' && templateData.header) {
+                let headerText = templateData.header;
+                const headerMatches = [...headerText.matchAll(variableRegex)];
+                const headerVariables = [...new Set(headerMatches.map(m => m[1]))];
+
+                headerVariables.forEach(v => {
+                    let val = formData.get(`header_var_${v}`);
+                    if (!val) val = `{{${v}}}`;
+                    headerText = headerText.split(`{{${v}}}`).join(val);
+                });
+                document.getElementById('preview-header-text').textContent = headerText;
+            }
+        }
+
 
         function selectConversation(id, name, phone, status, assignee, profileImage = null, lastContactMessageAt = null, closedByName = null, closedAt = null) {
             if (activeChatInterval) clearInterval(activeChatInterval);
@@ -5606,6 +5859,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             if (data && data.success) {
                 const contact = data.contact;
+                window.currentContact = contact; // Store globally for Auto-Fill
                 document.getElementById('crm-name').textContent = contact.name || 'Unknown';
                 document.getElementById('crm-phone').textContent = contact.phone_number || 'No phone';
                 document.getElementById('crm-avatar').textContent = (contact.name || '?').charAt(0).toUpperCase();
@@ -7273,7 +7527,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const type = document.getElementById('templateHeaderType').value;
             const textContainer = document.getElementById('header-text-container');
             const mediaHint = document.getElementById('header-media-hint');
-            
+
             if (type === 'TEXT') {
                 textContainer.classList.remove('hidden');
                 mediaHint.classList.add('hidden');
@@ -7295,15 +7549,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 document.getElementById('template-modal-title').textContent = 'Edit Template';
                 form.querySelector('#templateId').value = template.id;
                 form.querySelector('#templateName').value = template.name;
-                
+
                 // Header Logic
                 const headerType = template.header_type || (template.header ? 'TEXT' : 'NONE');
                 document.getElementById('templateHeaderType').value = headerType;
                 form.querySelector('#templateHeader').value = template.header || '';
-                
+
                 form.querySelector('#templateBody').value = template.body;
                 form.querySelector('#templateFooter').value = template.footer || '';
-                
+
                 // Populate Buttons
                 if (template.buttons_data && Array.isArray(template.buttons_data)) {
                     template.buttons_data.forEach(btn => addTemplateButton(btn));
@@ -8549,7 +8803,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                             if (mediaFile) {
                                 // Temporary loading state
-                                const submitBtn = form.querySelector('button[type="submit"]');
+                                const submitBtn = document.querySelector('button[type="submit"][form="fillVariablesForm"]');
                                 const originalText = submitBtn.textContent;
                                 submitBtn.textContent = 'Uploading Media...';
                                 submitBtn.disabled = true;
@@ -8660,7 +8914,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         payload.content = previewText;
 
                         // Send Request with Loading State
-                        const mainSubmitBtn = form.querySelector('button[type="submit"]');
+                        const mainSubmitBtn = document.querySelector('button[type="submit"][form="fillVariablesForm"]');
                         const originalBtnText = mainSubmitBtn.textContent;
                         mainSubmitBtn.textContent = 'Sending...';
                         mainSubmitBtn.disabled = true;
@@ -8677,7 +8931,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 // Reset hidden containers
                                 document.getElementById('header-media-container').classList.add('hidden');
                                 document.getElementById('button-vars-container').classList.add('hidden');
-                                loadMessages(currentConversationId, document.getElementById('chat-partner-name').textContent, 1, false);
+
+                                const contactNameEl = document.getElementById('chat-partner-name');
+                                const contactName = contactNameEl ? contactNameEl.textContent : 'Unknown';
+                                loadMessages(currentConversationId, contactName, 1, false);
                             } else {
                                 alert('Error: ' + (result ? result.message : 'Unknown error'));
                             }
@@ -8739,7 +8996,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         const variableRegex = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
                         const found = bodyText.match(variableRegex) || [];
                         const variables = [...new Set(found.map(v => v.replace(/{{|}}/g, '').trim()))];
-                        
+
                         // Parse Buttons
                         const buttons = [];
                         const buttonRows = form.querySelectorAll('.button-row');
@@ -8754,26 +9011,26 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                         const isUpdating = !!form.querySelector('#templateId').value;
                         const endpoint = isUpdating ? 'update_template.php' : 'add_template.php';
-                        
+
                         // Construct Quick Replies CSV for backward compatibility (Optional, can be empty)
                         const quickRepliesCSV = buttons.filter(b => b.type === 'QUICK_REPLY').map(b => b.text).join(',');
 
-                        result = await fetchApi(endpoint, { 
-                            method: 'POST', 
-                            body: { 
-                                id: form.querySelector('#templateId').value, 
-                                name: form.querySelector('#templateName').value, 
+                        result = await fetchApi(endpoint, {
+                            method: 'POST',
+                            body: {
+                                id: form.querySelector('#templateId').value,
+                                name: form.querySelector('#templateName').value,
                                 category: form.querySelector('#templateCategory').value,
                                 header_type: form.querySelector('#templateHeaderType').value,
-                                header: form.querySelector('#templateHeader').value, 
-                                body: bodyText, 
-                                footer: form.querySelector('#templateFooter').value, 
+                                header: form.querySelector('#templateHeader').value,
+                                body: bodyText,
+                                footer: form.querySelector('#templateFooter').value,
                                 quick_replies: quickRepliesCSV, // Legacy support
                                 buttons: buttons, // New structure
-                                variables: variables 
-                            } 
+                                variables: variables
+                            }
                         });
-                        
+
                         if(result && result.status === 'success') { closeModal('addTemplateModal'); form.reset(); loadTemplates(); } else if (result) { alert('Error: ' + result.message); }
                         break;
                     }
@@ -9321,6 +9578,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         document.addEventListener('DOMContentLoaded', async () => {
             renderAllModals();
             await initializeAppSettings();
+            initializeUser(); // Fire and forget
             setupEventListeners();
             setupThemeSwitcher();
 
