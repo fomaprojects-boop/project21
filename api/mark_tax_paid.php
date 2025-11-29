@@ -20,8 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $tax_type = $_POST['tax_type'] ?? ''; // 'VAT' or 'WHT'
 $amount = $_POST['amount'] ?? 0;
-$month = (int)date('m'); // Paying for current month (which is usually due next month)
-$year = (int)date('Y');
 
 if (!in_array($tax_type, ['VAT', 'WHT'])) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid tax type']);
@@ -29,23 +27,50 @@ if (!in_array($tax_type, ['VAT', 'WHT'])) {
 }
 
 try {
-    // Check if already exists
-    $check_sql = "SELECT id FROM monthly_tax_status WHERE tax_type = ? AND month = ? AND year = ?";
-    $stmt = $pdo->prepare($check_sql);
-    $stmt->execute([$tax_type, $month, $year]);
-    $existing = $stmt->fetch();
+    $current_month = (int)date('m');
+    $current_year = (int)date('Y');
 
-    if ($existing) {
+    // Calculate Previous Month
+    $prev_month = $current_month - 1;
+    $prev_year = $current_year;
+    if ($prev_month == 0) {
+        $prev_month = 12;
+        $prev_year = $current_year - 1;
+    }
+
+    // Smart Logic: Check if Previous Month is unpaid. If so, pay that (Liability).
+    // Otherwise, pay Current Month (Accruing/Early).
+
+    $check_sql = "SELECT id, is_paid FROM monthly_tax_status WHERE tax_type = ? AND month = ? AND year = ?";
+    $stmt = $pdo->prepare($check_sql);
+    $stmt->execute([$tax_type, $prev_month, $prev_year]);
+    $prev_record = $stmt->fetch();
+
+    if (!$prev_record || !$prev_record['is_paid']) {
+        // Target is Previous Month
+        $target_month = $prev_month;
+        $target_year = $prev_year;
+    } else {
+        // Target is Current Month
+        $target_month = $current_month;
+        $target_year = $current_year;
+    }
+
+    // Now Insert or Update the Target Month
+    $stmt->execute([$tax_type, $target_month, $target_year]); // Check target existence
+    $target_record = $stmt->fetch();
+
+    if ($target_record) {
         $sql = "UPDATE monthly_tax_status SET is_paid = 1, amount_paid = ?, date_paid = NOW() WHERE id = ?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$amount, $existing['id']]);
+        $stmt->execute([$amount, $target_record['id']]);
     } else {
         $sql = "INSERT INTO monthly_tax_status (tax_type, month, year, amount_paid, date_paid, is_paid) VALUES (?, ?, ?, ?, NOW(), 1)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$tax_type, $month, $year, $amount]);
+        $stmt->execute([$tax_type, $target_month, $target_year, $amount]);
     }
 
-    echo json_encode(['status' => 'success', 'message' => 'Tax marked as paid successfully.']);
+    echo json_encode(['status' => 'success', 'message' => "Tax ($tax_type) for $target_month/$target_year marked as paid."]);
 
 } catch (PDOException $e) {
     http_response_code(500);
