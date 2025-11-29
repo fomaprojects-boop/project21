@@ -6,7 +6,7 @@ require_once __DIR__ . '/db.php';
 function get_complete_financial_data($year, $manual_inputs = []) {
     // 1. Get Base Data
     $data = calculate_base_financials($year);
-    
+
     // 2. Incorporate Manual Inputs
     $data = apply_manual_adjustments($data, $year, $manual_inputs);
 
@@ -14,44 +14,56 @@ function get_complete_financial_data($year, $manual_inputs = []) {
     $settings = get_settings();
     $target_currency = $settings['default_currency'] ?? 'TZS';
     $rate = $settings['exchange_rate'] ?? 1.0;
-    
+
     if ($target_currency !== 'TZS' && $rate > 0 && $rate != 1.0) {
         $data = convert_all_monetary_values($data, $rate);
     }
-    
+
     return $data;
 }
 
 function calculate_base_financials($target_year) {
     global $pdo;
-    
+
     $years = [$target_year, $target_year - 1];
     $summary = [];
     $balance_sheet = [];
     $cash_flow = [];
     $ppe_movement = [];
-    $investments = fetch_financial_investments(); 
+    $investments = fetch_financial_investments();
+
+    // Fetch settings for Tax Logic (Currency Awareness)
+    $settings = get_settings();
+    $sys_currency = $settings['default_currency'] ?? 'TZS';
+    $exch_rate = $settings['exchange_rate'] ?? 1.0;
 
     foreach ($years as $y) {
         // A. Income Statement Components
-        // Revenue is now Net of VAT (Total Paid - VAT Component)
-        $revenue = calculate_net_revenue($y); 
-        $expenses = calculate_expenses_breakdown($y);
+        $revenue = calculate_net_revenue($y);
+        $expenses = calculate_expenses_breakdown($y); // Returns Gross Payroll
         $depreciation_data = calculate_depreciation_and_ppe($y);
 
         $cogs = $expenses['cogs_total'];
-        $opex = $expenses['opex_total'];
+        $opex = $expenses['opex_total']; // Includes Gross Payroll
         $depreciation_charge = $depreciation_data['total_charge'];
-        
-        $interest = 0; 
+
+        $interest = 0;
 
         $gross_profit = $revenue - $cogs;
         $operating_profit = $gross_profit - $opex - $depreciation_charge;
         $profit_before_tax = $operating_profit - $interest;
-        
-        // Tax Calculation
-        $tax_expense = ($profit_before_tax > 0) ? $profit_before_tax * 0.30 : 0;
+
+        // Tax Calculation (TRA Logic - Currency Aware)
+        $tax_data = calculate_income_tax($profit_before_tax, $sys_currency, $exch_rate);
+        $tax_expense = $tax_data['tax_amount'];
         $net_profit = $profit_before_tax - $tax_expense;
+
+        // -- Tax Payments Logic --
+        // 1. Provisional Tax (Income Tax) - Paid Quarterly via tax_payments
+        $provisional_tax_paid = calculate_provisional_tax_paid($y);
+
+        // 2. VAT Paid - Paid Monthly via monthly_tax_status
+        $vat_paid = calculate_vat_paid($y);
 
         $summary[$y] = [
             'total_revenue' => $revenue,
@@ -64,21 +76,24 @@ function calculate_base_financials($target_year) {
             'profit_before_tax' => $profit_before_tax,
             'income_tax_expense' => $tax_expense,
             'net_profit_after_tax' => $net_profit,
-            'expense_breakdown' => $expenses['breakdown']
+            'expense_breakdown' => $expenses['breakdown'],
+            'tax_computation' => $tax_data,
+            'provisional_tax_paid' => $provisional_tax_paid
         ];
-        
+
         $ppe_movement[$y] = $depreciation_data['movement'];
 
         // B. Balance Sheet Components
         $ar = calculate_accounts_receivable($y);
         $ap = calculate_accounts_payable($y);
         $cash = calculate_cash_position($y);
-        
-        $tax_paid = calculate_tax_paid($y);
-        $tax_liability_net = $tax_expense - $tax_paid;
-        
-        $tax_payable = ($tax_liability_net > 0) ? $tax_liability_net : 0;
-        $tax_receivable = ($tax_liability_net < 0) ? abs($tax_liability_net) : 0;
+
+        // Liabilities
+        $income_tax_liability = $tax_expense - $provisional_tax_paid;
+        $tax_payable = ($income_tax_liability > 0) ? $income_tax_liability : 0;
+        $tax_receivable = ($income_tax_liability < 0) ? abs($income_tax_liability) : 0;
+
+        $vat_liability = calculate_vat_liability($y); // Collected - Paid
 
         $net_ppe = $depreciation_data['net_book_value'];
         $financial_investments = calculate_investment_value($y);
@@ -86,13 +101,13 @@ function calculate_base_financials($target_year) {
         $retained_earnings = calculate_retained_earnings_cumulative($y);
         $share_capital = 0;
 
-        // Deferred Income Logic:
-        // We have AR (Unpaid Invoices). Since Revenue is Cash Basis, this AR is not yet Income.
-        // We record it as a Liability to balance the Asset side.
-        $deferred_income = $ar; 
+        $deferred_income = $ar;
+
+        // Payroll Liabilities (Cumulative Gross - Cumulative Net)
+        $payroll_liabilities = calculate_payroll_liabilities($y);
 
         $total_assets = $net_ppe + $financial_investments + $ar + $cash + $tax_receivable;
-        
+
         // Negative Cash Handling
         $shareholder_loan = 0;
         if ($cash < 0) {
@@ -102,8 +117,11 @@ function calculate_base_financials($target_year) {
         }
 
         $total_equity = $share_capital + $retained_earnings;
-        $total_liabilities = $ap + $tax_payable + $shareholder_loan + $deferred_income; 
-        
+        // Combine Tax Payable (Income Tax) and VAT Liability
+        $total_tax_liability = $tax_payable + $vat_liability;
+
+        $total_liabilities = $ap + $total_tax_liability + $shareholder_loan + $deferred_income + $payroll_liabilities;
+
         $balance_sheet[$y] = [
             'net_ppe' => $net_ppe,
             'financial_investments' => $financial_investments,
@@ -115,7 +133,10 @@ function calculate_base_financials($target_year) {
             'share_capital' => $share_capital,
             'retained_earnings' => $retained_earnings,
             'accounts_payable' => $ap,
-            'tax_payable' => $tax_payable,
+            'payroll_liabilities' => $payroll_liabilities,
+            'tax_payable' => $total_tax_liability,
+            'income_tax_payable' => $tax_payable,
+            'vat_liability' => $vat_liability,
             'shareholder_loan' => $shareholder_loan,
             'deferred_income' => $deferred_income,
             'loans_payable' => 0,
@@ -126,9 +147,9 @@ function calculate_base_financials($target_year) {
         $cash_flow[$y] = [
             'profit_before_tax' => $profit_before_tax,
             'depreciation_add_back' => $depreciation_charge,
-            'tax_paid' => $tax_paid,
-            'increase_in_ar' => 0, 
-            'increase_in_ap' => 0, 
+            'tax_paid' => $provisional_tax_paid + $vat_paid, // Outflow includes VAT paid
+            'increase_in_ar' => 0,
+            'increase_in_ap' => 0,
             'additions_ppe' => $depreciation_data['additions'],
             'purchase_investments' => calculate_investment_purchases($y),
             'proceeds_shares' => 0,
@@ -142,38 +163,49 @@ function calculate_base_financials($target_year) {
         'cash_flow_data' => $cash_flow,
         'equity_data' => [],
         'ppe_movement' => $ppe_movement,
-        'investment_details' => $investments
+        'investment_details' => $investments,
+        'ppe_additions_detail' => get_ppe_additions_detail($target_year)
     ];
 }
 
 function apply_manual_adjustments($data, $target_year, $manual) {
     $y = $target_year;
-    
+
     // 1. Income Statement Adjustments
     $data['summary_data'][$y]['interest_expense'] = $manual['interest_expense'];
     $data['summary_data'][$y]['profit_before_tax'] -= $manual['interest_expense'];
-    
+
     $pbt = $data['summary_data'][$y]['profit_before_tax'];
-    $tax = ($pbt > 0) ? $pbt * 0.30 : 0;
+
+    // Re-calculate tax with manual adjustments
+    $settings = get_settings();
+    $sys_currency = $settings['default_currency'] ?? 'TZS';
+    $exch_rate = $settings['exchange_rate'] ?? 1.0;
+
+    $tax_data = calculate_income_tax($pbt, $sys_currency, $exch_rate);
+    $tax = $tax_data['tax_amount'];
+
     $data['summary_data'][$y]['income_tax_expense'] = $tax;
     $data['summary_data'][$y]['net_profit_after_tax'] = $pbt - $tax;
-    
+    $data['summary_data'][$y]['tax_computation'] = $tax_data;
+
     // Update Retained Earnings
+    // Previous Retained Earnings + Current Net Profit
     $new_retained_earnings = $data['balance_sheet_data'][$y-1]['retained_earnings'] + $data['summary_data'][$y]['net_profit_after_tax'];
     $data['balance_sheet_data'][$y]['retained_earnings'] = $new_retained_earnings;
-    
+
     // 2. Balance Sheet Adjustments
     $data['balance_sheet_data'][$y]['loans_payable'] = $manual['bank_loans'];
-    
+
     $share_capital_value = $manual['number_of_shares'] * $manual['par_value'];
     $cash_injection = $share_capital_value + $manual['bank_loans'] - $manual['interest_expense'];
-    
+
     $original_cash = $data['balance_sheet_data'][$y]['cash_position'];
     $shareholder_loan = $data['balance_sheet_data'][$y]['shareholder_loan'];
-    
+
     $real_cash = ($original_cash > 0 ? $original_cash : -$shareholder_loan);
     $final_cash = $real_cash + $cash_injection;
-    
+
     if ($final_cash >= 0) {
         $data['balance_sheet_data'][$y]['cash_position'] = $final_cash;
         $data['balance_sheet_data'][$y]['shareholder_loan'] = 0;
@@ -181,26 +213,25 @@ function apply_manual_adjustments($data, $target_year, $manual) {
         $data['balance_sheet_data'][$y]['cash_position'] = 0;
         $data['balance_sheet_data'][$y]['shareholder_loan'] = abs($final_cash);
     }
-    
+
     $data['balance_sheet_data'][$y]['share_capital'] = $share_capital_value;
     $data['balance_sheet_data'][$y]['equity'] = $share_capital_value + $new_retained_earnings;
 
     $bs = $data['balance_sheet_data'][$y];
     $data['balance_sheet_data'][$y]['total_assets'] = $bs['net_ppe'] + $bs['financial_investments'] + $bs['accounts_receivable'] + $bs['tax_receivable'] + $bs['cash_position'];
-    $data['balance_sheet_data'][$y]['total_liabilities_and_equity'] = $bs['equity'] + $bs['accounts_payable'] + $bs['tax_payable'] + $bs['shareholder_loan'] + $bs['loans_payable'] + $bs['deferred_income'];
+    $data['balance_sheet_data'][$y]['total_liabilities_and_equity'] = $bs['equity'] + $bs['accounts_payable'] + $bs['payroll_liabilities'] + $bs['tax_payable'] + $bs['shareholder_loan'] + $bs['loans_payable'] + $bs['deferred_income'];
 
-    // 3. Cash Flow Adjustments
     $cf = &$data['cash_flow_data'][$y];
     $cf_prev = $data['cash_flow_data'][$y-1];
     $bs_prev = $data['balance_sheet_data'][$y-1];
-    
+
     $cf['profit_before_tax'] = $data['summary_data'][$y]['profit_before_tax'];
     $cf['increase_in_ap'] = $data['balance_sheet_data'][$y]['accounts_payable'] - $bs_prev['accounts_payable'];
     $cf['proceeds_shares'] = $share_capital_value;
     $cf['proceeds_borrowings'] = $manual['bank_loans'];
-    
+
     $cf['operating_activities'] = $cf['profit_before_tax'] + $cf['depreciation_add_back'] - $cf['tax_paid'] + $cf['increase_in_ap'];
-    $cf['investing_activities'] = -($cf['additions_ppe']) - ($cf['purchase_investments']);
+    $cf['investing_activities'] = -($cf['additions_ppe']) -($cf['purchase_investments']);
     $cf['financing_activities'] = $cf['proceeds_shares'] + $cf['proceeds_borrowings'];
     $cf['net_increase_in_cash'] = $cf['operating_activities'] + $cf['investing_activities'] + $cf['financing_activities'];
 
@@ -218,19 +249,89 @@ function apply_manual_adjustments($data, $target_year, $manual) {
 
 // --- Helper Calculations ---
 
-// NEW: Calculate Net Revenue (Paid Amounts - VAT)
+function calculate_income_tax($profit, $currency = 'TZS', $rate = 1.0) {
+    if ($profit <= 0) {
+        return ['tax_amount' => 0, 'method' => 'None', 'rate' => '0%', 'details' => 'Loss detected'];
+    }
+
+    $settings = get_settings();
+    $corp_rate = isset($settings['corporate_tax_rate']) ? floatval($settings['corporate_tax_rate']) : 0;
+
+    if ($corp_rate > 0) {
+        // Corporate Flat Rate
+        $tax = $profit * ($corp_rate / 100);
+        return [
+            'tax_amount' => $tax,
+            'method' => 'Corporate Tax Rate',
+            'rate' => $corp_rate . '%',
+            'details' => 'Flat rate applied'
+        ];
+    } else {
+        // TRA Resident Individual Rates (Annualized 2024/2025)
+
+        // Convert profit to TZS for calculation
+        $profit_tzs = $profit;
+        if ($currency !== 'TZS' && $rate > 0) {
+            $profit_tzs = $profit * $rate;
+        }
+
+        $tax_tzs = 0;
+        $details = [];
+
+        // Band 1
+        if ($profit_tzs > 3240000) {
+            $taxable = min($profit_tzs, 6240000) - 3240000;
+            $t = $taxable * 0.08;
+            $tax_tzs += $t;
+            $details[] = "Band 3.24M-6.24M (8%): " . number_format($t, 2);
+        }
+
+        // Band 2
+        if ($profit_tzs > 6240000) {
+             $taxable = min($profit_tzs, 9120000) - 6240000;
+             $t = $taxable * 0.20;
+             $tax_tzs += $t;
+             $details[] = "Band 6.24M-9.12M (20%): " . number_format($t, 2);
+        }
+
+        // Band 3
+        if ($profit_tzs > 9120000) {
+             $taxable = min($profit_tzs, 12000000) - 9120000;
+             $t = $taxable * 0.25;
+             $tax_tzs += $t;
+             $details[] = "Band 9.12M-12M (25%): " . number_format($t, 2);
+        }
+
+        // Band 4
+        if ($profit_tzs > 12000000) {
+            $taxable = $profit_tzs - 12000000;
+            $t = $taxable * 0.30;
+            $tax_tzs += $t;
+            $details[] = "Band >12M (30%): " . number_format($t, 2);
+        }
+
+        // Convert Tax back to Base Currency
+        $final_tax = $tax_tzs;
+        if ($currency !== 'TZS' && $rate > 0) {
+            $final_tax = $tax_tzs / $rate;
+        }
+
+        return [
+            'tax_amount' => $final_tax,
+            'method' => 'TRA Individual Rates (2024/25)',
+            'rate' => 'Graduated (TZS Basis)',
+            'details' => implode(' | ', $details)
+        ];
+    }
+}
+
 function calculate_net_revenue($year) {
     global $pdo;
-    // Formula: SUM( PaidAmount / (1 + (TaxRate / 100)) )
-    // This extracts the Net Revenue from the Gross Payment.
-    // Using COALESCE to handle null tax_rates as 0%.
-    // Using 'invoices' table to capture all payments (legacy and new).
-    $sql = "SELECT SUM(amount_paid / (1 + (COALESCE(tax_rate, 0) / 100))) 
-            FROM invoices 
-            WHERE status != 'cancelled' 
-            AND amount_paid > 0 
+    $sql = "SELECT SUM(amount_paid / (1 + (COALESCE(tax_rate, 0) / 100)))
+            FROM invoices
+            WHERE status != 'cancelled'
+            AND amount_paid > 0
             AND YEAR(issue_date) = ?";
-            
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$year]);
     return (float)$stmt->fetchColumn();
@@ -245,15 +346,16 @@ function calculate_expenses_breakdown($year) {
     $stmt = $pdo->prepare("SELECT expense_type, amount FROM direct_expenses WHERE YEAR(date) = ? AND ((type = 'Claim' AND status = 'Approved') OR (type = 'Requisition' AND status = 'Paid'))");
     $stmt->execute([$year]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     $stmt2 = $pdo->prepare("SELECT service_type as expense_type, amount FROM payout_requests WHERE YEAR(processed_at) = ? AND status IN ('Approved', 'Paid')");
     $stmt2->execute([$year]);
     $rows = array_merge($rows, $stmt2->fetchAll(PDO::FETCH_ASSOC));
 
-    $stmt3 = $pdo->prepare("SELECT 'Payroll' as expense_type, SUM(pe.basic_salary + pe.allowances) as amount FROM payroll_entries pe JOIN payroll_batches pb ON pe.batch_id = pb.id WHERE pb.status = 'Paid' AND pb.year = ? GROUP BY expense_type");
+    // Ensure we capture GROSS salary (Basic + Allowances)
+    $stmt3 = $pdo->prepare("SELECT 'Salaries & Wages' as expense_type, SUM(pe.basic_salary + pe.allowances) as amount FROM payroll_entries pe JOIN payroll_batches pb ON pe.batch_id = pb.id WHERE pb.status = 'Paid' AND pb.year = ? GROUP BY expense_type");
     $stmt3->execute([$year]);
     $payroll = $stmt3->fetch(PDO::FETCH_ASSOC);
-    if ($payroll) $rows[] = $payroll;
+    if ($payroll && $payroll['amount'] > 0) $rows[] = $payroll;
 
     foreach ($rows as $row) {
         $type = strtolower(trim($row['expense_type']));
@@ -262,7 +364,7 @@ function calculate_expenses_breakdown($year) {
             $cogs_total += $amt;
             $breakdown['cogs'][$type] = ($breakdown['cogs'][$type] ?? 0) + $amt;
         } else {
-            if (in_array($type, ['shares', 'bonds', 'treasury_bills', 'machinery', 'equipment', 'vehicle', 'furniture', 'building'])) continue; 
+            if (in_array($type, ['shares', 'bonds', 'treasury_bills', 'machinery', 'equipment', 'vehicle', 'furniture', 'building'])) continue;
             $opex_total += $amt;
             $breakdown['opex'][$type] = ($breakdown['opex'][$type] ?? 0) + $amt;
         }
@@ -270,13 +372,86 @@ function calculate_expenses_breakdown($year) {
     return ['cogs_total' => $cogs_total, 'opex_total' => $opex_total, 'breakdown' => $breakdown];
 }
 
+function calculate_payroll_liabilities($year) {
+    global $pdo;
+    // Cumulative Unpaid Payroll Liabilities up to this year
+    // Liability = (Gross - Net)
+    $stmt = $pdo->prepare("SELECT SUM((pe.basic_salary + pe.allowances) - pe.net_salary)
+                           FROM payroll_entries pe
+                           JOIN payroll_batches pb ON pe.batch_id = pb.id
+                           WHERE pb.status = 'Paid' AND pb.year <= ?");
+    $stmt->execute([$year]);
+    return (float)$stmt->fetchColumn();
+}
+
+function calculate_provisional_tax_paid($year) {
+    global $pdo;
+    // Sum of payments from tax_payments (Provisional Income Tax)
+    $stmt = $pdo->prepare("SELECT SUM(amount) FROM tax_payments WHERE financial_year = ?");
+    $stmt->execute([$year]);
+    return (float)$stmt->fetchColumn();
+}
+
+function calculate_vat_paid($year) {
+    global $pdo;
+    // Sum of VAT payments from monthly_tax_status
+    $stmt = $pdo->prepare("SELECT SUM(amount_paid) FROM monthly_tax_status WHERE tax_type = 'VAT' AND year = ? AND is_paid = 1");
+    $stmt->execute([$year]);
+    return (float)$stmt->fetchColumn();
+}
+
+function calculate_vat_liability($year) {
+    global $pdo;
+    // VAT Collected (Gross - Net) from Invoices
+    $stmt = $pdo->prepare("SELECT SUM(amount_paid - (amount_paid / (1 + (COALESCE(tax_rate, 0) / 100))))
+            FROM invoices
+            WHERE status != 'cancelled'
+            AND amount_paid > 0
+            AND YEAR(issue_date) <= ?");
+    $stmt->execute([$year]);
+    $vat_collected = (float)$stmt->fetchColumn();
+
+    // VAT Paid (via monthly_tax_status)
+    $stmt2 = $pdo->prepare("SELECT SUM(amount_paid) FROM monthly_tax_status WHERE tax_type = 'VAT' AND year <= ? AND is_paid = 1");
+    $stmt2->execute([$year]);
+    $vat_paid = (float)$stmt2->fetchColumn();
+
+    return max(0, $vat_collected - $vat_paid);
+}
+
+function get_ppe_additions_detail($year) {
+    global $pdo;
+    $types = ['machinery', 'equipment', 'vehicle', 'furniture', 'building', 'computer'];
+    $placeholders = implode(',', array_fill(0, count($types), '?'));
+
+    // Fetch Items purchased in Current Year
+    $sql = "SELECT expense_type as name, amount as cost, date as date_acquired FROM direct_expenses WHERE status IN ('Approved', 'Paid') AND expense_type IN ($placeholders) AND YEAR(date) = ?
+            UNION ALL
+            SELECT service_type as name, amount as cost, processed_at as date_acquired FROM payout_requests WHERE status IN ('Approved', 'Paid') AND service_type IN ($placeholders) AND YEAR(processed_at) = ?
+            UNION ALL
+            SELECT category as name, purchase_cost as cost, purchase_date as date_acquired FROM assets WHERE YEAR(purchase_date) = ?";
+
+    $params = array_merge($types, [$year], $types, [$year], [$year]);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $current = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fetch Items purchased in Previous Year
+    $prev_year = $year - 1;
+    $params_prev = array_merge($types, [$prev_year], $types, [$prev_year], [$prev_year]);
+    $stmt->execute($params_prev);
+    $prev = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    return ['current_year' => $current, 'prev_year' => $prev];
+}
+
 function calculate_depreciation_and_ppe($year) {
     global $pdo;
     $types = ['machinery', 'equipment', 'vehicle', 'furniture', 'building', 'computer'];
     $placeholders = implode(',', array_fill(0, count($types), '?'));
-    
+
     $sql = "SELECT id, expense_type, amount, date as date_acquired FROM direct_expenses WHERE status IN ('Approved', 'Paid') AND expense_type IN ($placeholders) AND YEAR(date) <= ?
-            UNION ALL 
+            UNION ALL
             SELECT id, service_type as expense_type, amount, processed_at as date_acquired FROM payout_requests WHERE status IN ('Approved', 'Paid') AND service_type IN ($placeholders) AND YEAR(processed_at) <= ?
             UNION ALL
             SELECT id, category as expense_type, purchase_cost as amount, purchase_date as date_acquired FROM assets WHERE YEAR(purchase_date) <= ?";
@@ -305,8 +480,8 @@ function calculate_depreciation_and_ppe($year) {
         if ($accum_dep_opening < $cost) {
             $months = 12;
             if ($acq_year == $year) {
-                $months = 12 - (int)$acq_date->format('m') + 1; 
-                $additions_year += $cost; 
+                $months = 12 - (int)$acq_date->format('m') + 1;
+                $additions_year += $cost;
             }
             $charge_current = ($cost * $rate * $months) / 12;
             if (($accum_dep_opening + $charge_current) > $cost) $charge_current = $cost - $accum_dep_opening;
@@ -314,7 +489,7 @@ function calculate_depreciation_and_ppe($year) {
         $total_charge += $charge_current;
         $total_cost += $cost;
         $total_accum_dep += ($accum_dep_opening + $charge_current);
-        
+
         $cat = ucfirst($asset['expense_type']);
         if (!isset($movement[$cat])) $movement[$cat] = ['opening_cost' => 0, 'additions' => 0, 'charge_for_year' => 0, 'closing_accum_dep' => 0, 'closing_nbv' => 0];
         if ($acq_year < $year) $movement[$cat]['opening_cost'] += $cost;
@@ -329,7 +504,7 @@ function calculate_depreciation_and_ppe($year) {
 function fetch_financial_investments() {
     global $pdo;
     $stmt = $pdo->prepare("
-        SELECT expense_type as investment_type, amount as purchase_cost, reference as description, date as expense_date 
+        SELECT expense_type as investment_type, amount as purchase_cost, reference as description, date as expense_date
         FROM direct_expenses WHERE status IN ('Approved','Paid') AND expense_type IN ('shares', 'bonds', 'treasury_bills')
         UNION ALL
         SELECT service_type as investment_type, amount as purchase_cost, transaction_reference as description, processed_at as expense_date
@@ -376,11 +551,11 @@ function calculate_accounts_receivable($year) {
     $stmt1 = $pdo->prepare("SELECT SUM(total_amount) FROM invoices WHERE status != 'cancelled' AND YEAR(issue_date) <= ?");
     $stmt1->execute([$year]);
     $total_invoiced = (float)$stmt1->fetchColumn();
-    
+
     $stmt2 = $pdo->prepare("SELECT SUM(amount_paid) FROM invoices WHERE YEAR(issue_date) <= ?");
     $stmt2->execute([$year]);
     $total_paid = (float)$stmt2->fetchColumn();
-    
+
     return max(0, $total_invoiced - $total_paid);
 }
 
@@ -408,23 +583,26 @@ function calculate_cash_position($year) {
     $stmt = $pdo->prepare("SELECT SUM(amount_paid) FROM invoices WHERE amount_paid > 0 AND YEAR(issue_date) <= ?");
     $stmt->execute([$year]);
     $inflow = (float)$stmt->fetchColumn();
-    
+
     $outflow = 0;
     $stmt2 = $pdo->prepare("SELECT SUM(amount) FROM direct_expenses WHERE ((type='Claim' AND status='Approved') OR (type='Requisition' AND status='Paid')) AND YEAR(date) <= ?");
     $stmt2->execute([$year]);
     $outflow += (float)$stmt2->fetchColumn();
-    
+
     $stmt3 = $pdo->prepare("SELECT SUM(amount) FROM payout_requests WHERE status IN ('Approved', 'Paid') AND YEAR(processed_at) <= ?");
     $stmt3->execute([$year]);
     $outflow += (float)$stmt3->fetchColumn();
-    
+
     $stmt4 = $pdo->prepare("SELECT SUM(pe.net_salary) FROM payroll_entries pe JOIN payroll_batches pb ON pe.batch_id = pb.id WHERE pb.status = 'Paid' AND pb.year <= ?");
     $stmt4->execute([$year]);
     $outflow += (float)$stmt4->fetchColumn();
-    
+
     $outflow += calculate_investment_purchases_cumulative($year);
-    $outflow += calculate_tax_paid($year);
-    
+
+    // Tax Outflows (Provisional + VAT)
+    $outflow += calculate_provisional_tax_paid($year);
+    $outflow += calculate_vat_paid($year);
+
     return $inflow - $outflow;
 }
 
@@ -447,14 +625,26 @@ function calculate_retained_earnings_cumulative($year) {
     global $pdo;
     $stmt = $pdo->query("SELECT MIN(YEAR(issue_date)) FROM invoices");
     $min_year = $stmt->fetchColumn();
-    $start_year = $min_year ? (int)$min_year : 2020; 
+    $start_year = $min_year ? (int)$min_year : 2020;
     $total_retained = 0;
+
+    $settings = get_settings();
+    $sys_currency = $settings['default_currency'] ?? 'TZS';
+    $exch_rate = $settings['exchange_rate'] ?? 1.0;
+
     for ($y = $start_year; $y <= $year; $y++) {
-        $rev = calculate_net_revenue($y); // Use Net Revenue
+        $rev = calculate_net_revenue($y);
         $exp = calculate_expenses_breakdown($y);
         $dep = calculate_depreciation_and_ppe($y)['total_charge'];
-        $pbt = ($rev - $exp['cogs_total']) - $exp['opex_total'] - $dep;
-        $tax = ($pbt > 0) ? $pbt * 0.30 : 0;
+
+        $cogs = $exp['cogs_total'];
+        $opex = $exp['opex_total'];
+
+        $pbt = $rev - $cogs - $opex - $dep;
+
+        $tax_data = calculate_income_tax($pbt, $sys_currency, $exch_rate);
+        $tax = $tax_data['tax_amount'];
+
         $net = $pbt - $tax;
         $total_retained += $net;
     }
@@ -463,7 +653,7 @@ function calculate_retained_earnings_cumulative($year) {
 
 function convert_all_monetary_values($data, $rate) {
     array_walk_recursive($data, function(&$value, $key) use ($rate) {
-        if (is_numeric($value) && !in_array($key, ['year', 'number_of_shares'])) { 
+        if (is_numeric($value) && !in_array($key, ['year', 'number_of_shares', 'rate', 'method', 'details'])) {
              $value = $value / $rate;
         }
     });
