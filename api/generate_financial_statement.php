@@ -94,7 +94,6 @@ try {
     $pdf->SetAutoPageBreak(TRUE, 20);
     $pdf->AddPage();
 
-    // Helper for Table Rows (Removed Note Column)
     function row($label, $val1, $val2, $is_bold = false, $bg_color = false) {
         $font_weight = $is_bold ? 'font-weight: bold;' : '';
         $bg = $bg_color ? 'background-color: #f9fafb;' : 'background-color: #ffffff;';
@@ -153,17 +152,30 @@ try {
               </thead><tbody>';
 
     $html .= '<tr><td colspan="3" style="background-color: #f3f4f6; font-weight: bold;">ASSETS</td></tr>';
-    $html .= row('Property, Plant & Equipment (Net) (Note 5)', format_accounting_number($balance_sheet_data[$year]['non_current_assets']), format_accounting_number($balance_sheet_data[$year - 1]['non_current_assets']), false, false);
-    $html .= row('Accounts Receivable', format_accounting_number($balance_sheet_data[$year]['accounts_receivable']), format_accounting_number($balance_sheet_data[$year - 1]['accounts_receivable']), false, true);
+    $html .= row('Property, Plant & Equipment (Net) (Note 5)', format_accounting_number($balance_sheet_data[$year]['net_ppe']), format_accounting_number($balance_sheet_data[$year - 1]['net_ppe']), false, false);
+    $html .= row('Financial Investments (Note 7)', format_accounting_number($balance_sheet_data[$year]['financial_investments']), format_accounting_number($balance_sheet_data[$year - 1]['financial_investments']), false, true);
+    $html .= row('Accounts Receivable', format_accounting_number($balance_sheet_data[$year]['accounts_receivable']), format_accounting_number($balance_sheet_data[$year - 1]['accounts_receivable']), false, false);
+
+    // Conditionally show Tax Receivable
+    if ($balance_sheet_data[$year]['tax_receivable'] > 0 || $balance_sheet_data[$year - 1]['tax_receivable'] > 0) {
+        $html .= row('Current Tax Receivable (Note 4)', format_accounting_number($balance_sheet_data[$year]['tax_receivable']), format_accounting_number($balance_sheet_data[$year - 1]['tax_receivable']), false, true);
+    }
+
     $html .= row('Cash and Cash Equivalents', format_accounting_number($balance_sheet_data[$year]['cash_position']), format_accounting_number($balance_sheet_data[$year - 1]['cash_position']), false, false);
     $html .= row('Total Assets', format_accounting_number($balance_sheet_data[$year]['total_assets']), format_accounting_number($balance_sheet_data[$year - 1]['total_assets']), true, true);
 
     $html .= '<tr><td colspan="3" style="background-color: #f3f4f6; font-weight: bold;">LIABILITIES AND EQUITY</td></tr>';
     $html .= row('Accounts Payable', format_accounting_number($balance_sheet_data[$year]['accounts_payable']), format_accounting_number($balance_sheet_data[$year - 1]['accounts_payable']), false, false);
     $html .= row('Tax Payable (Note 4)', format_accounting_number($balance_sheet_data[$year]['tax_payable']), format_accounting_number($balance_sheet_data[$year - 1]['tax_payable']), false, true);
-    $html .= row('Bank Loans / Long Term Liabilities (Note 6)', format_accounting_number($balance_sheet_data[$year]['loans_payable']), format_accounting_number($balance_sheet_data[$year - 1]['loans_payable']), false, false);
-    $html .= row('Total Equity', format_accounting_number($balance_sheet_data[$year]['equity']), format_accounting_number($balance_sheet_data[$year - 1]['equity']), false, true);
-    $html .= row('Total Liabilities and Equity', format_accounting_number($balance_sheet_data[$year]['total_liabilities_and_equity']), format_accounting_number($balance_sheet_data[$year - 1]['total_liabilities_and_equity']), true, false);
+
+    // Conditionally show Shareholder Loan
+    if ($balance_sheet_data[$year]['shareholder_loan'] > 0 || $balance_sheet_data[$year - 1]['shareholder_loan'] > 0) {
+        $html .= row('Shareholder Loan / Short Term Borrowing', format_accounting_number($balance_sheet_data[$year]['shareholder_loan']), format_accounting_number($balance_sheet_data[$year - 1]['shareholder_loan']), false, false);
+    }
+
+    $html .= row('Bank Loans / Long Term Liabilities (Note 6)', format_accounting_number($balance_sheet_data[$year]['loans_payable']), format_accounting_number($balance_sheet_data[$year - 1]['loans_payable']), false, true);
+    $html .= row('Total Equity', format_accounting_number($balance_sheet_data[$year]['equity']), format_accounting_number($balance_sheet_data[$year - 1]['equity']), false, false);
+    $html .= row('Total Liabilities and Equity', format_accounting_number($balance_sheet_data[$year]['total_liabilities_and_equity']), format_accounting_number($balance_sheet_data[$year - 1]['total_liabilities_and_equity']), true, true);
 
     $html .= '</tbody></table><br><br>';
 
@@ -260,9 +272,17 @@ try {
     $html .= '<table cellpadding="5"><thead><tr><th width="70%">Item</th><th width="30%">Amount (' . $currency . ')</th></tr></thead><tbody>';
     $html .= row('Profit Before Tax', format_accounting_number($summary_data[$year]['profit_before_tax']), '', false, false);
     $html .= row('Tax Rate Applied', $summary_data[$year]['tax_rate_used'], '', false, true);
-    $html .= row('Tax Liability (Expense)', format_accounting_number($summary_data[$year]['income_tax_expense']), '', true, false);
-    $html .= row('Less: Tax Payments Made', format_accounting_number($balance_sheet_data[$year]['prepaid_taxes']), '', false, true);
-    $html .= row('Net Tax Payable / (Refundable)', format_accounting_number($balance_sheet_data[$year]['tax_payable']), '', true, false);
+
+    // Check if Tax Receivable
+    if ($balance_sheet_data[$year]['tax_receivable'] > 0) {
+        $html .= row('Tax Liability (Expense)', '0.00 (Loss Carryforward)', '', true, false);
+        $html .= row('Less: Tax Payments Made', format_accounting_number($balance_sheet_data[$year]['prepaid_taxes']), '', false, true);
+        $html .= row('Tax Asset Recognized (Receivable)', format_accounting_number($balance_sheet_data[$year]['tax_receivable']), '', true, false);
+    } else {
+        $html .= row('Tax Liability (Expense)', format_accounting_number($summary_data[$year]['income_tax_expense']), '', true, false);
+        $html .= row('Less: Tax Payments Made', format_accounting_number($balance_sheet_data[$year]['prepaid_taxes']), '', false, true);
+        $html .= row('Net Tax Payable / (Refundable)', format_accounting_number($balance_sheet_data[$year]['tax_payable']), '', true, false);
+    }
     $html .= '</tbody></table>';
 
     // Note 5: PPE
@@ -295,7 +315,26 @@ try {
     $html .= '<h3>Note 6: Borrowings</h3>';
     $html .= '<table cellpadding="5"><thead><tr><th width="70%">Description</th><th width="30%">Amount (' . $currency . ')</th></tr></thead><tbody>';
     $html .= row('Bank Loans / Long Term Facilities', format_accounting_number($balance_sheet_data[$year]['loans_payable']), '', false, false);
+    if ($balance_sheet_data[$year]['shareholder_loan'] > 0) {
+        $html .= row('Shareholder Loan (Short Term Deficit Funding)', format_accounting_number($balance_sheet_data[$year]['shareholder_loan']), '', false, true);
+    }
     $html .= '</tbody></table>';
+
+    // Note 7: Financial Investments
+    $fin_investments = get_financial_investments_details($year);
+    if (!empty($fin_investments)) {
+        $html .= '<h3>Note 7: Financial Investments</h3>';
+        $html .= '<p>Financial assets held at cost (Shares, Bonds, etc.). Not depreciated.</p>';
+        $html .= '<table cellpadding="5"><thead><tr><th width="40%">Description</th><th width="30%">Type</th><th width="30%">Cost</th></tr></thead><tbody>';
+        foreach ($fin_investments as $inv) {
+            $html .= '<tr>
+                        <td style="border: 1px solid #e5e7eb;">' . htmlspecialchars($inv['description']) . '</td>
+                        <td style="border: 1px solid #e5e7eb;">' . htmlspecialchars($inv['investment_type']) . '</td>
+                        <td style="border: 1px solid #e5e7eb; text-align: right;">' . format_accounting_number($inv['purchase_cost']) . '</td>
+                      </tr>';
+        }
+        $html .= '</tbody></table>';
+    }
 
     $pdf->writeHTML($html, true, false, true, false, '');
 

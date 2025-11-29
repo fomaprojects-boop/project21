@@ -18,7 +18,6 @@ function get_complete_financial_data($year, $extra_params = []) {
     // 2. The equity data depends on the summary
     $equity_data = [];
     foreach ($summary_data as $y => $data) {
-        // Only apply manual share capital input to the current reporting year
         $cap_input = ($y == $year) ? $share_capital : 0;
         $equity_data[$y] = get_equity_data($y, $summary_data, $cap_input);
     }
@@ -52,14 +51,11 @@ function calculate_annual_net_profit($year) {
     $revenue = $stmt_rev->fetchColumn() ?: 0;
 
     // Expenses (Simplified Logic for History)
-    // We reuse the main logic function but only take the totals
     $expenses = get_expense_breakdown_by_category($year);
     $total_expenses = $expenses['cogs'] + $expenses['opex'];
 
     $depreciation = calculate_total_depreciation($year);
 
-    // Assume 0 interest for historical auto-calc unless stored.
-    // This is a limitation of not having a persistent 'financial_reports' table.
     $interest = 0;
 
     $profit_before_tax = $revenue - $total_expenses - $depreciation - $interest;
@@ -197,7 +193,6 @@ function get_financial_summary_data($year, $interest_expense_input = 0) {
     for ($i = 0; $i <= 1; $i++) {
         $current_year = $year - $i;
 
-        // For comparative year, we don't have inputs, so we assume 0 or need stored data.
         $interest_expense = ($i == 0) ? $interest_expense_input : 0;
 
         // Revenue
@@ -308,6 +303,14 @@ function calculate_ap_balance($year) {
     return $ap_total;
 }
 
+function get_financial_investments_total($year) {
+    global $pdo;
+    // Financial Investments (Shares, Bonds, etc.) are NOT depreciated.
+    $stmt = $pdo->prepare("SELECT SUM(purchase_cost) FROM investments WHERE YEAR(purchase_date) <= ?");
+    $stmt->execute([$year]);
+    return $stmt->fetchColumn() ?: 0;
+}
+
 function get_balance_sheet_data($year, $summary_data, $equity_data, $bank_loans_input = 0) {
     global $pdo;
     $balance_data = [];
@@ -318,18 +321,19 @@ function get_balance_sheet_data($year, $summary_data, $equity_data, $bank_loans_
         $bank_loans = ($i == 0) ? $bank_loans_input : 0;
 
         // ASSETS
+        // 1. PPE (Tangible Assets from 'assets' table)
         $stmt_nca = $pdo->prepare("SELECT SUM(purchase_cost) FROM assets WHERE YEAR(purchase_date) <= ?");
         $stmt_nca->execute([$current_year]);
         $gross_fixed_assets = $stmt_nca->fetchColumn() ?: 0;
         $accumulated_depreciation = calculate_accumulated_depreciation($current_year);
-        $net_fixed_assets = $gross_fixed_assets - $accumulated_depreciation;
+        $net_ppe = $gross_fixed_assets - $accumulated_depreciation;
 
-        $stmt_inv = $pdo->prepare("SELECT SUM(purchase_cost) FROM investments WHERE YEAR(purchase_date) <= ?");
-        $stmt_inv->execute([$current_year]);
-        $total_investments = $stmt_inv->fetchColumn() ?: 0;
+        // 2. Financial Investments (from 'investments' table)
+        $financial_investments = get_financial_investments_total($current_year);
 
-        $non_current_assets = $net_fixed_assets + $total_investments;
+        $non_current_assets = $net_ppe + $financial_investments;
 
+        // 3. Current Assets
         $accounts_receivable = calculate_ar_balance($date_end);
 
         // LIABILITIES
@@ -339,35 +343,68 @@ function get_balance_sheet_data($year, $summary_data, $equity_data, $bank_loans_
         $stmt_tax_paid->execute([$current_year]);
         $prepaid_taxes = $stmt_tax_paid->fetchColumn() ?: 0;
 
+        $profit_before_tax = $summary_data[$current_year]['profit_before_tax'];
         $income_tax_expense = $summary_data[$current_year]['income_tax_expense'];
-        $tax_balance = $income_tax_expense - $prepaid_taxes;
-        $income_tax_payable = ($tax_balance > 0) ? $tax_balance : 0;
-        $tax_asset = ($tax_balance < 0) ? abs($tax_balance) : 0;
 
-        $current_liabilities = $accounts_payable + $income_tax_payable;
+        // Tax Asset Logic (Loss Carryforward/Receivable)
+        if ($profit_before_tax < 0 && $prepaid_taxes > 0) {
+            // Loss Scenario: Tax Paid is an Asset
+            $tax_payable = 0;
+            $tax_receivable = $prepaid_taxes;
+        } else {
+            // Profit Scenario
+            $tax_balance = $income_tax_expense - $prepaid_taxes;
+            $tax_payable = ($tax_balance > 0) ? $tax_balance : 0;
+            $tax_receivable = ($tax_balance < 0) ? abs($tax_balance) : 0;
+        }
+
+        // Loans
+        $current_liabilities = $accounts_payable + $tax_payable;
         $non_current_liabilities = $bank_loans;
         $total_liabilities = $current_liabilities + $non_current_liabilities;
 
         // EQUITY
-        $equity = $equity_data[$current_year]['closing_balance']; // Includes Share Capital added in get_equity_data
+        $equity = $equity_data[$current_year]['closing_balance'];
 
+        // PRELIMINARY BALANCE CHECK
+        // Assets = Liabilities + Equity
+        // Cash is the plug.
+        // Total Liabilities & Equity (Target)
         $total_liabilities_and_equity = $total_liabilities + $equity;
 
-        // BALANCE CHECK
-        $total_assets_target = $total_liabilities_and_equity;
-        $other_current_assets = $accounts_receivable + $tax_asset;
+        // Known Assets
+        $other_current_assets = $accounts_receivable + $tax_receivable;
 
-        $cash_position = $total_assets_target - $non_current_assets - $other_current_assets;
+        // Cash Position Calculation
+        $cash_position = $total_liabilities_and_equity - $non_current_assets - $other_current_assets;
+
+        $shareholder_loan = 0;
+        if ($cash_position < 0) {
+            // Negative Cash is impossible. It implies Shareholder Loan / Short Term Borrowing.
+            $shareholder_loan = abs($cash_position);
+            $cash_position = 0;
+
+            // Adjust Liabilities
+            $current_liabilities += $shareholder_loan;
+            $total_liabilities += $shareholder_loan;
+            $total_liabilities_and_equity += $shareholder_loan; // Target increases to match new liability
+        }
+
         $current_assets = $other_current_assets + $cash_position;
+        $total_assets = $non_current_assets + $current_assets;
 
         $balance_data[$current_year] = [
             'current_assets' => $current_assets,
             'non_current_assets' => $non_current_assets,
-            'total_assets' => $total_assets_target,
+            'net_ppe' => $net_ppe,
+            'financial_investments' => $financial_investments,
+            'total_assets' => $total_assets,
             'accounts_receivable' => $accounts_receivable,
             'accounts_payable' => $accounts_payable,
-            'tax_payable' => $income_tax_payable,
+            'tax_payable' => $tax_payable,
+            'tax_receivable' => $tax_receivable,
             'loans_payable' => $bank_loans,
+            'shareholder_loan' => $shareholder_loan,
             'current_liabilities' => $current_liabilities,
             'non_current_liabilities' => $non_current_liabilities,
             'equity' => $equity,
@@ -390,7 +427,6 @@ function get_cash_flow_data($year, $summary_data, $balance_sheet_data) {
         // 1. Operating Activities
         $profit_before_tax = $summary_data[$current_year]['profit_before_tax'];
         $depreciation = $summary_data[$current_year]['total_depreciation'];
-        $interest_expense = $summary_data[$current_year]['interest_expense'];
 
         $ar_end = $balance_sheet_data[$current_year]['accounts_receivable'];
         $ar_start = ($i == 0) ? $balance_sheet_data[$prev_year]['accounts_receivable'] : calculate_ar_balance("$prev_year-12-31");
@@ -411,6 +447,7 @@ function get_cash_flow_data($year, $summary_data, $balance_sheet_data) {
         $stmt_assets->execute([$current_year]);
         $assets_purchased = $stmt_assets->fetchColumn() ?: 0;
 
+        // Note: Investments table handles financial investments
         $stmt_inv = $pdo->prepare("SELECT SUM(purchase_cost) FROM investments WHERE YEAR(purchase_date) = ?");
         $stmt_inv->execute([$current_year]);
         $investments_purchased = $stmt_inv->fetchColumn() ?: 0;
@@ -422,7 +459,12 @@ function get_cash_flow_data($year, $summary_data, $balance_sheet_data) {
         $loans_start = ($i == 0) ? $balance_sheet_data[$prev_year]['loans_payable'] : 0;
         $net_loans = $loans_end - $loans_start;
 
-        $financing_activities = $net_loans;
+        // Shareholder loan change
+        $sl_end = $balance_sheet_data[$current_year]['shareholder_loan'];
+        $sl_start = ($i == 0) ? $balance_sheet_data[$prev_year]['shareholder_loan'] : 0;
+        $net_sl = $sl_end - $sl_start;
+
+        $financing_activities = $net_loans + $net_sl;
 
         $cash_flow[$current_year] = [
             'profit_before_tax' => $profit_before_tax,
@@ -646,6 +688,15 @@ function get_depreciation_details($year) {
         $all_details[$current_year] = $details;
     }
     return $all_details;
+}
+
+// Add function to get Financial Investment Details for Note 7
+function get_financial_investments_details($year) {
+    global $pdo;
+    // Fetch investments up to this year
+    $stmt = $pdo->prepare("SELECT description, investment_type, quantity, purchase_cost FROM investments WHERE YEAR(purchase_date) <= ?");
+    $stmt->execute([$year]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function generate_customer_statement_pdf($customerId, $period, $output_mode = 'download', $tenantId) {
