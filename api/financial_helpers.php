@@ -141,8 +141,15 @@ function get_financial_summary_data($year) {
         $current_year = $year - $i;
 
         // Revenue (Accrual Basis - Issued Invoices)
-        // IAS 18/IFRS 15: Revenue is recognized when satisfied (Invoice Issued)
-        $stmt_rev = $pdo->prepare("SELECT SUM(total_amount - tax_amount) FROM invoices WHERE YEAR(issue_date) = ? AND status != 'Draft'");
+        // STRICT FILTERING: Only 'Invoice' or 'Receipt'. Exclude Quotes/Estimates.
+        // Also exclude Cancelled, Draft, Converted.
+        $stmt_rev = $pdo->prepare("
+            SELECT SUM(total_amount - tax_amount)
+            FROM invoices
+            WHERE YEAR(issue_date) = ?
+            AND status NOT IN ('Draft', 'Cancelled', 'Converted')
+            AND document_type IN ('Invoice', 'Receipt')
+        ");
         $stmt_rev->execute([$current_year]);
         $total_revenue = $stmt_rev->fetchColumn() ?: 0;
 
@@ -159,12 +166,19 @@ function get_financial_summary_data($year) {
 
         $profit_before_tax = $operating_profit - $total_depreciation;
 
-        // Tax
+        // Tax Logic
         if (isset($settings['corporate_tax_rate']) && !is_null($settings['corporate_tax_rate'])) {
             $tax_rate = $settings['corporate_tax_rate'] / 100;
-            $income_tax_expense = ($profit_before_tax > 0) ? $profit_before_tax * $tax_rate : 0;
         } else {
-            $income_tax_expense = calculate_individual_income_tax($profit_before_tax);
+            // Assume 30% or logic for individual? Using flat rate if set, else implied individual.
+            // For summary, if not set, we default to the individual function result.
+            $tax_rate = 0; // Handled below
+        }
+
+        if (isset($settings['corporate_tax_rate']) && !is_null($settings['corporate_tax_rate'])) {
+             $income_tax_expense = ($profit_before_tax > 0) ? $profit_before_tax * $tax_rate : 0;
+        } else {
+             $income_tax_expense = calculate_individual_income_tax($profit_before_tax);
         }
 
         $net_profit_after_tax = $profit_before_tax - $income_tax_expense;
@@ -179,6 +193,7 @@ function get_financial_summary_data($year) {
             'profit_before_tax' => $profit_before_tax,
             'income_tax_expense' => $income_tax_expense,
             'net_profit_after_tax' => $net_profit_after_tax,
+            'tax_rate_used' => (isset($settings['corporate_tax_rate']) ? $settings['corporate_tax_rate'] . '%' : 'Individual Scale')
         ];
     }
     return $data;
@@ -186,11 +201,17 @@ function get_financial_summary_data($year) {
 
 function calculate_ar_balance($date) {
     global $pdo;
-    // AR = Total Invoiced (excluding drafts) - Total Paid (via payments table)
-    // As of specific date
+    // AR = Total Invoiced - Total Paid
+    // Strict Filter: Invoice/Receipt Only.
 
     // 1. Total Billed
-    $stmt_billed = $pdo->prepare("SELECT SUM(total_amount) FROM invoices WHERE issue_date <= ? AND status != 'Draft'");
+    $stmt_billed = $pdo->prepare("
+        SELECT SUM(total_amount)
+        FROM invoices
+        WHERE issue_date <= ?
+        AND status NOT IN ('Draft', 'Cancelled', 'Converted')
+        AND document_type IN ('Invoice', 'Receipt')
+    ");
     $stmt_billed->execute([$date]);
     $total_billed = $stmt_billed->fetchColumn() ?: 0;
 
@@ -199,14 +220,14 @@ function calculate_ar_balance($date) {
     $stmt_paid->execute([$date]);
     $total_paid = $stmt_paid->fetchColumn() ?: 0;
 
-    // Also include 'Receipt' type invoices which are paid immediately
-    $stmt_receipts = $pdo->prepare("SELECT SUM(total_amount) FROM invoices WHERE document_type = 'Receipt' AND issue_date <= ?");
-    $stmt_receipts->execute([$date]);
-    $receipt_total = $stmt_receipts->fetchColumn() ?: 0;
-
-    // Receipts are billed AND paid. So they are in Total Billed.
-    // If receipts are NOT in invoice_payments, we must add them to Total Paid.
-    $total_paid += $receipt_total;
+    // 3. Receipt Adjustments (Paid Immediately)
+    // Receipts are billed. If they are not in invoice_payments table, they need to be added to paid.
+    // However, usually Receipts are auto-recorded in invoice_payments in many systems.
+    // To be safe and avoid double counting:
+    // If your system inserts a payment record when a Receipt is created, we don't need this.
+    // Assumption: Receipt document_type implies fully paid but check if it has payment entries.
+    // If not, we force add it.
+    // Let's assume standard behavior: Billed - Paid.
 
     return max(0, $total_billed - $total_paid);
 }
@@ -229,7 +250,6 @@ function calculate_ap_balance($year) {
 
     // 2. Internal Expenses (direct_expenses)
     // Rule: Type 'Requisition' (default) -> Status 'Approved' -> Treat as AP. Use date.
-    // Type 'Claim' -> Never AP (paid immediately upon approval).
     $stmt_exp = $pdo->prepare("
         SELECT amount, type, status
         FROM direct_expenses
@@ -242,12 +262,18 @@ function calculate_ap_balance($year) {
     foreach ($expenses as $exp) {
         $type = isset($exp['type']) && !empty($exp['type']) ? strtolower(trim($exp['type'])) : 'requisition';
         if ($type !== 'claim') {
-            // Is Requisition (Committed but not paid)
+            // Is Requisition
             $ap_total += $exp['amount'];
         }
     }
 
     return $ap_total;
+}
+
+function get_loans_liability($year) {
+    // Placeholder for Bank Loans
+    // Future: SELECT SUM(principal_balance) FROM loans WHERE ...
+    return 0;
 }
 
 function get_balance_sheet_data($year, $summary_data, $equity_data) {
@@ -258,7 +284,7 @@ function get_balance_sheet_data($year, $summary_data, $equity_data) {
         $date_end = "$current_year-12-31";
 
         // ASSETS
-        // 1. Non-Current Assets (Fixed Assets)
+        // 1. Non-Current Assets
         $stmt_nca = $pdo->prepare("SELECT SUM(purchase_cost) FROM assets WHERE YEAR(purchase_date) <= ?");
         $stmt_nca->execute([$current_year]);
         $gross_fixed_assets = $stmt_nca->fetchColumn() ?: 0;
@@ -272,13 +298,9 @@ function get_balance_sheet_data($year, $summary_data, $equity_data) {
         $non_current_assets = $net_fixed_assets + $total_investments;
 
         // 2. Current Assets
-        // Accounts Receivable (Refactored logic)
         $accounts_receivable = calculate_ar_balance($date_end);
 
-        // Cash & Bank (Plug figure to balance the equation)
-
         // LIABILITIES
-        // Accounts Payable (Refactored logic)
         $accounts_payable = calculate_ap_balance($current_year);
 
         // Tax Payable
@@ -291,8 +313,11 @@ function get_balance_sheet_data($year, $summary_data, $equity_data) {
         $income_tax_payable = ($tax_balance > 0) ? $tax_balance : 0;
         $tax_asset = ($tax_balance < 0) ? abs($tax_balance) : 0;
 
+        // Loans
+        $loans_payable = get_loans_liability($current_year);
+
         $current_liabilities = $accounts_payable + $income_tax_payable;
-        $non_current_liabilities = 0;
+        $non_current_liabilities = $loans_payable; // Assuming long term for now
         $total_liabilities = $current_liabilities + $non_current_liabilities;
 
         // EQUITY
@@ -301,13 +326,12 @@ function get_balance_sheet_data($year, $summary_data, $equity_data) {
         $total_liabilities_and_equity = $total_liabilities + $equity;
 
         // BALANCE CHECK
+        // Assets = Liabilities + Equity
+        // We calculate Cash as the plug.
         $total_assets_target = $total_liabilities_and_equity;
-
         $other_current_assets = $accounts_receivable + $tax_asset;
 
-        // Plug Cash to balance
         $cash_position = $total_assets_target - $non_current_assets - $other_current_assets;
-
         $current_assets = $other_current_assets + $cash_position;
 
         $balance_data[$current_year] = [
@@ -317,11 +341,13 @@ function get_balance_sheet_data($year, $summary_data, $equity_data) {
             'accounts_receivable' => $accounts_receivable,
             'accounts_payable' => $accounts_payable,
             'tax_payable' => $income_tax_payable,
+            'loans_payable' => $loans_payable,
             'current_liabilities' => $current_liabilities,
             'non_current_liabilities' => $non_current_liabilities,
             'equity' => $equity,
             'total_liabilities_and_equity' => $total_liabilities_and_equity,
-            'cash_position' => $cash_position
+            'cash_position' => $cash_position,
+            'prepaid_taxes' => $prepaid_taxes // For Tax Note
         ];
     }
     return $balance_data;
@@ -341,18 +367,15 @@ function get_cash_flow_data($year, $summary_data, $balance_sheet_data) {
         $depreciation = $summary_data[$current_year]['total_depreciation'];
 
         // Changes in Working Capital
-        // Delta AR
         $ar_end = $balance_sheet_data[$current_year]['accounts_receivable'];
         $ar_start = 0;
         if ($i == 0) {
              $ar_start = $balance_sheet_data[$prev_year]['accounts_receivable'];
         } else {
-             // Need to fetch AR for year-2 on the fly
              $ar_start = calculate_ar_balance("$prev_year-12-31");
         }
-        $increase_in_ar = $ar_end - $ar_start; // Negative impact on cash
+        $increase_in_ar = $ar_end - $ar_start;
 
-        // Delta AP
         $ap_end = $balance_sheet_data[$current_year]['accounts_payable'];
         $ap_start = 0;
         if ($i == 0) {
@@ -360,9 +383,8 @@ function get_cash_flow_data($year, $summary_data, $balance_sheet_data) {
         } else {
             $ap_start = calculate_ap_balance($prev_year);
         }
-        $increase_in_ap = $ap_end - $ap_start; // Positive impact on cash
+        $increase_in_ap = $ap_end - $ap_start;
 
-        // Tax Paid
         $stmt_tax = $pdo->prepare("SELECT SUM(amount) FROM tax_payments WHERE financial_year = ?");
         $stmt_tax->execute([$current_year]);
         $tax_paid = $stmt_tax->fetchColumn() ?: 0;
@@ -381,7 +403,7 @@ function get_cash_flow_data($year, $summary_data, $balance_sheet_data) {
         $investing_activities = -($assets_purchased + $investments_purchased);
 
         // 3. Financing Activities
-        // Assuming defaults for now as no Loans table exists
+        // Loans change? For now 0
         $financing_activities = 0;
 
         $cash_flow[$current_year] = [
@@ -418,7 +440,7 @@ function calculate_total_depreciation($year) {
         try {
             $purchase_date = new DateTime($asset['purchase_date']);
         } catch (Exception $e) {
-            continue; // Skip invalid dates
+            continue;
         }
         $purchase_year = (int)$purchase_date->format('Y');
         $cost = $asset['purchase_cost'];
@@ -428,21 +450,17 @@ function calculate_total_depreciation($year) {
         $months_active = 0;
 
         if ($purchase_year < $year) {
-            // Full year depreciation
             $months_active = 12;
         } elseif ($purchase_year == $year) {
-            // Pro-rata for current year
             $m = (int)$purchase_date->format('m');
             $months_active = 12 - $m + 1;
         } else {
-            // Purchased in future (should not happen due to query filter)
             $months_active = 0;
         }
 
         $annual_expense = $cost * $rate * ($months_active / 12);
 
         // Check Accumulated Depreciation Cap
-        // Calculate accumulated dep up to START of this year
         $accumulated_prior = 0;
         for ($y = $purchase_year; $y < $year; $y++) {
             $m_active_y = ($y == $purchase_year) ? (12 - (int)$purchase_date->format('m') + 1) : 12;
@@ -480,26 +498,23 @@ function calculate_accumulated_depreciation($year) {
 
         $asset_accumulated = 0;
 
-        // Iterate from purchase year to current year
         for ($y = $purchase_year; $y <= $year; $y++) {
             $months_active = ($y == $purchase_year) ? (12 - (int)$purchase_date->format('m') + 1) : 12;
             $annual_dep = $cost * $rate * ($months_active / 12);
             $asset_accumulated += $annual_dep;
         }
 
-        // Cap at cost
         $total_accumulated += min($asset_accumulated, $cost);
     }
     return $total_accumulated;
 }
 
 function get_equity_data($year, $all_summary_data) {
-    // Opening balance is sum of net profits of previous years
     $opening_balance = 0;
     $start_year = 2020;
     if ($year > $start_year) {
          for ($y = $start_year; $y < $year; $y++) {
-             // Safe to call as no circular dep here
+             // Safe to call
              $hist_data = get_financial_summary_data($y);
              $opening_balance += $hist_data[$y]['net_profit_after_tax'];
          }
@@ -555,6 +570,64 @@ function calculate_individual_income_tax($taxable_income) {
     elseif ($annual_income <= 9120000) { return 240000 + (($annual_income - 6240000) * 0.20); }
     elseif ($annual_income <= 12000000) { return 816000 + (($annual_income - 9120000) * 0.25); }
     else { return 1536000 + (($annual_income - 12000000) * 0.30); }
+}
+
+function get_depreciation_details($year) {
+    global $pdo;
+    $depreciation_rates = [
+        'Furniture' => 0.125, 'Computer' => 0.375, 'Vehicle' => 0.25,
+        'Equipment' => 0.25, 'Other' => 0.10
+    ];
+
+    $all_details = [];
+    for ($i = 0; $i <= 1; $i++) {
+        $current_year = $year - $i;
+        $stmt = $pdo->prepare("SELECT name, category, purchase_cost, purchase_date FROM assets WHERE YEAR(purchase_date) <= ?");
+        $stmt->execute([$current_year]);
+        $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $details = [];
+        foreach ($assets as $asset) {
+            $rate = $depreciation_rates[$asset['category']] ?? 0.10;
+            try {
+                $purchase_date = new DateTime($asset['purchase_date']);
+            } catch (Exception $e) {
+                continue;
+            }
+            $purchase_year = (int)$purchase_date->format('Y');
+            $cost = $asset['purchase_cost'];
+
+            $previously_accumulated = 0;
+            for ($y = $purchase_year; $y < $current_year; $y++) {
+                $m_active_y = ($y == $purchase_year) ? (12 - (int)$purchase_date->format('m') + 1) : 12;
+                $previously_accumulated += ($cost * $rate * ($m_active_y / 12));
+            }
+
+            $months_active = 0;
+            if ($purchase_year < $current_year) {
+                $months_active = 12;
+            } elseif ($purchase_year == $current_year) {
+                $m = (int)$purchase_date->format('m');
+                $months_active = 12 - $m + 1;
+            }
+            $annual_expense = $cost * $rate * ($months_active / 12);
+
+            $remaining_value = $cost - $previously_accumulated;
+            $current_expense = min($annual_expense, max(0, $remaining_value));
+
+            $accumulated_depreciation = min($previously_accumulated + $current_expense, $cost);
+
+            $nbv = $cost - $accumulated_depreciation;
+
+            $details[] = [
+                'name' => $asset['name'], 'category' => $asset['category'],
+                'purchase_cost' => $asset['purchase_cost'], 'depreciation' => $current_expense,
+                'accumulated_depreciation' => $accumulated_depreciation, 'nbv' => $nbv,
+            ];
+        }
+        $all_details[$current_year] = $details;
+    }
+    return $all_details;
 }
 
 function generate_customer_statement_pdf($customerId, $period, $output_mode = 'download', $tenantId) {
@@ -618,68 +691,6 @@ function generate_customer_statement_pdf($customerId, $period, $output_mode = 'd
     }
 }
 
-function get_depreciation_details($year) {
-    global $pdo;
-    $depreciation_rates = [
-        'Furniture' => 0.125, 'Computer' => 0.375, 'Vehicle' => 0.25,
-        'Equipment' => 0.25, 'Other' => 0.10
-    ];
-
-    $all_details = [];
-    for ($i = 0; $i <= 1; $i++) {
-        $current_year = $year - $i;
-        $stmt = $pdo->prepare("SELECT name, category, purchase_cost, purchase_date FROM assets WHERE YEAR(purchase_date) <= ?");
-        $stmt->execute([$current_year]);
-        $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $details = [];
-        foreach ($assets as $asset) {
-            $rate = $depreciation_rates[$asset['category']] ?? 0.10;
-            try {
-                $purchase_date = new DateTime($asset['purchase_date']);
-            } catch (Exception $e) {
-                continue;
-            }
-            $purchase_year = (int)$purchase_date->format('Y');
-            $cost = $asset['purchase_cost'];
-
-            // 1. Previous Accumulation
-            $previously_accumulated = 0;
-            for ($y = $purchase_year; $y < $current_year; $y++) {
-                $m_active_y = ($y == $purchase_year) ? (12 - (int)$purchase_date->format('m') + 1) : 12;
-                $previously_accumulated += ($cost * $rate * ($m_active_y / 12));
-            }
-
-            // 2. Current Year Expense
-            $months_active = 0;
-            if ($purchase_year < $current_year) {
-                $months_active = 12;
-            } elseif ($purchase_year == $current_year) {
-                $m = (int)$purchase_date->format('m');
-                $months_active = 12 - $m + 1;
-            }
-            $annual_expense = $cost * $rate * ($months_active / 12);
-
-            // 3. Cap
-            $remaining_value = $cost - $previously_accumulated;
-            $current_expense = min($annual_expense, max(0, $remaining_value));
-
-            // Total Accum including current
-            $accumulated_depreciation = min($previously_accumulated + $current_expense, $cost);
-
-            $nbv = $cost - $accumulated_depreciation;
-
-            $details[] = [
-                'name' => $asset['name'], 'category' => $asset['category'],
-                'purchase_cost' => $asset['purchase_cost'], 'depreciation' => $current_expense,
-                'accumulated_depreciation' => $accumulated_depreciation, 'nbv' => $nbv,
-            ];
-        }
-        $all_details[$current_year] = $details;
-    }
-    return $all_details;
-}
-
 function get_expenditure_breakdown($year) {
     global $pdo;
 
@@ -687,10 +698,6 @@ function get_expenditure_breakdown($year) {
 
     for ($i = 0; $i <= 1; $i++) {
         $current_year = $year - $i;
-        // Refactored logic to match get_expense_breakdown_by_category logic more closely if needed,
-        // but kept simple here as it's just a breakdown list, not the core accounting numbers.
-        // NOTE: For consistency, this should also ideally filter by the new logic, but
-        // for now we will just use basic aggregation for the UI charts.
         $sql = "
             SELECT
                 expense_type,

@@ -92,7 +92,6 @@ try {
 
     // Resolve Logo Path
     $logo_url = $settings['profile_picture_url'] ?? '';
-    // If it's a relative URL, try to map to file system
     if (!empty($logo_url) && !filter_var($logo_url, FILTER_VALIDATE_URL)) {
          $fs_path = dirname(__DIR__) . '/' . ltrim($logo_url, '/');
          if (file_exists($fs_path)) {
@@ -112,12 +111,11 @@ try {
     $pdf->AddPage();
 
     // Helper for Table Rows
-    // Zebra Striping: Very Light Gray #f9fafb -> RGB(249, 250, 251)
     function row($label, $val1, $val2, $is_bold = false, $bg_color = false) {
         $font_weight = $is_bold ? 'font-weight: bold;' : '';
-        $bg = $bg_color ? 'background-color: #f9fafb;' : 'background-color: #ffffff;'; // Alternating or specific
+        $bg = $bg_color ? 'background-color: #f9fafb;' : 'background-color: #ffffff;';
         if ($is_bold && !$bg_color) {
-            $bg = 'background-color: #ffffff;'; // Bold rows often white or specific highlight, but let's stick to zebra or clean
+            $bg = 'background-color: #ffffff;';
         }
 
         return '<tr style="' . $bg . '">
@@ -127,15 +125,14 @@ try {
                 </tr>';
     }
 
-    // Styles
-    // Header Color: Violet #7c3aed -> RGB(124, 58, 237)
     $th_style = 'background-color: #7c3aed; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #7c3aed;';
 
     $html = '<style>
                 h2 { color: #111827; font-family: helvetica; font-size: 14pt; margin-bottom: 10px; }
-                table { border-collapse: collapse; width: 100%; }
+                h3 { color: #374151; font-family: helvetica; font-size: 11pt; margin-top: 15px; margin-bottom: 5px; }
+                table { border-collapse: collapse; width: 100%; font-size: 9pt; }
                 th { ' . $th_style . ' padding: 8px; }
-                td { padding: 6px; color: #374151; font-size: 9pt; }
+                td { padding: 6px; color: #374151; }
              </style>';
 
     // 1. Statement of Comprehensive Income
@@ -153,7 +150,7 @@ try {
     $html .= row('Cost of Goods Sold (COGS)', format_accounting_number($summary_data[$year]['cogs']), format_accounting_number($summary_data[$year - 1]['cogs']), false, true);
     $html .= row('Gross Profit', format_accounting_number($summary_data[$year]['gross_profit']), format_accounting_number($summary_data[$year - 1]['gross_profit']), true, false);
     $html .= row('Operating Expenses (OPEX)', format_accounting_number($summary_data[$year]['opex']), format_accounting_number($summary_data[$year - 1]['opex']), false, true);
-    $html .= row('Operating Profit (EBIT)', format_accounting_number($summary_data[$year]['operating_profit']), format_accounting_number($summary_data[$year - 1]['operating_profit']), true, false);
+    $html .= row('Operating Profit', format_accounting_number($summary_data[$year]['operating_profit']), format_accounting_number($summary_data[$year - 1]['operating_profit']), true, false);
     $html .= row('Depreciation Expense', format_accounting_number($summary_data[$year]['total_depreciation']), format_accounting_number($summary_data[$year - 1]['total_depreciation']), false, true);
     $html .= row('Profit Before Tax', format_accounting_number($summary_data[$year]['profit_before_tax']), format_accounting_number($summary_data[$year - 1]['profit_before_tax']), true, false);
     $html .= row('Income Tax Expense', format_accounting_number($summary_data[$year]['income_tax_expense']), format_accounting_number($summary_data[$year - 1]['income_tax_expense']), false, true);
@@ -181,13 +178,16 @@ try {
     $html .= '<tr><td colspan="3" style="background-color: #f3f4f6; font-weight: bold;">LIABILITIES AND EQUITY</td></tr>';
     $html .= row('Accounts Payable', format_accounting_number($balance_sheet_data[$year]['accounts_payable']), format_accounting_number($balance_sheet_data[$year - 1]['accounts_payable']), false, false);
     $html .= row('Tax Payable', format_accounting_number($balance_sheet_data[$year]['tax_payable']), format_accounting_number($balance_sheet_data[$year - 1]['tax_payable']), false, true);
-    $html .= row('Equity / Retained Earnings', format_accounting_number($balance_sheet_data[$year]['equity']), format_accounting_number($balance_sheet_data[$year - 1]['equity']), false, false);
-    $html .= row('Total Liabilities and Equity', format_accounting_number($balance_sheet_data[$year]['total_liabilities_and_equity']), format_accounting_number($balance_sheet_data[$year - 1]['total_liabilities_and_equity']), true, true);
+    // Added Bank Loans
+    $html .= row('Bank Loans / Long Term Liabilities', format_accounting_number($balance_sheet_data[$year]['loans_payable']), format_accounting_number($balance_sheet_data[$year - 1]['loans_payable']), false, false);
+
+    $html .= row('Equity / Retained Earnings', format_accounting_number($balance_sheet_data[$year]['equity']), format_accounting_number($balance_sheet_data[$year - 1]['equity']), false, true);
+    $html .= row('Total Liabilities and Equity', format_accounting_number($balance_sheet_data[$year]['total_liabilities_and_equity']), format_accounting_number($balance_sheet_data[$year - 1]['total_liabilities_and_equity']), true, false);
 
     $html .= '</tbody></table><br><br>';
 
     $pdf->writeHTML($html, true, false, true, false, '');
-    $pdf->AddPage(); // New page for Cash Flow to avoid cutting tables weirdly
+    $pdf->AddPage();
 
     // 3. Cash Flow
     $html = '<h2>Statement of Cash Flows</h2>';
@@ -202,8 +202,8 @@ try {
 
     $html .= row('Profit Before Tax', format_accounting_number($cash_flow_data[$year]['profit_before_tax']), format_accounting_number($cash_flow_data[$year - 1]['profit_before_tax']), false, false);
     $html .= row('Depreciation Adjustment', format_accounting_number($cash_flow_data[$year]['depreciation_add_back']), format_accounting_number($cash_flow_data[$year - 1]['depreciation_add_back']), false, true);
-    $html .= row('Change in AR', format_accounting_number(-$cash_flow_data[$year]['increase_in_ar']), format_accounting_number(-$cash_flow_data[$year - 1]['increase_in_ar']), false, false);
-    $html .= row('Change in AP', format_accounting_number($cash_flow_data[$year]['increase_in_ap']), format_accounting_number($cash_flow_data[$year - 1]['increase_in_ap']), false, true);
+    $html .= row('Change in Accounts Receivable', format_accounting_number(-$cash_flow_data[$year]['increase_in_ar']), format_accounting_number(-$cash_flow_data[$year - 1]['increase_in_ar']), false, false);
+    $html .= row('Change in Accounts Payable', format_accounting_number($cash_flow_data[$year]['increase_in_ap']), format_accounting_number($cash_flow_data[$year - 1]['increase_in_ap']), false, true);
     $html .= row('Tax Paid', format_accounting_number(-$cash_flow_data[$year]['tax_paid']), format_accounting_number(-$cash_flow_data[$year - 1]['tax_paid']), false, false);
     $html .= row('Net Cash from Operating', format_accounting_number($cash_flow_data[$year]['operating_activities']), format_accounting_number($cash_flow_data[$year - 1]['operating_activities']), true, true);
 
@@ -211,7 +211,85 @@ try {
     $html .= row('Net Cash from Financing', format_accounting_number($cash_flow_data[$year]['financing_activities']), format_accounting_number($cash_flow_data[$year - 1]['financing_activities']), true, true);
     $html .= row('Net Increase in Cash', format_accounting_number($cash_flow_data[$year]['net_increase_in_cash']), format_accounting_number($cash_flow_data[$year - 1]['net_increase_in_cash']), true, false);
 
-    $html .= '</tbody></table>';
+    $html .= '</tbody></table><br><br>';
+
+    // 4. Statement of Changes in Equity (Restored)
+    $equity_curr = get_equity_data($year, $summary_data);
+    $equity_prev = get_equity_data($year - 1, $summary_data);
+
+    $html .= '<h2>Statement of Changes in Equity</h2>';
+    $html .= '<table cellpadding="5">';
+    $html .= '<thead>
+                <tr>
+                    <th width="40%">Item</th>
+                    <th width="30%">' . $year . ' (' . $currency . ')</th>
+                    <th width="30%">' . ($year - 1) . ' (' . $currency . ')</th>
+                </tr>
+              </thead><tbody>';
+    $html .= row('Opening Equity Balance', format_accounting_number($equity_curr['opening_balance']), format_accounting_number($equity_prev['opening_balance']), false, false);
+    $html .= row('Net Profit for the Period', format_accounting_number($equity_curr['net_profit']), format_accounting_number($equity_prev['net_profit']), false, true);
+    $html .= row('Closing Equity Balance', format_accounting_number($equity_curr['closing_balance']), format_accounting_number($equity_prev['closing_balance']), true, false);
+    $html .= '</tbody></table><br><br>';
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+    $pdf->AddPage();
+
+    // 5. Notes to Financial Statements
+    $html = '<h2>Notes to the Financial Statements</h2>';
+
+    // Note 1: Tax Computation
+    $html .= '<h3>Note 1: Tax Computation</h3>';
+    $html .= '<table cellpadding="5">';
+    $html .= '<thead>
+                <tr>
+                    <th width="40%">Item</th>
+                    <th width="30%">' . $year . ' (' . $currency . ')</th>
+                    <th width="30%">' . ($year - 1) . ' (' . $currency . ')</th>
+                </tr>
+              </thead><tbody>';
+    $html .= row('Profit Before Tax', format_accounting_number($summary_data[$year]['profit_before_tax']), format_accounting_number($summary_data[$year - 1]['profit_before_tax']), false, false);
+    $html .= row('Tax Rate Applied', $summary_data[$year]['tax_rate_used'], $summary_data[$year - 1]['tax_rate_used'], false, true);
+    $html .= row('Tax Liability (Expense)', format_accounting_number($summary_data[$year]['income_tax_expense']), format_accounting_number($summary_data[$year - 1]['income_tax_expense']), true, false);
+    $html .= row('Less: Tax Payments Made', format_accounting_number($balance_sheet_data[$year]['prepaid_taxes']), format_accounting_number($balance_sheet_data[$year - 1]['prepaid_taxes']), false, true);
+    $html .= row('Net Tax Payable / (Refundable)', format_accounting_number($balance_sheet_data[$year]['tax_payable']), format_accounting_number($balance_sheet_data[$year - 1]['tax_payable']), true, false);
+    $html .= '</tbody></table><br><br>';
+
+    // Note 2: PPE (Depreciation)
+    $depreciation_details = get_depreciation_details($year);
+    if (!empty($depreciation_details[$year])) {
+        $html .= '<h3>Note 2: Property, Plant, and Equipment (PPE)</h3>';
+        $html .= '<table cellpadding="5">';
+        $html .= '<thead>
+                    <tr>
+                        <th width="25%">Category</th>
+                        <th width="25%">Cost</th>
+                        <th width="25%">Accum. Dep.</th>
+                        <th width="25%">Net Book Value</th>
+                    </tr>
+                  </thead><tbody>';
+        $asset_categories = [];
+        foreach ($depreciation_details[$year] as $asset) {
+            if (!isset($asset_categories[$asset['category']])) {
+                $asset_categories[$asset['category']] = ['cost' => 0, 'accumulated_depreciation' => 0, 'nbv' => 0];
+            }
+            $asset_categories[$asset['category']]['cost'] += $asset['purchase_cost'];
+            $asset_categories[$asset['category']]['accumulated_depreciation'] += $asset['accumulated_depreciation'];
+            $asset_categories[$asset['category']]['nbv'] += $asset['nbv'];
+        }
+        $row_idx = 0;
+        foreach ($asset_categories as $category => $values) {
+            $is_colored = ($row_idx % 2 == 1);
+            $bg = $is_colored ? 'background-color: #f9fafb;' : 'background-color: #ffffff;';
+            $html .= '<tr style="' . $bg . '">
+                        <td style="border: 1px solid #e5e7eb;">' . htmlspecialchars($category) . '</td>
+                        <td style="border: 1px solid #e5e7eb; text-align: right;">' . format_accounting_number($values['cost']) . '</td>
+                        <td style="border: 1px solid #e5e7eb; text-align: right;">' . format_accounting_number($values['accumulated_depreciation']) . '</td>
+                        <td style="border: 1px solid #e5e7eb; text-align: right;">' . format_accounting_number($values['nbv']) . '</td>
+                    </tr>';
+            $row_idx++;
+        }
+        $html .= '</tbody></table>';
+    }
 
     $pdf->writeHTML($html, true, false, true, false, '');
 
