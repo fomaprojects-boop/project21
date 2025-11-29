@@ -976,18 +976,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-stamp text-xl"></i></div>
                             <span class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Liability</span>
                         </div>
-                        <div class="flex items-center justify-between mb-4 relative z-10">
-                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-stamp text-xl"></i></div>
-                            <span id="stamp-status-badge" class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Loading</span>
-                        </div>
-                        <h3 class="text-emerald-100 text-sm font-medium">Stamp Duty (<span id="stamp-period"></span>)</h3>
+                        <h3 class="text-emerald-100 text-sm font-medium">Stamp Duty (Rent 1%)</h3>
                         <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-stamp-duty">Loading...</p>
                         <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
-                            <div class="text-xs text-emerald-50" id="stamp-due-text">Payable to TRA</div>
-                            <div class="flex space-x-2">
-                                <button onclick="openTaxHistory('Stamp Duty')" class="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors" title="View History"><i class="fas fa-history"></i></button>
-                                <button id="btn-pay-stamp" class="hidden text-xs bg-white text-emerald-600 font-bold px-3 py-1 rounded hover:bg-emerald-50 shadow-sm transition-colors">Pay Now</button>
-                            </div>
+                            <div class="text-xs text-emerald-50">Payable to TRA</div>
+                             <button onclick="openTaxHistory('Stamp Duty')" class="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors" title="View History"><i class="fas fa-history"></i></button>
                         </div>
                     </div>
 
@@ -7863,7 +7856,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             // Switch to Editor
             document.getElementById('workflow-main-view').style.display = 'none';
             document.getElementById('workflow-editor-view').style.display = 'block';
-
+            
             // Populate Inputs
             document.getElementById('workflow-name-input').value = currentWorkflow.name;
             document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
@@ -9442,7 +9435,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                 let statusText = info.status;
                 let badgeClass = 'bg-white/20 backdrop-blur-sm border border-white/10 text-white'; // Default Glass
-
+                
                 if (info.status === 'Overdue') {
                     statusText = `Overdue (${info.overdue_days} days)`;
                     badgeClass = 'bg-red-500/80 text-white border border-red-400';
@@ -9469,14 +9462,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 if (dueText) {
                     if (info.is_paid) {
                          dueText.textContent = 'Paid - Thank you';
-                    } else if (info.status === 'Accruing' || info.due_date) {
-                        // Logic fix: Show Due Date for Accruing too, but marked clearly
+                    } else if (info.due_date) {
                         const dueDateObj = new Date(info.due_date);
                         if (!isNaN(dueDateObj.getTime())) {
                              const day = dueDateObj.getDate();
                              const month = dueDateObj.toLocaleString('default', { month: 'short' });
-                             const label = info.status === 'Accruing' ? 'Next Due:' : 'Due:';
-                             dueText.textContent = `${label} ${day} ${month}`;
+                             dueText.textContent = `Due: ${day} ${month}`;
                         } else {
                              dueText.textContent = 'Due date unavailable';
                         }
@@ -9489,8 +9480,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             if (data.taxes) {
                 updateTaxCard('vat', data.taxes.vat, 'vat');
                 updateTaxCard('wht', data.taxes.wht, 'wht');
-                if (data.taxes.stamp_duty) {
-                    updateTaxCard('stamp_duty', data.taxes.stamp_duty, 'stamp');
+
+                const stampAmount = document.getElementById('dash-stamp-duty');
+                if (stampAmount) {
+                    stampAmount.textContent = DEFAULT_CURRENCY + ' ' + number_format(data.taxes.stamp_duty, 2);
                 }
             }
 
@@ -9514,13 +9507,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                         if (typeLower === 'invoice' || typeLower === 'receipt') {
                             iconClass = 'fa-arrow-down'; // Money In
-                            bgClass = 'bg-violet-100';
+                            bgClass = 'bg-violet-100'; 
                             textClass = 'text-violet-600';
                             amountClass = 'text-green-600';
                             sign = '+';
                         } else if (typeLower === 'expense') {
                             iconClass = 'fa-arrow-up'; // Money Out
-                            bgClass = 'bg-rose-100';
+                            bgClass = 'bg-rose-100'; 
                             textClass = 'text-rose-600';
                             amountClass = 'text-gray-800';
                             sign = '-';
