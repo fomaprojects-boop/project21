@@ -223,6 +223,23 @@ try {
         }
     }
 
+    // --- Schema Auto-Fix: Add theme column to users ---
+    // Allows user-specific theme preference (Light/Dark)
+    $schema_lock_user_theme = __DIR__ . '/schema_user_theme.lock';
+    if (!file_exists($schema_lock_user_theme)) {
+        try {
+            // Add column if not exists
+            $pdo->exec("ALTER TABLE users ADD COLUMN theme VARCHAR(10) DEFAULT 'light'");
+            file_put_contents($schema_lock_user_theme, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1060) {
+                file_put_contents($schema_lock_user_theme, date('Y-m-d H:i:s'));
+            } else {
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - User Theme Column Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');

@@ -1,40 +1,22 @@
-<?php
-require_once 'api/config.php';
-require_once 'api/db.php';
 
-
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-$userId = $_SESSION['user_id'];
-$userName = isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_name']) : 'User';
-$userRole = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'Staff';
-$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-$path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-$baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="base-url" content="<?php echo $baseUrl; ?>">
-    <meta name="user-id" content="<?php echo $userId; ?>">
-    <meta name="user-role" content="<?php echo $userRole; ?>">
+    <meta name="base-url" content="">
+    <meta name="user-id" content="">
+    <meta name="user-role" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatMe - Professional Edition</title>
     <script>
-        const LOGGED_IN_USER_NAME = '<?php echo htmlspecialchars($userName, ENT_QUOTES); ?>';
+        const LOGGED_IN_USER_NAME = '';
         // Global State Objects for Auto-Fill Context
         window.systemSettings = {};
         window.currentContact = {};
         window.currentUser = {
-            id: <?php echo $userId; ?>,
-            full_name: '<?php echo htmlspecialchars($userName, ENT_QUOTES); ?>',
-            role: '<?php echo $userRole; ?>'
+            id: ,
+            full_name: '',
+            role: ''
         };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -551,10 +533,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
         window.fbAsyncInit = function() {
             // Debugging: Log App ID to console
-            console.log('Initializing Facebook SDK with App ID:', '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>');
+            console.log('Initializing Facebook SDK with App ID:', '');
 
             FB.init({
-            appId            : '<?php echo defined('FACEBOOK_APP_ID') ? FACEBOOK_APP_ID : ''; ?>',
+            appId            : '',
             autoLogAppEvents : true,
             xfbml            : true,
             version          : 'v21.0'
@@ -620,7 +602,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <i id="business-menu-icon" class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div id="business-menu" class="hidden pl-8 space-y-2 py-2">
-                        <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+
                         <a href="#" onclick="showView('vendors', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-store w-6 mr-3"></i><span>Vendors</span></a>
                         <a href="#" onclick="showView('invoices', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-file-invoice-dollar w-6 mr-3"></i><span>Invoices</span></a>
                         <a href="#" onclick="showView('assets', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-box-open w-6 mr-3"></i><span>Assets</span></a>
@@ -628,15 +610,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <a href="#" onclick="showView('tax_payments', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-landmark w-6 mr-3"></i><span>Tax Payments</span></a>
                         <a href="#" onclick="showView('financials', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-chart-pie w-6 mr-3"></i><span>Financial Statements</span></a>
                         <a href="#" onclick="showView('payroll', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-money-bill-wave w-6 mr-3"></i><span>Wages and Salaries</span></a>
-                        <?php endif; ?>
+
                     </div>
                 </div>
 
                 <a href="#" onclick="showView('youtube-ads', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fab fa-youtube w-6 mr-3"></i><span>YouTube Ads</span></a>
 
-                <?php if (FEATURE_ENHANCED_EXPENSE_WORKFLOW): ?>
+
                 <a href="#" onclick="showView('expenses', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-cash-register w-6 mr-3"></i><span>Expenses</span></a>
-                <?php endif; ?>
+
 
                 <!-- Whatsapp Dropdown -->
                 <div>
@@ -656,9 +638,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </div>
                 </div>
 
-                <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+
                 <a href="#" onclick="showView('users', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-users w-6 mr-3"></i><span>Users</span></a>
-                <?php endif; ?>
+
 
                 <!-- Print & Design Workflow Dropdown -->
                 <div>
@@ -670,20 +652,20 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <i id="print-design-menu-icon" class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div id="print-design-menu" class="hidden pl-8 space-y-2 py-2">
-                        <?php if ($userRole === 'Admin' || $userRole === 'Staff' || $userRole === 'Accountant'): ?>
+
                             <a href="#" onclick="showView('analytics', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-chart-pie w-6 mr-3"></i><span>Analytics</span></a>
-                            <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+
                                 <a href="#" onclick="showView('costs', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-dollar-sign w-6 mr-3"></i><span>Material Costs</span></a>
-                            <?php endif; ?>
+
                             <a href="#" onclick="showView('online-job-order', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-clipboard-list w-6 mr-3"></i><span>Job Orders</span></a>
                             <a href="#" onclick="showView('pricing-calculator', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-calculator w-6 mr-3"></i><span>Pricing Calculator</span></a>
                             <a href="#" onclick="showView('file-upload', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-file-upload w-6 mr-3"></i><span>File Upload</span></a>
                             <a href="#" onclick="showView('digital-proofing', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-check-double w-6 mr-3"></i><span>Digital Proofing</span></a>
-                        <?php endif; ?>
-                        <?php if ($userRole === 'Client'): ?>
+
+
                             <a href="#" onclick="showView('customer-dashboard', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-user-circle w-6 mr-3"></i><span>My Dashboard</span></a>
                             <a href="#" onclick="showView('online-job-order', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-clipboard-list w-6 mr-3"></i><span>New Job Order</span></a>
-                        <?php endif; ?>
+
                     </div>
                 </div>
             </nav>
@@ -696,7 +678,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     <button id="theme-switcher" class="hover:text-violet-200" title="Toggle Dark Mode">
                         <i class="fas fa-moon text-xl"></i>
                     </button>
-                    <span class="font-semibold">Welcome, <?php echo $userName; ?>!</span>
+                    <span class="font-semibold">Welcome, !</span>
                     <button onclick="showView('settings', event)" class="hover:text-violet-200" title="Settings"><i class="fas fa-cog text-xl"></i></button>
                     <a href="api/logout.php" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold" title="Logout"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
                 </div>
@@ -3571,27 +3553,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             } catch (error) {
                 console.error(`Error fetching ${endpoint}:`, error.message);
-                showToast(`Error: ${error.message}`, 'error'); // Onyesha kosa halisi
+                alert(`Error: ${error.message}`); // Onyesha kosa halisi
                 return null;
             }
         }
 
         // --- UTILITY FUNCTIONS ---
-        // Helper for SweetAlert2 Confirmations
-        function confirmAction(message) {
-            return Swal.fire({
-                title: 'Are you sure?',
-                text: message,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#7c3aed', // Violet-600
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, proceed!'
-            }).then((result) => {
-                return result.isConfirmed;
-            });
-        }
-
         function playNotificationSound() {
             const audio = new Audio('assets/ding.mp3');
             const playPromise = audio.play();
@@ -3723,13 +3690,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const end = Math.min(start + limit - 1, totalItems);
             container.innerHTML = `<p class="text-sm text-gray-700">Showing ${start} to ${end} of ${totalItems} results</p>${paginationHTML}`;
         }
-        async function disconnectWhatsApp() {
-            if (await confirmAction('Are you sure you want to disconnect your WhatsApp account?')) {
+        function disconnectWhatsApp() {
+            if (confirm('Are you sure you want to disconnect your WhatsApp account?')) {
                 // We'll call the backend to clear the credentials
                 fetchApi('facebook_oauth_controller.php?action=disconnect', { method: 'POST' })
                     .then(result => {
                         if (result && result.status === 'success') {
-                            showToast('WhatsApp disconnected successfully.', 'success');
+                            alert('WhatsApp disconnected successfully.');
                             loadSettings(); // Reload settings to update the UI
                         }
                     });
@@ -3740,7 +3707,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         function launchWhatsAppSignup() {
             // Check if FB object is loaded
             if (typeof FB === 'undefined') {
-                showToast('Facebook SDK could not be loaded. Please check your connection or ad blocker and refresh the page.', 'error');
+                alert('Facebook SDK could not be loaded. Please check your connection or ad blocker and refresh the page.');
                 return;
             }
 
@@ -3766,7 +3733,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         body: { code: code, redirect_uri: redirectUri }
                     }).then(result => {
                         if (result && result.status === 'success') {
-                            showToast('WhatsApp connected successfully! The page will now refresh.', 'success');
+                            alert('WhatsApp connected successfully! The page will now refresh.');
                             window.location.reload();
                         } else {
                             if (statusEl) {
@@ -3774,17 +3741,17 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 statusEl.classList.remove('text-yellow-600');
                             }
                             // Show the actual error message from backend
-                            showToast('Connection Failed: ' + (result ? result.message : 'Unknown error occurred on the server.', 'error'));
+                            alert('Connection Failed: ' + (result ? result.message : 'Unknown error occurred on the server.'));
                         }
                     });
                 } else {
                     console.log('response: ', response);
-                    showToast('Login failed or cancelled.', 'error');
+                    alert('Login failed or cancelled.');
                 }
             }
 
             FB.login(fbLoginCallback, {
-                config_id: '<?php echo defined('FACEBOOK_CONFIG_ID') ? FACEBOOK_CONFIG_ID : ''; ?>',
+                config_id: '',
                 response_type: 'code',
                 override_default_response_type: true,
                 extras: {
@@ -4096,7 +4063,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 });
 
                 if (result && result.status === 'success') {
-                    showToast('Job order created successfully!', 'success');
+                    alert('Job order created successfully!');
                     form.reset();
                     closeModal('newJobOrderModal');
                     loadJobOrders();
@@ -4140,7 +4107,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
 
             if (result && result.status === 'success') {
-                showToast('Quotation saved successfully!', 'success');
+                alert('Quotation saved successfully!');
                 loadQuotations();
             }
         }
@@ -4222,7 +4189,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 });
 
                 if (result && result.status === 'success') {
-                    showToast('File uploaded and checked successfully! Status: ' + result.check_status, 'success');
+                    alert('File uploaded and checked successfully! Status: ' + result.check_status);
                     form.reset();
                     loadFileUploadData(); // Refresh the list of files
                 }
@@ -4269,7 +4236,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     body: formData
                 });
                  if (result && result.status === 'success') {
-                    showToast('Proof uploaded successfully for client approval.', 'success');
+                    alert('Proof uploaded successfully for client approval.');
                     form.reset();
                     closeModal('newProofModal');
                     loadProofs();
@@ -4421,7 +4388,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         async function deleteCost(id) {
-            if (!await confirmAction('Are you sure you want to delete this material cost?')) return;
+            if (!confirm('Are you sure you want to delete this material cost?')) return;
             const response = await fetchApi(`costs.php?id=${id}`, { method: 'DELETE' });
             if (response && response.status === 'success') {
                 loadCosts(); // Refresh the list
@@ -4461,7 +4428,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 body: formData
             });
             if (response && response.status === 'success') {
-                showToast('Asset added successfully!', 'success');
+                alert('Asset added successfully!');
                 form.reset();
                 loadAssets();
             }
@@ -4479,7 +4446,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         function generateFinancialStatement() {
             const year = document.getElementById('financial-year').value;
             if (!year) {
-                showToast('Please select a financial year.', 'success');
+                alert('Please select a financial year.');
                 return;
             }
             const pdfUrl = `${BASE_URL}/api/generate_financial_statement.php?year=${year}`;
@@ -4549,7 +4516,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 body: data
             });
             if (response && response.status === 'success') {
-                showToast('Investment added successfully!', 'success');
+                alert('Investment added successfully!');
                 form.reset();
                 loadInvestments();
             }
@@ -4601,7 +4568,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 body: data
             });
             if (response && response.status === 'success') {
-                showToast('Tax payment added successfully!', 'success');
+                alert('Tax payment added successfully!');
                 form.reset();
                 loadInvestments(1); // Refresh to the first page
             }
@@ -4627,7 +4594,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
 
             if (response && response.status === 'success') {
-                showToast('Investment updated successfully!', 'success');
+                alert('Investment updated successfully!');
                 closeModal('editInvestmentModal');
                 loadInvestments(); // Refresh the investments table
             }
@@ -4743,7 +4710,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     body: formData
                 });
                 if (response && response.status === 'success') {
-                    showToast('Payroll file uploaded successfully and is pending approval.', 'success');
+                    alert('Payroll file uploaded successfully and is pending approval.');
                     form.reset();
                     loadPayrollBatches();
                 }
@@ -4754,7 +4721,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         async function approvePayroll(batchId) {
-            if (!await confirmAction('Are you sure you want to approve this payroll batch? This will mark it as paid and impact financial statements.')) return;
+            if (!confirm('Are you sure you want to approve this payroll batch? This will mark it as paid and impact financial statements.')) return;
 
             const response = await fetchApi('approve_payroll_batch.php', {
                 method: 'POST',
@@ -4762,7 +4729,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
 
             if (response && response.status === 'success') {
-                showToast('Payroll batch approved successfully!', 'success');
+                alert('Payroll batch approved successfully!');
                 loadPayrollBatches();
             }
         }
@@ -4810,7 +4777,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         async function sendPayslips(batchId) {
-             if (!await confirmAction('Are you sure you want to email payslips to all employees in this batch?')) return;
+             if (!confirm('Are you sure you want to email payslips to all employees in this batch?')) return;
 
              const response = await fetchApi('send_payslips.php', {
                  method: 'POST',
@@ -4818,7 +4785,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
              });
 
              if (response && response.status === 'success') {
-                 showToast(response.message || 'Payslips are being sent in the background.', 'success');
+                 alert(response.message || 'Payslips are being sent in the background.');
                  loadPayrollBatches();
              }
         }
@@ -4851,7 +4818,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 });
             } else { tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Failed to load users.</td></tr>`;}
         }
-        async function deleteUser(userId, userName) { if (!await confirmAction(`Are you sure you want to delete '${userName}'?`)) return; const result = await fetchApi('delete_user.php', { method: 'POST', body: { id: userId } }); if (result && result.status === 'success') { showToast(result.message, 'success'); loadUsers(); } else if (result) { showToast('Error: ' + result.message, 'error'); } }
+        async function deleteUser(userId, userName) { if (!confirm(`Are you sure you want to delete '${userName}'?`)) return; const result = await fetchApi('delete_user.php', { method: 'POST', body: { id: userId } }); if (result && result.status === 'success') { alert(result.message); loadUsers(); } else if (result) { alert('Error: ' + result.message); } }
 
         async function loadContacts() {
             const tableBody = document.getElementById('contacts-table-body');
@@ -4862,7 +4829,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 contacts.forEach(contact => { tableBody.innerHTML += `<tr><td class="p-4">${contact.name}</td><td class="p-4">${contact.phone_number}</td><td class="p-4"><button onclick="deleteContact(${contact.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button></td></tr>`; });
             } else { tableBody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-500">Failed to load contacts.</td></tr>`; }
         }
-        async function deleteContact(id) { if (!await confirmAction('Are you sure?')) return; const result = await fetchApi('delete_contact.php', { method: 'POST', body: { id: id } }); if (result && result.status === 'success') loadContacts(); }
+        async function deleteContact(id) { if (!confirm('Are you sure?')) return; const result = await fetchApi('delete_contact.php', { method: 'POST', body: { id: id } }); if (result && result.status === 'success') loadContacts(); }
 
         async function loadConversations() {
             const container = document.getElementById('conversations-container');
@@ -5537,7 +5504,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 document.getElementById('assignee-name').textContent = result.assignee_name || 'Assigned';
                 loadConversations(); // Update sidebar
             } else {
-                showToast(result.message || 'Assignment failed', 'error');
+                alert(result.message || 'Assignment failed');
             }
         }
 
@@ -5861,7 +5828,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             const isNote = inputMode === 'note';
             if (isNote && attachment_url) {
-                return showToast('File attachments cannot be added to internal notes.', 'error');
+                return alert('File attachments cannot be added to internal notes.');
             }
             const endpoint = isNote ? 'save_internal_note.php' : 'send_whatsapp_message.php';
 
@@ -6099,7 +6066,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const dateStr = document.getElementById('schedule-datetime').value;
             if (!dateStr) return;
             const content = document.getElementById('messageInput').value;
-            if (!content) { showToast('Type a message first', 'success'); return; }
+            if (!content) { alert('Type a message first'); return; }
 
             const result = await fetchApi('send_whatsapp_message.php', {
                 method: 'POST',
@@ -6113,7 +6080,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             if (result && result.success) {
                 toggleSchedulePicker();
                 document.getElementById('messageInput').value = '';
-                showToast('Message scheduled!', 'success');
+                alert('Message scheduled!');
                 loadMessages(currentConversationId, document.getElementById('chat-partner-name').textContent, 1, false);
             }
         }
@@ -6290,7 +6257,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 grid.innerHTML = `<p class="text-gray-500 col-span-3">No templates found.</p>`;
             }
         }
-        async function deleteTemplate(id, name) { if (!await confirmAction(`Delete template "${name}"?`)) return; const result = await fetchApi('delete_template.php', { method: 'POST', body: { id: id } }); if (result && result.status === 'success') { loadTemplates(); } else if (result) { showToast('Error: ' + result.message, 'error'); } }
+        async function deleteTemplate(id, name) { if (!confirm(`Delete template "${name}"?`)) return; const result = await fetchApi('delete_template.php', { method: 'POST', body: { id: id } }); if (result && result.status === 'success') { loadTemplates(); } else if (result) { alert('Error: ' + result.message); } }
 
         async function loadBroadcasts() {
             const tableBody = document.getElementById('broadcasts-table-body');
@@ -6402,7 +6369,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         // This success check is now handled by the launchWhatsAppSignup function's callback
         // The old redirect flow is no longer used, so this can be removed or commented out.
         /* if (urlParams.get('whatsapp_status') === 'success') {
-            showToast('WhatsApp connected successfully!', 'success');
+            alert('WhatsApp connected successfully!');
             window.history.replaceState({}, document.title, window.location.pathname + "#settings");
              setTimeout(() => showSettingsTab('channels', { currentTarget: document.querySelector('[onclick*="channels"]') }), 100);
         } */
@@ -6439,9 +6406,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         document.getElementById('copy-webhook-url').addEventListener('click', function() {
             const urlToCopy = document.getElementById('unique-webhook-url-display').dataset.fullUrl;
             navigator.clipboard.writeText(urlToCopy).then(() => {
-                showToast('Webhook URL copied to clipboard!', 'success');
+                alert('Webhook URL copied to clipboard!');
             }, (err) => {
-                showToast('Failed to copy URL. Please copy it manually.', 'error');
+                alert('Failed to copy URL. Please copy it manually.');
                 console.error('Could not copy text: ', err);
             });
         });
@@ -6692,12 +6659,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 }
             } catch (error) {
                 console.error('Error loading contacts:', error);
-                showToast('Could not load contacts for the selected customer.', 'error');
+                alert('Could not load contacts for the selected customer.');
             }
         }
 
         async function completeWhatsappRegistration() {
-            if (!await confirmAction("This will attempt to register your number with Meta to fix 'Pending' status. Proceed?")) return;
+            if (!confirm("This will attempt to register your number with Meta to fix 'Pending' status. Proceed?")) return;
 
             const btn = document.getElementById('whatsapp-register-btn');
             const originalText = btn.textContent;
@@ -6707,10 +6674,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const result = await fetchApi('register_whatsapp.php', { method: 'POST', body: { pin: '123456' } });
 
             if (result && result.status === 'success') {
-                showToast(result.message, 'success');
+                alert(result.message);
                 loadSettings(); // Reload to hide the button
             } else {
-                showToast('Registration failed: ' + (result ? result.message : 'Unknown error', 'error'));
+                alert('Registration failed: ' + (result ? result.message : 'Unknown error'));
             }
 
             btn.textContent = originalText;
@@ -6751,7 +6718,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             const result = await fetchApi('save_settings.php', { method: 'POST', body: formData });
             if (result && result.status === 'success') {
-                showToast(result.message, 'success');
+                alert(result.message);
                 DEFAULT_CURRENCY = formData.get('default_currency') || 'TZS';
                 // Rudisha fomu zote baada ya kuhifadhi
                 if (document.getElementById('edit-profile-btn').textContent === 'Cancel') {
@@ -6764,7 +6731,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     toggleInvoiceDesignEdit();
                 }
                 loadSettings(); // Reload to show saved state
-            } else if (result) { showToast('Error: ' + result.message, 'error'); }
+            } else if (result) { alert('Error: ' + result.message); }
         }
         async function uploadProfilePicture(event) {
             const file = event.target.files[0]; if (!file) return;
@@ -6772,8 +6739,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const result = await fetchApi('upload_profile_picture.php', { method: 'POST', body: formData });
             if(result && result.status === 'success') {
                 document.getElementById('profile-pic-preview').src = result.url + '?' + new Date().getTime();
-                showToast('Profile picture updated successfully!', 'success');
-            } else if (result) { showToast('Error: ' + result.message, 'error'); }
+                alert('Profile picture updated successfully!');
+            } else if (result) { alert('Error: ' + result.message); }
         }
         function showSettingsTab(tabId, event) {
             if (event) event.preventDefault();
@@ -7003,13 +6970,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         async function deleteInvoice(id, invoiceNumber) {
-            if (!await confirmAction(`Are you sure you want to delete document #${invoiceNumber}? This action cannot be undone.`)) return;
+            if (!confirm(`Are you sure you want to delete document #${invoiceNumber}? This action cannot be undone.`)) return;
             const result = await fetchApi('delete_invoice.php', { method: 'POST', body: { id } });
             if (result && result.status === 'success') {
-                showToast(result.message, 'success');
+                alert(result.message);
                 loadInvoices(currentInvoicePage); // Refresh current page
             } else if (result) {
-                showToast('Error: ' + result.message, 'error');
+                alert('Error: ' + result.message);
             }
         }
 
@@ -7182,7 +7149,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 const pdfUrl = `${BASE_URL}/api/generate_statement_pdf.php?customer_id=${currentCustomerId}&period=${period}`;
                 window.open(pdfUrl, '_blank');
             } else {
-                showToast('Could not determine the current customer.', 'error');
+                alert('Could not determine the current customer.');
             }
         }
 
@@ -7206,7 +7173,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         async function sendDemandNotice(invoiceId) {
-            if (!await confirmAction('Are you sure you want to send a formal demand notice for this overdue invoice?')) {
+            if (!confirm('Are you sure you want to send a formal demand notice for this overdue invoice?')) {
                 return;
             }
 
@@ -7220,15 +7187,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 });
 
                 if (result && result.success) {
-                    showToast(result.message || 'Demand notice sent successfully.', 'error');
+                    alert(result.message || 'Demand notice sent successfully.');
                 } else {
                     // fetchApi will already alert the error message, but you can add a fallback.
-                    showToast(result ? result.message : 'An unknown error occurred.', 'error');
+                    alert(result ? result.message : 'An unknown error occurred.');
                 }
             } catch (error) {
                 // This will catch errors from fetchApi if it throws an exception (e.g. network error)
                 console.error("Failed to send demand notice:", error);
-                showToast("An error occurred while trying to send the demand notice.", 'error');
+                alert("An error occurred while trying to send the demand notice.");
             } finally {
                 // Hide the spinner here
                 // e.g., document.getElementById('main-spinner').style.display = 'none';
@@ -7314,7 +7281,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
          } catch (error) {
               console.error("Error opening create invoice view:", error);
               // Optionally show an error message to the user in the UI
-              showToast("Could not open the invoice form. Please try again.", 'error');
+              alert("Could not open the invoice form. Please try again.");
          } finally {
              isCreatingInvoice = false; // Ondoa flag baada ya kumaliza (hata kama kuna error)
          }
@@ -7682,7 +7649,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         function openUploadModal(payoutId) { uploadingReceiptId = payoutId; document.getElementById('receiptPayoutId').value = payoutId; openModal('uploadReceiptModal'); }
         async function openPayoutModal(payoutId) {
             const req = allPayouts.find(p => p.id == payoutId);
-            if (!req) { showToast('Could not find payout request.', 'error'); return; }
+            if (!req) { alert('Could not find payout request.'); return; }
             let paymentDetailsHtml = '';
             if (req.payment_method === 'Bank Transfer' && req.bank_name) {
                 paymentDetailsHtml = `<h4 class="font-semibold text-gray-800">Bank Details</h4><p class="text-sm">Bank: ${req.bank_name}</p><p class="text-sm">Name: ${req.account_name}</p><p class="text-sm">Acc No: ${req.account_number}</p>`;
@@ -7718,15 +7685,15 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             openModal('convertDocumentModal');
         }
         async function sendInvoiceRequest(vendorId) {
-            if (!await confirmAction('Are you sure you want to send an invoice request to this vendor?')) return;
+            if (!confirm('Are you sure you want to send an invoice request to this vendor?')) return;
             const result = await fetchApi('send_invoice_request.php', { method: 'POST', body: { vendor_id: vendorId } });
-            if (result) showToast(result.message, 'success');
+            if (result) alert(result.message);
             if (result && (result.status === 'success' || result.status === 'warning')) loadPayoutRequests();
         }
         async function approvePayout(payoutId) {
-            if (!await confirmAction('Are you sure you want to approve this payout? This will simulate a payment and notify the vendor.')) return;
+            if (!confirm('Are you sure you want to approve this payout? This will simulate a payment and notify the vendor.')) return;
             const result = await fetchApi('approve_payout.php', { method: 'POST', body: { id: payoutId } });
-            if (result) showToast(result.message, 'success');
+            if (result) alert(result.message);
             if (result && (result.status === 'success' || result.status === 'warning')) { closeModal('payoutDetailModal'); loadPayoutRequests(); }
         }
 
@@ -7759,7 +7726,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
 
             if (result && result.status === 'success') {
-                showToast('Email verified successfully!', 'success');
+                alert('Email verified successfully!');
                 closeModal('addAdvertiserModal');
                 loadYouTubeAds();
             }
@@ -7771,7 +7738,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 method: 'POST',
                 body: { email: email }
             });
-            if(result) showToast(result.message, 'success');
+            if(result) alert(result.message);
         }
 
         async function handleCreateAdSubmit(event) {
@@ -7789,7 +7756,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 });
 
                 if (result && result.status === 'success') {
-                    showToast('Ad created successfully! The invoice has been sent to the advertiser.', 'success');
+                    alert('Ad created successfully! The invoice has been sent to the advertiser.');
                     form.reset();
                     loadPendingCampaigns(1); // Refresh pending campaigns
                 } else {
@@ -7828,7 +7795,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         steps: response.data.steps || []
                     };
                 } else {
-                    showToast('Failed to load workflow.', 'error');
+                    alert('Failed to load workflow.');
                     return;
                 }
             } else {
@@ -8133,8 +8100,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
-        async function removeWorkflowStep(index) {
-            if (!await confirmAction('Remove this step?')) return;
+        function removeWorkflowStep(index) {
+            if (!confirm('Remove this step?')) return;
             currentWorkflow.steps.splice(index, 1);
             renderLinearSteps();
         }
@@ -8171,29 +8138,29 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             currentWorkflow.is_active = isActive;
 
             // Validate
-            if (!currentWorkflow.name) return showToast('Please enter a workflow name.', 'success');
-            if (currentWorkflow.trigger_type === 'KEYWORD' && !currentWorkflow.keywords) return showToast('Please enter at least one keyword.', 'success');
-            if (currentWorkflow.steps.length === 0) return showToast('Please add at least one step.', 'success');
+            if (!currentWorkflow.name) return alert('Please enter a workflow name.');
+            if (currentWorkflow.trigger_type === 'KEYWORD' && !currentWorkflow.keywords) return alert('Please enter at least one keyword.');
+            if (currentWorkflow.steps.length === 0) return alert('Please add at least one step.');
 
             const result = await fetchApi('save_workflow.php', { method: 'POST', body: currentWorkflow });
 
             if(result && result.status === 'success') {
                 const statusMsg = isActive ? 'published and active' : 'saved as draft';
-                showToast(`Workflow ${statusMsg}!`, 'success');
+                alert(`Workflow ${statusMsg}!`);
                 closeWorkflowEditor();
             } else {
-                showToast('Error: ' + (result ? result.message : 'Unknown error', 'error'));
+                alert('Error: ' + (result ? result.message : 'Unknown error'));
             }
         }
 
         async function deleteWorkflow(id, name) {
-            if (!await confirmAction(`Delete workflow '${name}'?`)) return;
+            if (!confirm(`Delete workflow '${name}'?`)) return;
             const result = await fetchApi('delete_workflow.php', { method: 'POST', body: { id } });
             if (result && result.status === 'success') {
-                showToast('Workflow deleted!', 'success');
+                alert('Workflow deleted!');
                 loadWorkflows();
             } else if (result) {
-                showToast('Error: ' + result.message, 'error');
+                alert('Error: ' + result.message);
             }
         }
 
@@ -8295,10 +8262,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
              }
              const result = await fetchApi('create_invoice.php', { method: 'POST', body: invoiceData });
              if (result && result.status === 'success') {
-                 showToast(result.message, 'success');
+                 alert(result.message);
                  showView('invoices', event);
              } else if (result) {
-                 showToast('Error: ' + result.message, 'error');
+                 alert('Error: ' + result.message);
              }
          }
 
@@ -8316,14 +8283,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
 
             if (result && result.status === 'success') {
-                showToast(result.message, 'success');
+                alert(result.message);
                 form.reset(); // Clear the form
                 // Optionally, refresh the approvals dashboard if it's on the same page
                 if (document.getElementById('approvals-table-body')) {
                     loadExpenses(currentExpensesPage);
                 }
             } else if (result) {
-                showToast('Error: ' + result.message, 'error');
+                alert('Error: ' + result.message);
             }
         }
 
@@ -8470,12 +8437,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
 
             if (result && result.status === 'success') {
-                showToast('Payment confirmed and receipt uploaded successfully!', 'success');
+                alert('Payment confirmed and receipt uploaded successfully!');
                 closeModal('payRequisitionModal');
                 form.reset();
                 loadExpenses(currentExpensesPage);
             } else {
-                showToast('Error: ' + (result ? result.message : 'Unknown error', 'error'));
+                alert('Error: ' + (result ? result.message : 'Unknown error'));
             }
 
             submitBtn.disabled = false;
@@ -8582,7 +8549,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
 
         async function handleApprove(expenseId) {
-            if (!await confirmAction('Are you sure you want to approve this expense?')) return;
+            if (!confirm('Are you sure you want to approve this expense?')) return;
 
             const formData = new FormData();
             formData.append('expense_id', expenseId);
@@ -8592,17 +8559,17 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
 
             if (result && result.status === 'success') {
-                showToast(result.message || 'Success! Expense has been approved.', 'success');
+                alert(result.message || 'Success! Expense has been approved.');
                 loadExpenses(currentExpensesPage);
             } else if (result) {
-                showToast('Error: ' + (result.message || 'Unknown error', 'error'));
+                alert('Error: ' + (result.message || 'Unknown error'));
             } else {
-                showToast('An unknown error occurred. Please check your connection.', 'error');
+                alert('An unknown error occurred. Please check your connection.');
             }
         }
 
         async function handlePostToGL(expenseId) {
-            if (!await confirmAction('Are you sure you want to post this expense to the General Ledger? This action cannot be undone.')) return;
+            if (!confirm('Are you sure you want to post this expense to the General Ledger? This action cannot be undone.')) return;
             const formData = new FormData();
             formData.append('source_type', 'direct_expense');
             formData.append('source_id', expenseId);
@@ -8611,10 +8578,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 body: formData
             });
             if (result && result.status === 'success') {
-                showToast(result.message, 'success');
+                alert(result.message);
                 loadExpenses();
             } else if (result) {
-                showToast('Error: ' + result.message, 'error');
+                alert('Error: ' + result.message);
             }
         }
 
@@ -8911,11 +8878,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             const formData = new FormData(form);
                             result = await fetchApi(endpoint, { method: 'POST', body: formData });
                             if (result && result.status === 'success') {
-                                showToast(result.message, 'success');
+                                alert(result.message);
                                 closeModal('expenseActionModal');
                                 loadExpenses();
                             } else if (result) {
-                                showToast('Error: ' + result.message, 'error');
+                                alert('Error: ' + result.message);
                             }
                         }
                         break;
@@ -8971,7 +8938,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                         }]
                                     });
                                 } else {
-                                    showToast('Failed to upload header media.', 'error');
+                                    alert('Failed to upload header media.');
                                     submitBtn.textContent = originalText;
                                     submitBtn.disabled = false;
                                     return;
@@ -9080,10 +9047,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 const contactName = contactNameEl ? contactNameEl.textContent : 'Unknown';
                                 loadMessages(currentConversationId, contactName, 1, false);
                             } else {
-                                showToast('Error: ' + (result ? result.message : 'Unknown error', 'error'));
+                                alert('Error: ' + (result ? result.message : 'Unknown error'));
                             }
                         } catch (e) {
-                            showToast('Network or Server Error', 'error');
+                            alert('Network or Server Error');
                         } finally {
                             mainSubmitBtn.textContent = originalBtnText;
                             mainSubmitBtn.disabled = false;
@@ -9096,7 +9063,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     case 'addUserForm': {
                         result = await fetchApi('send_invitation.php', { method: 'POST', body: { name: form.querySelector('#userName').value, email: form.querySelector('#userEmail').value, role: form.querySelector('#userRole').value } });
                         if(result) {
-                            showToast(result.message, 'success');
+                            alert(result.message);
                             if (result.status === 'success' || result.status === 'warning') {
                                 closeModal('addUserModal');
                                 form.reset();
@@ -9112,7 +9079,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             form.reset();
                             loadContacts();
                         } else if (result) {
-                            showToast('Error: ' + result.message, 'error');
+                            alert('Error: ' + result.message);
                         }
                         break;
                     }
@@ -9126,12 +9093,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             body: customerData
                         });
                         if (result && result.status === 'success') {
-                            showToast(result.message, 'success');
+                            alert(result.message);
                             closeModal('addCustomerModal');
                             form.reset();
                             loadCustomers();
                         } else if (result) {
-                            showToast('Error: ' + result.message, 'error');
+                            alert('Error: ' + result.message);
                         }
                         break;
                     }
@@ -9175,27 +9142,27 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             }
                         });
 
-                        if(result && result.status === 'success') { closeModal('addTemplateModal'); form.reset(); loadTemplates(); } else if (result) { showToast('Error: ' + result.message, 'error'); }
+                        if(result && result.status === 'success') { closeModal('addTemplateModal'); form.reset(); loadTemplates(); } else if (result) { alert('Error: ' + result.message); }
                         break;
                     }
-                    case 'newBroadcastForm': const formData = new FormData(form); const data = Object.fromEntries(formData.entries()); data.selected_contacts = Array.from(form.querySelector('select[name="selected_contacts[]"]').selectedOptions).map(option => option.value); result = await fetchApi('create_broadcast.php', { method: 'POST', body: data }); if (result && result.status === 'success') { showToast(result.message, 'success'); closeModal('newBroadcastModal'); form.reset(); loadBroadcasts(); } else if (result) { showToast('Error: ' + result.message, 'error'); } break;
+                    case 'newBroadcastForm': const formData = new FormData(form); const data = Object.fromEntries(formData.entries()); data.selected_contacts = Array.from(form.querySelector('select[name="selected_contacts[]"]').selectedOptions).map(option => option.value); result = await fetchApi('create_broadcast.php', { method: 'POST', body: data }); if (result && result.status === 'success') { alert(result.message); closeModal('newBroadcastModal'); form.reset(); loadBroadcasts(); } else if (result) { alert('Error: ' + result.message); } break;
                     case 'rejectPayoutForm':
                         const reason = form.querySelector('#rejectionReason').value;
                         result = await fetchApi('reject_payout.php', { method: 'POST', body: { id: rejectingPayoutId, reason: reason } });
-                        if (result) showToast(result.message, 'success');
+                        if (result) alert(result.message);
                         if (result && (result.status === 'success' || result.status === 'warning')) { closeModal('rejectPayoutModal'); form.reset(); loadPayoutRequests(); }
                         break;
                     case 'uploadReceiptForm':
                         const receiptData = new FormData(form);
                         receiptData.append('payout_request_id', uploadingReceiptId);
                         result = await fetchApi('upload_receipt.php', { method: 'POST', body: receiptData });
-                        if (result) showToast(result.message, 'success');
+                        if (result) alert(result.message);
                         if (result && result.status === 'success') { closeModal('uploadReceiptModal'); form.reset(); loadPayoutRequests(); }
                         break;
                     case 'addVendorForm':
                          result = await fetchApi('add_vendor.php', { method: 'POST', body: { name: form.querySelector('#vendorName').value, email: form.querySelector('#vendorEmail').value, phone: form.querySelector('#vendorPhone').value } });
                         if (result && result.status === 'success') { closeModal('addVendorModal'); form.reset(); loadVendors(); }
-                        else if(result) { showToast('Error: ' + result.message, 'error'); }
+                        else if(result) { alert('Error: ' + result.message); }
                         break;
                     case 'recordPaymentForm': {
                         const formData = new FormData(form);
@@ -9205,7 +9172,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             body: paymentData
                         });
                         if (result && result.status === 'success') {
-                            showToast(result.message, 'success');
+                            alert(result.message);
                             closeModal('recordPaymentModal');
                             form.reset();
                             // Refresh the appropriate view (invoices or customer statement)
@@ -9216,7 +9183,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 loadCustomerStatement(currentCustomerId);
                             }
                         } else if (result) {
-                            showToast('Error: ' + result.message, 'error');
+                            alert('Error: ' + result.message);
                         }
                         break;
                     }
@@ -9269,11 +9236,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             body: { from_id: fromId, to_type: toType }
                         });
                         if (result && result.status === 'success') {
-                            showToast(result.message, 'success');
+                            alert(result.message);
                             closeModal('convertDocumentModal');
                             loadInvoices(); // Refresh the list
                         } else if (result) {
-                            showToast('Error: ' + result.message, 'error');
+                            alert('Error: ' + result.message);
                         }
                         break;
                     }
@@ -9282,11 +9249,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         const videoId = form.querySelector('#youtubeVideoId').value;
                         result = await fetchApi('modules/youtube_ads/controllers/AdController.php?action=linkManualVideo', { method: 'POST', body: { ad_id: adId, video_id: videoId } });
                         if (result && result.status === 'success') {
-                            showToast(result.message, 'success');
+                            alert(result.message);
                             openManageVideosModal(adId);
                             form.reset();
                         } else if (result) {
-                            showToast('Error: ' + result.message, 'error');
+                            alert('Error: ' + result.message);
                         }
                         break;
                     }
@@ -9399,7 +9366,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         async function markTaxPaid(type, amount) {
-            if (!await confirmAction(`Confirm that you have paid ${type} of ${DEFAULT_CURRENCY} ${number_format(amount, 2)} to TRA?`)) return;
+            if(!confirm(`Confirm that you have paid ${type} of ${DEFAULT_CURRENCY} ${number_format(amount, 2)} to TRA?`)) return;
 
             const formData = new FormData();
             formData.append('tax_type', type);
@@ -9411,10 +9378,10 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             });
 
             if (result && result.status === 'success') {
-                showToast(result.message, 'success');
+                alert(result.message);
                 loadDashboard(); // Refresh dashboard to update status
             } else {
-                showToast(result ? result.message : 'Error marking tax as paid.', 'error');
+                alert(result ? result.message : 'Error marking tax as paid.');
             }
         }
 
@@ -9740,7 +9707,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         document.addEventListener('DOMContentLoaded', async () => {
             renderAllModals();
             await initializeAppSettings();
-            await initializeUser(); // Wait for user data (theme)
+            initializeUser(); // Fire and forget
             setupEventListeners();
             setupThemeSwitcher();
 
@@ -9754,5 +9721,37 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         });
     </script>
+
+<script>
+    // Mock fetchApi
+    window.fetchApi = async function(endpoint) {
+        console.log('Mock fetch:', endpoint);
+        if (endpoint.includes('get_dashboard_stats.php')) {
+            return {
+                status: 'success',
+                revenue: 1500000,
+                expenses: 500000,
+                taxes: {
+                    vat: { amount: 100000, status: 'Due', overdue_days: 0, period: 'Sep', is_paid: false },
+                    wht: { amount: 50000, status: 'Overdue', overdue_days: 5, period: 'Sep', is_paid: false },
+                    stamp_duty: { amount: 25000, status: 'Accruing', overdue_days: 0, period: 'Oct', is_paid: false }
+                },
+                insights: [],
+                activity: [
+                    { type: 'Invoice', reference: 'INV-001', amount: 100000, created_at: new Date().toISOString() },
+                    { type: 'Expense', reference: 'Fuel', amount: 50000, created_at: new Date().toISOString() },
+                    { type: 'Receipt', reference: 'REC-001', amount: 100000, created_at: new Date().toISOString() }
+                ],
+                charts: { week: { labels: [], data: [], trend: 'neutral' } }
+            };
+        }
+        return { status: 'success' };
+    };
+
+    // Force load dashboard on init
+    window.addEventListener('load', () => {
+        showView('dashboard');
+    });
+</script>
 </body>
 </html>
