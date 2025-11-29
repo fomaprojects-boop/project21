@@ -905,7 +905,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <h2 class="text-3xl font-bold text-gray-800">Overview</h2>
                         <p class="text-gray-500 mt-1">Here's what's happening with your business today.</p>
                     </div>
-                    <button class="bg-violet-600 text-white px-4 py-2 rounded-lg shadow hover:bg-violet-700 transition flex items-center">
+                    <button onclick="window.open('api/generate_dashboard_pdf.php', '_blank')" class="bg-violet-600 text-white px-4 py-2 rounded-lg shadow hover:bg-violet-700 transition flex items-center">
                         <i class="fas fa-download mr-2"></i> Download Report
                     </button>
                 </div>
@@ -7870,7 +7870,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             // Switch to Editor
             document.getElementById('workflow-main-view').style.display = 'none';
             document.getElementById('workflow-editor-view').style.display = 'block';
-            
+
             // Populate Inputs
             document.getElementById('workflow-name-input').value = currentWorkflow.name;
             document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
@@ -9313,7 +9313,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             if (!dashboardChartData || !dashboardChartData[filter]) return;
 
             const chartData = dashboardChartData[filter];
-            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const canvas = document.getElementById('revenueChart');
+            const ctx = canvas.getContext('2d');
+
+            // Create Gradient: Violet to Transparent
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(124, 58, 237, 0.5)');
+            gradient.addColorStop(1, 'rgba(124, 58, 237, 0)');
 
             // Update Trend Text
             const trendTextEl = document.getElementById('chart-trend-text');
@@ -9339,7 +9345,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         label: 'Revenue',
                         data: chartData.data,
                         borderColor: '#7c3aed', // Violet-600
-                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                        backgroundColor: gradient,
                         borderWidth: 2,
                         tension: 0.4,
                         fill: true,
@@ -9460,7 +9466,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     // Format due date
                     const dueDateObj = new Date(info.due_date);
                     const dueMonthName = monthNames[dueDateObj.getMonth()];
-                    if (dueText) dueText.textContent = `Due: ${dueDateObj.getDate()} ${dueMonthName}`;
+                    if (dueText) {
+                        if (!isNaN(dueDateObj.getDate()) && dueMonthName) {
+                            dueText.textContent = `Due: ${dueDateObj.getDate()} ${dueMonthName}`;
+                        } else {
+                            dueText.textContent = 'Due: Check details';
+                        }
+                    }
 
                 } else {
                     // Pending
@@ -9469,7 +9481,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                     const dueDateObj = new Date(info.due_date);
                     const dueMonthName = monthNames[dueDateObj.getMonth()];
-                    if (dueText) dueText.textContent = `Due: ${dueDateObj.getDate()} ${dueMonthName}`;
+                    if (dueText) {
+                        if (!isNaN(dueDateObj.getDate()) && dueMonthName) {
+                            dueText.textContent = `Due: ${dueDateObj.getDate()} ${dueMonthName}`;
+                        } else {
+                            dueText.textContent = 'Due: Check details';
+                        }
+                    }
                 }
 
                 if (statusBadge) {
