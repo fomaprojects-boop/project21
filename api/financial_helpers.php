@@ -88,6 +88,7 @@ function get_complete_financial_data($year, $extra_params = []) {
         array_walk_recursive($summary_data, $recursive_convert);
         array_walk_recursive($balance_sheet_data, $recursive_convert);
         array_walk_recursive($cash_flow_data, $recursive_convert);
+        array_walk_recursive($equity_data, $recursive_convert); // Convert Equity Data
         array_walk_recursive($ppe_details, $recursive_convert);
         array_walk_recursive($investment_details, $recursive_convert);
 
@@ -112,6 +113,7 @@ function get_complete_financial_data($year, $extra_params = []) {
         'summary_data' => $summary_data,
         'balance_sheet_data' => $balance_sheet_data,
         'cash_flow_data' => $cash_flow_data,
+        'equity_data' => $equity_data, // Return Converted Equity Data
         'ppe_details' => $ppe_details,
         'investment_details' => $investment_details
     ];
@@ -249,9 +251,9 @@ function get_expense_breakdown_by_category($year) {
         }
     }
 
-    // 3. Payroll
+    // 3. Payroll (Use Gross Salary: Basic + Allowances)
     $stmt_payroll = $pdo->prepare("
-        SELECT SUM(pe.net_salary)
+        SELECT SUM(pe.basic_salary + pe.allowances)
         FROM payroll_entries pe
         JOIN payroll_batches pb ON pe.batch_id = pb.id
         WHERE pb.year = ? AND pb.status IN ('approved', 'processed')

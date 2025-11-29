@@ -26,8 +26,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $year = $_GET['year'] ?? date('Y');
 
-// Capture Manual Inputs (Assumed Base Currency TZS)
-// These will be converted inside get_complete_financial_data along with everything else
+// Capture Manual Inputs
 $manual_inputs = [
     'interest_expense' => isset($_GET['interest_expense']) ? floatval($_GET['interest_expense']) : 0,
     'bank_loans' => isset($_GET['bank_loans']) ? floatval($_GET['bank_loans']) : 0,
@@ -76,6 +75,8 @@ try {
     $summary_data = $all_financial_data['summary_data'];
     $balance_sheet_data = $all_financial_data['balance_sheet_data'];
     $cash_flow_data = $all_financial_data['cash_flow_data'];
+    // Use the pre-calculated equity data from API instead of recalculating
+    $equity_data = $all_financial_data['equity_data'];
     $ppe_details = $all_financial_data['ppe_details']; // Pre-converted
     $investment_details = $all_financial_data['investment_details']; // Pre-converted
 
@@ -213,35 +214,9 @@ try {
     $html .= '</tbody></table><br><br>';
 
     // 4. Statement of Changes in Equity
-    // Capital Input is already converted in get_complete_financial_data
-    $equity_curr = get_equity_data($year, $summary_data, $all_financial_data['balance_sheet_data'][$year]['loans_payable']); // Wait, manual input for capital is separate.
-    // Correction: Equity data is already computed and converted in $all_financial_data['summary_data']'s equity loop?
-    // No, equity data structure is separate but relies on summary.
-    // Let's re-use the equity logic but we need the converted numbers.
-    // The previous implementation of get_complete_financial_data returned summary, balance, cashflow.
-    // It did NOT return equity array separately, but equity is embedded in Balance Sheet total.
-    // However, for this specific table, we need the breakdown (Opening, Net Profit, Capital).
-    // These specific keys ('opening_balance', 'net_profit', 'share_capital') ARE in the conversion whitelist.
-    // So we can re-calculate using the CONVERTED summary data.
-
-    // Re-fetch equity structure using converted summary data
-    // Note: Manual input 'share_capital' was converted via array_walk if it was in the array? No, manual inputs are scalar.
-    // We need to convert the manual input explicitly for display here if it's not part of the main datasets.
-    // Actually, get_complete_financial_data handled the conversion of the final structure.
-    // But we need the breakdown array here.
-    // Let's look at get_equity_data return: ['opening_balance', 'net_profit', 'share_capital', 'closing_balance']
-    // We didn't return this structure from get_complete_financial_data. We only returned summary, balance, cashflow.
-
-    // FIX: We need to convert share_capital manually here if we want to display it, OR trust that get_equity_data
-    // using converted summary data will produce converted net_profit and opening_balance.
-    // But share_capital input is raw.
-    $exchange_rate = isset($settings['exchange_rate']) ? floatval($settings['exchange_rate']) : 1;
-    $target_currency = $settings['default_currency'] ?? 'TZS';
-
-    $converted_share_capital = convert_currency($manual_inputs['share_capital'], $target_currency, $exchange_rate);
-
-    $equity_curr = get_equity_data($year, $summary_data, $converted_share_capital);
-    $equity_prev = get_equity_data($year - 1, $summary_data, 0);
+    // Use pre-calculated and converted equity data
+    $equity_curr = $equity_data[$year];
+    $equity_prev = $equity_data[$year - 1];
 
     $html .= '<h2>Statement of Changes in Equity</h2>';
     $html .= '<table cellpadding="5">';
