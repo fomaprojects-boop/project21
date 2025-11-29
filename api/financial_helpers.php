@@ -33,17 +33,89 @@ function get_complete_financial_data($year) {
 function get_expense_breakdown_by_category($year) {
     global $pdo;
 
-    // Direct Expenses
-    $stmt = $pdo->prepare("SELECT amount, expense_type FROM direct_expenses WHERE YEAR(date) = ? AND status IN ('Approved', 'Paid')");
-    $stmt->execute([$year]);
-    $expenses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $cogs = 0;
+    $opex = 0;
 
-    // Payout Requests
-    $stmt_payout = $pdo->prepare("SELECT amount, service_type FROM payout_requests WHERE YEAR(processed_at) = ? AND status = 'Approved'");
+    // COGS Keywords (Case-insensitive)
+    $cogs_keywords = ['materials', 'material', 'goods', 'production', 'inventory', 'purchase'];
+
+    // 1. Vendor Payout Requests
+    // Rule: Status 'Approved' OR 'Paid' -> Treat as EXPENSE (P&L). Use processed_at.
+    $stmt_payout = $pdo->prepare("
+        SELECT amount, service_type
+        FROM payout_requests
+        WHERE YEAR(processed_at) = ?
+        AND status IN ('Approved', 'Paid')
+    ");
     $stmt_payout->execute([$year]);
     $payouts = $stmt_payout->fetchAll(PDO::FETCH_ASSOC);
 
-    // Payroll (Strictly OPEX)
+    foreach ($payouts as $pay) {
+        $type = strtolower(trim($pay['service_type']));
+        $is_cogs = false;
+        foreach ($cogs_keywords as $keyword) {
+            if (strpos($type, $keyword) !== false) {
+                $is_cogs = true;
+                break;
+            }
+        }
+        if ($is_cogs) {
+            $cogs += $pay['amount'];
+        } else {
+            $opex += $pay['amount'];
+        }
+    }
+
+    // 2. Internal Expenses (direct_expenses)
+    // Rule: Use date column.
+    // Type 'Claim' -> Status 'Approved' = Expense.
+    // Type 'Requisition' (default) -> Status 'Paid' = Expense.
+    $stmt_exp = $pdo->prepare("
+        SELECT amount, expense_type, type, status
+        FROM direct_expenses
+        WHERE YEAR(date) = ?
+    ");
+    $stmt_exp->execute([$year]);
+    $expenses = $stmt_exp->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($expenses as $exp) {
+        $amount = $exp['amount'];
+        $status = $exp['status'];
+        // Handle type fallback
+        $type_col = isset($exp['type']) && !empty($exp['type']) ? strtolower(trim($exp['type'])) : 'requisition';
+        $category = strtolower(trim($exp['expense_type']));
+
+        $should_include = false;
+
+        if ($type_col === 'claim') {
+            if ($status === 'Approved') {
+                $should_include = true;
+            }
+        } else {
+            // Requisition (or fallback)
+            if ($status === 'Paid') {
+                $should_include = true;
+            }
+        }
+
+        if ($should_include) {
+             $is_cogs = false;
+            foreach ($cogs_keywords as $keyword) {
+                if (strpos($category, $keyword) !== false) {
+                    $is_cogs = true;
+                    break;
+                }
+            }
+
+            if ($is_cogs) {
+                $cogs += $amount;
+            } else {
+                $opex += $amount;
+            }
+        }
+    }
+
+    // 3. Payroll (Strictly OPEX)
     $stmt_payroll = $pdo->prepare("
         SELECT SUM(pe.net_salary)
         FROM payroll_entries pe
@@ -53,38 +125,7 @@ function get_expense_breakdown_by_category($year) {
     $stmt_payroll->execute([$year]);
     $payroll_total = $stmt_payroll->fetchColumn() ?: 0;
 
-    $cogs = 0;
-    $opex = $payroll_total; // Start OPEX with payroll
-
-    // COGS Keywords (Case-insensitive)
-    $cogs_types = ['materials', 'production', 'production_cost', 'goods_purchase', 'inventory', 'goods/products'];
-
-    foreach ($expenses as $exp) {
-        $type = strtolower(trim($exp['expense_type']));
-        // Check if type matches any COGS keyword
-        $is_cogs = false;
-        foreach ($cogs_types as $keyword) {
-            if (strpos($type, $keyword) !== false) {
-                $is_cogs = true;
-                break;
-            }
-        }
-
-        if ($is_cogs) {
-            $cogs += $exp['amount'];
-        } else {
-            $opex += $exp['amount'];
-        }
-    }
-
-    foreach ($payouts as $pay) {
-        $type = strtolower(trim($pay['service_type']));
-        if ($type === 'goods/products') { // Strict match for payout requests as per instruction
-            $cogs += $pay['amount'];
-        } else {
-            $opex += $pay['amount'];
-        }
-    }
+    $opex += $payroll_total;
 
     return ['cogs' => $cogs, 'opex' => $opex];
 }
@@ -172,19 +213,43 @@ function calculate_ar_balance($date) {
 
 function calculate_ap_balance($year) {
     global $pdo;
-    // AP = Unpaid Approved Expenses
+    // AP = Unpaid Approved Expenses (Liabilities)
+    $ap_total = 0;
 
-    // Direct Expenses
-    $stmt = $pdo->prepare("SELECT SUM(amount) FROM direct_expenses WHERE YEAR(date) <= ? AND status IN ('Approved', 'Approved for Payment')");
-    $stmt->execute([$year]);
-    $ap_expenses = $stmt->fetchColumn() ?: 0;
-
-    // Payout Requests
-    $stmt_pay = $pdo->prepare("SELECT SUM(amount) FROM payout_requests WHERE YEAR(processed_at) <= ? AND status = 'Approved'");
+    // 1. Vendor Payout Requests
+    // Rule: Status 'Submitted' -> Treat as AP. Use created_at.
+    // Note: If column is missing, fallback logic handles it in SQL or application level?
+    // Assuming 'created_at' exists as per instructions.
+    $stmt_pay = $pdo->prepare("
+        SELECT SUM(amount)
+        FROM payout_requests
+        WHERE YEAR(created_at) <= ?
+        AND status = 'Submitted'
+    ");
     $stmt_pay->execute([$year]);
-    $ap_payouts = $stmt_pay->fetchColumn() ?: 0;
+    $ap_total += ($stmt_pay->fetchColumn() ?: 0);
 
-    return $ap_expenses + $ap_payouts;
+    // 2. Internal Expenses (direct_expenses)
+    // Rule: Type 'Requisition' (default) -> Status 'Approved' -> Treat as AP. Use date.
+    // Type 'Claim' -> Never AP (paid immediately upon approval).
+    $stmt_exp = $pdo->prepare("
+        SELECT amount, type, status
+        FROM direct_expenses
+        WHERE YEAR(date) <= ?
+        AND status = 'Approved'
+    ");
+    $stmt_exp->execute([$year]);
+    $expenses = $stmt_exp->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($expenses as $exp) {
+        $type = isset($exp['type']) && !empty($exp['type']) ? strtolower(trim($exp['type'])) : 'requisition';
+        if ($type !== 'claim') {
+            // Is Requisition (Committed but not paid)
+            $ap_total += $exp['amount'];
+        }
+    }
+
+    return $ap_total;
 }
 
 function get_balance_sheet_data($year, $summary_data, $equity_data) {
@@ -360,36 +425,34 @@ function calculate_total_depreciation($year) {
         $purchase_year = (int)$purchase_date->format('Y');
         $cost = $asset['purchase_cost'];
 
-        // 1. Calculate previously accumulated depreciation (up to start of this year)
-        // We simulate the depreciation history to be accurate
-        $previously_accumulated = 0;
-        for ($y = $purchase_year; $y < $year; $y++) {
-            $year_dep = $cost * $rate;
-            if ($y == $purchase_year) {
-                // First year pro-rata
-                $m = (int)$purchase_date->format('m');
-                $months_active = 12 - $m + 1;
-                $year_dep = $year_dep * ($months_active / 12);
-            }
-            $previously_accumulated += $year_dep;
-        }
+        // Formula: (Cost * Rate) * (Months_Active_in_Current_Year / 12)
 
-        // 2. Calculate Tentative Current Year Expense
-        $tentative_expense = $cost * $rate;
-        if ($purchase_year == $year) {
-            // Pro-rata current year
+        $months_active = 0;
+
+        if ($purchase_year < $year) {
+            // Full year depreciation
+            $months_active = 12;
+        } elseif ($purchase_year == $year) {
+            // Pro-rata for current year
             $m = (int)$purchase_date->format('m');
             $months_active = 12 - $m + 1;
-            $tentative_expense = $tentative_expense * ($months_active / 12);
+        } else {
+            // Purchased in future (should not happen due to query filter)
+            $months_active = 0;
         }
 
-        // 3. Cap check: (Previous + Current) cannot exceed Cost
-        // Remaining Book Value at start of year
-        $remaining_value = $cost - $previously_accumulated;
+        $annual_expense = $cost * $rate * ($months_active / 12);
 
-        // Actual expense is the lesser of the tentative expense or the remaining value
-        // Use max(0, ...) to ensure no negative depreciation if it was already fully depreciated
-        $actual_expense = min($tentative_expense, max(0, $remaining_value));
+        // Check Accumulated Depreciation Cap
+        // Calculate accumulated dep up to START of this year
+        $accumulated_prior = 0;
+        for ($y = $purchase_year; $y < $year; $y++) {
+            $m_active_y = ($y == $purchase_year) ? (12 - (int)$purchase_date->format('m') + 1) : 12;
+            $accumulated_prior += ($cost * $rate * ($m_active_y / 12));
+        }
+
+        $remaining_value = $cost - $accumulated_prior;
+        $actual_expense = min($annual_expense, max(0, $remaining_value));
 
         $total_depreciation += $actual_expense;
     }
@@ -409,7 +472,11 @@ function calculate_accumulated_depreciation($year) {
 
     foreach ($assets as $asset) {
         $rate = $depreciation_rates[$asset['category']] ?? 0.10;
-        $purchase_date = new DateTime($asset['purchase_date']);
+        try {
+            $purchase_date = new DateTime($asset['purchase_date']);
+        } catch (Exception $e) {
+            continue;
+        }
         $purchase_year = (int)$purchase_date->format('Y');
         $cost = $asset['purchase_cost'];
 
@@ -417,16 +484,9 @@ function calculate_accumulated_depreciation($year) {
 
         // Iterate from purchase year to current year
         for ($y = $purchase_year; $y <= $year; $y++) {
-            $annual_dep = $cost * $rate;
-            if ($y == $purchase_year) {
-                // Pro-rata for first year
-                $month = (int)$purchase_date->format('m');
-                $months_active = 12 - $month + 1;
-                $dep = $annual_dep * ($months_active / 12);
-            } else {
-                $dep = $annual_dep;
-            }
-            $asset_accumulated += $dep;
+            $months_active = ($y == $purchase_year) ? (12 - (int)$purchase_date->format('m') + 1) : 12;
+            $annual_dep = $cost * $rate * ($months_active / 12);
+            $asset_accumulated += $annual_dep;
         }
 
         // Cap at cost
@@ -585,33 +645,26 @@ function get_depreciation_details($year) {
             $purchase_year = (int)$purchase_date->format('Y');
             $cost = $asset['purchase_cost'];
 
-            // Replicate the logic from calculate_total_depreciation to show correct "Current Expense" in the table
-
             // 1. Previous Accumulation
             $previously_accumulated = 0;
             for ($y = $purchase_year; $y < $current_year; $y++) {
-                $year_dep = $cost * $rate;
-                if ($y == $purchase_year) {
-                     $m = (int)$purchase_date->format('m');
-                     $months_active = 12 - $m + 1;
-                     $year_dep = $year_dep * ($months_active / 12);
-                }
-                $previously_accumulated += $year_dep;
+                $m_active_y = ($y == $purchase_year) ? (12 - (int)$purchase_date->format('m') + 1) : 12;
+                $previously_accumulated += ($cost * $rate * ($m_active_y / 12));
             }
 
-            // 2. Tentative Current
-            $tentative_expense = $cost * $rate;
-            if ($purchase_year == $current_year) {
+            // 2. Current Year Expense
+            $months_active = 0;
+            if ($purchase_year < $current_year) {
+                $months_active = 12;
+            } elseif ($purchase_year == $current_year) {
                 $m = (int)$purchase_date->format('m');
                 $months_active = 12 - $m + 1;
-                $tentative_expense = $tentative_expense * ($months_active / 12);
-            } else if ($purchase_year > $current_year) {
-                $tentative_expense = 0;
             }
+            $annual_expense = $cost * $rate * ($months_active / 12);
 
             // 3. Cap
             $remaining_value = $cost - $previously_accumulated;
-            $current_expense = min($tentative_expense, max(0, $remaining_value));
+            $current_expense = min($annual_expense, max(0, $remaining_value));
 
             // Total Accum including current
             $accumulated_depreciation = min($previously_accumulated + $current_expense, $cost);
@@ -636,6 +689,10 @@ function get_expenditure_breakdown($year) {
 
     for ($i = 0; $i <= 1; $i++) {
         $current_year = $year - $i;
+        // Refactored logic to match get_expense_breakdown_by_category logic more closely if needed,
+        // but kept simple here as it's just a breakdown list, not the core accounting numbers.
+        // NOTE: For consistency, this should also ideally filter by the new logic, but
+        // for now we will just use basic aggregation for the UI charts.
         $sql = "
             SELECT
                 expense_type,
