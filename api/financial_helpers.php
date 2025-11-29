@@ -293,10 +293,12 @@ function calculate_expenses_breakdown($year) {
     $rows = array_merge($rows, $stmt2->fetchAll(PDO::FETCH_ASSOC));
 
     // 3. Payroll (Gross)
+    // Query `payroll_entries` joined with `payroll_batches`
     $stmt3 = $pdo->prepare("
-        SELECT 'Payroll' as expense_type, SUM(basic_salary + allowances) as amount
-        FROM payroll_records
-        WHERE YEAR(payment_date) = ? AND status = 'Paid'
+        SELECT 'Payroll' as expense_type, SUM(pe.basic_salary + pe.allowances) as amount
+        FROM payroll_entries pe
+        JOIN payroll_batches pb ON pe.batch_id = pb.id
+        WHERE pb.status = 'Paid' AND pb.year = ?
         GROUP BY expense_type
     ");
     $stmt3->execute([$year]);
@@ -328,20 +330,18 @@ function calculate_expenses_breakdown($year) {
 function calculate_depreciation_and_ppe($year) {
     global $pdo;
 
-    // Fetch depreciable assets (direct_expenses or payouts)
-    // Keywords: machinery, equipment, vehicle, furniture, building
-    // Exclude: shares, bonds
-    $types = ['machinery', 'equipment', 'vehicle', 'furniture', 'building'];
+    // Fetch depreciable assets (direct_expenses or payouts) or legacy assets
+    $types = ['machinery', 'equipment', 'vehicle', 'furniture', 'building', 'computer'];
     $placeholders = implode(',', array_fill(0, count($types), '?'));
 
-    // Fetch from Direct Expenses - Use 'date' column
+    // 1. Direct Expenses
     $sql = "SELECT id, expense_type, amount, date as date_acquired
             FROM direct_expenses
             WHERE status IN ('Approved', 'Paid')
             AND expense_type IN ($placeholders)
             AND YEAR(date) <= ?";
 
-    // Add Payout Requests
+    // 2. Payout Requests
     $sql .= " UNION ALL
               SELECT id, service_type as expense_type, amount, processed_at as date_acquired
               FROM payout_requests
@@ -349,7 +349,15 @@ function calculate_depreciation_and_ppe($year) {
               AND service_type IN ($placeholders)
               AND YEAR(processed_at) <= ?";
 
-    $params = array_merge($types, [$year], $types, [$year]);
+    // 3. Legacy Assets Table
+    // Columns: name (mapped to expense_type), purchase_cost, purchase_date
+    $sql .= " UNION ALL
+              SELECT id, category as expense_type, purchase_cost as amount, purchase_date as date_acquired
+              FROM assets
+              WHERE YEAR(purchase_date) <= ?";
+
+    // Bind Params (3 times: Direct, Payout, Assets)
+    $params = array_merge($types, [$year], $types, [$year], [$year]);
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -365,32 +373,37 @@ function calculate_depreciation_and_ppe($year) {
         $cost = (float)$asset['amount'];
         $acq_date = new DateTime($asset['date_acquired']);
         $acq_year = (int)$acq_date->format('Y');
+        $type_lower = strtolower($asset['expense_type']);
 
-        // Rate based on type (Simplified)
-        $rate = 0.20; // Default 20%
-        if (strpos($asset['expense_type'], 'building') !== false) $rate = 0.05;
-        if (strpos($asset['expense_type'], 'vehicle') !== false) $rate = 0.25;
+        // Granular Rates
+        $rate = 0.20; // Default (Other)
+        if (strpos($type_lower, 'computer') !== false || strpos($type_lower, 'laptop') !== false) $rate = 0.375; // 37.5%
+        if (strpos($type_lower, 'vehicle') !== false || strpos($type_lower, 'car') !== false) $rate = 0.25; // 25%
+        if (strpos($type_lower, 'furniture') !== false) $rate = 0.125; // 12.5%
+        if (strpos($type_lower, 'building') !== false) $rate = 0.05; // 5%
 
         // Calculate Accum Dep up to Start of Year
-        $years_held_prior = max(0, $year - $acq_year);
+        // Logic: Iterate from purchase year up to (but not including) current year
         $accum_dep_opening = 0;
 
-        // Simulate history
-        for ($y = $acq_year; $y < $year; $y++) {
+        for ($y_hist = $acq_year; $y_hist < $year; $y_hist++) {
              $months = 12;
-             if ($y == $acq_year) {
-                 $months = 12 - (int)$acq_date->format('m') + 1;
+             if ($y_hist == $acq_year) {
+                 $months = 12 - (int)$acq_date->format('m') + 1; // Pro-rata for first year
              }
              $charge = ($cost * $rate * $months) / 12;
              $accum_dep_opening += $charge;
         }
+
+        // Cap Accum Dep at Cost
+        if ($accum_dep_opening > $cost) $accum_dep_opening = $cost;
 
         // Current Year Charge
         $charge_current = 0;
         if ($accum_dep_opening < $cost) {
             $months = 12;
             if ($acq_year == $year) {
-                $months = 12 - (int)$acq_date->format('m') + 1;
+                $months = 12 - (int)$acq_date->format('m') + 1; // Pro-rata
                 $additions_year += $cost; // Purchased this year
             }
             $charge_current = ($cost * $rate * $months) / 12;
@@ -429,12 +442,13 @@ function calculate_depreciation_and_ppe($year) {
 function fetch_financial_investments() {
     global $pdo;
     // Use 'date' column instead of 'expense_date'
+    // REKEBISHO: 'description' column does not exist. Use 'reference' for direct_expenses and 'transaction_reference' for payout_requests
     $stmt = $pdo->prepare("
-        SELECT expense_type as investment_type, amount as purchase_cost, description, date as expense_date
+        SELECT expense_type as investment_type, amount as purchase_cost, reference as description, date as expense_date
         FROM direct_expenses
         WHERE status IN ('Approved','Paid') AND expense_type IN ('shares', 'bonds', 'treasury_bills')
         UNION ALL
-        SELECT service_type as investment_type, amount as purchase_cost, description, processed_at as expense_date
+        SELECT service_type as investment_type, amount as purchase_cost, transaction_reference as description, processed_at as expense_date
         FROM payout_requests
         WHERE status IN ('Approved','Paid') AND service_type IN ('shares', 'bonds', 'treasury_bills')
     ");
@@ -535,8 +549,13 @@ function calculate_cash_position($year) {
     $stmt3->execute([$year]);
     $outflow += (float)$stmt3->fetchColumn();
 
-    // Payroll
-    $stmt4 = $pdo->prepare("SELECT SUM(net_salary) FROM payroll_records WHERE status = 'Paid' AND YEAR(payment_date) <= ?");
+    // Payroll - Corrected Query using payroll_entries + payroll_batches
+    $stmt4 = $pdo->prepare("
+        SELECT SUM(pe.net_salary)
+        FROM payroll_entries pe
+        JOIN payroll_batches pb ON pe.batch_id = pb.id
+        WHERE pb.status = 'Paid' AND pb.year <= ?
+    ");
     $stmt4->execute([$year]);
     $outflow += (float)$stmt4->fetchColumn();
 
