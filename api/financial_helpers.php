@@ -1,658 +1,600 @@
 <?php
-require_once 'db.php';
+require_once __DIR__ . '/db.php';
 
-// A single function to fetch and structure all data to avoid recursion
-function get_complete_financial_data($year) {
-    // Basic validation
-    if (!is_numeric($year) || $year < 2000 || $year > 2100) {
-        $year = date('Y');
-    }
+// IFRS Logic Engine
+// Purpose: Process raw transaction data into IFRS-compliant reporting structures
+// (Income Statement, Balance Sheet, Cash Flow, Notes)
 
-    // 1. Get summary data (Income Statement)
-    $summary_data = get_financial_summary_data($year);
+function get_complete_financial_data($year, $manual_inputs = []) {
+    // 1. Get Base Data (TZS)
+    $data = calculate_base_financials($year);
 
-    // 2. The equity data depends on the summary
-    $equity_data = [];
-    foreach ($summary_data as $y => $data) {
-        $equity_data[$y] = get_equity_data($y, $summary_data);
-    }
+    // 2. Incorporate Manual Inputs (adjustments not in DB)
+    $data = apply_manual_adjustments($data, $year, $manual_inputs);
 
-    // 3. Balance sheet data calculation
-    $balance_sheet_data = get_balance_sheet_data($year, $summary_data, $equity_data);
-
-    // 4. Cash flow data (Indirect Method)
-    $cash_flow_data = get_cash_flow_data($year, $summary_data, $balance_sheet_data);
-
-    return [
-        'summary_data' => $summary_data,
-        'balance_sheet_data' => $balance_sheet_data,
-        'cash_flow_data' => $cash_flow_data,
-    ];
-}
-
-function get_expense_breakdown_by_category($year) {
-    global $pdo;
-
-    // Direct Expenses
-    $stmt = $pdo->prepare("SELECT amount, expense_type FROM direct_expenses WHERE YEAR(date) = ? AND status IN ('Approved', 'Paid')");
-    $stmt->execute([$year]);
-    $expenses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Payout Requests
-    $stmt_payout = $pdo->prepare("SELECT amount, service_type FROM payout_requests WHERE YEAR(processed_at) = ? AND status = 'Approved'");
-    $stmt_payout->execute([$year]);
-    $payouts = $stmt_payout->fetchAll(PDO::FETCH_ASSOC);
-
-    // Payroll (Strictly OPEX)
-    $stmt_payroll = $pdo->prepare("
-        SELECT SUM(pe.net_salary)
-        FROM payroll_entries pe
-        JOIN payroll_batches pb ON pe.batch_id = pb.id
-        WHERE pb.year = ? AND pb.status IN ('approved', 'processed')
-    ");
-    $stmt_payroll->execute([$year]);
-    $payroll_total = $stmt_payroll->fetchColumn() ?: 0;
-
-    $cogs = 0;
-    $opex = $payroll_total; // Start OPEX with payroll
-
-    // COGS Keywords (Case-insensitive)
-    $cogs_types = ['materials', 'production', 'production_cost', 'goods_purchase', 'inventory', 'goods/products'];
-
-    foreach ($expenses as $exp) {
-        $type = strtolower(trim($exp['expense_type']));
-        // Check if type matches any COGS keyword
-        $is_cogs = false;
-        foreach ($cogs_types as $keyword) {
-            if (strpos($type, $keyword) !== false) {
-                $is_cogs = true;
-                break;
-            }
-        }
-
-        if ($is_cogs) {
-            $cogs += $exp['amount'];
-        } else {
-            $opex += $exp['amount'];
-        }
-    }
-
-    foreach ($payouts as $pay) {
-        $type = strtolower(trim($pay['service_type']));
-        if ($type === 'goods/products') { // Strict match for payout requests as per instruction
-            $cogs += $pay['amount'];
-        } else {
-            $opex += $pay['amount'];
-        }
-    }
-
-    return ['cogs' => $cogs, 'opex' => $opex];
-}
-
-function get_financial_summary_data($year) {
-    global $pdo;
-
+    // 3. Currency Conversion (if needed)
     $settings = get_settings();
+    $target_currency = $settings['default_currency'] ?? 'TZS';
+    $rate = $settings['exchange_rate'] ?? 1.0;
 
-    $data = [];
-    // Comparative data (Current Year and Previous Year)
-    for ($i = 0; $i <= 1; $i++) {
-        $current_year = $year - $i;
-
-        // Revenue (Accrual Basis - Issued Invoices)
-        // IAS 18/IFRS 15: Revenue is recognized when satisfied (Invoice Issued)
-        $stmt_rev = $pdo->prepare("SELECT SUM(total_amount - tax_amount) FROM invoices WHERE YEAR(issue_date) = ? AND status != 'Draft'");
-        $stmt_rev->execute([$current_year]);
-        $total_revenue = $stmt_rev->fetchColumn() ?: 0;
-
-        // Expenses Split
-        $expenses = get_expense_breakdown_by_category($current_year);
-        $cogs = $expenses['cogs'];
-        $opex = $expenses['opex'];
-
-        $gross_profit = $total_revenue - $cogs;
-        $operating_profit = $gross_profit - $opex; // EBIT
-
-        // Depreciation (Pro-Rata)
-        $total_depreciation = calculate_total_depreciation($current_year);
-
-        $profit_before_tax = $operating_profit - $total_depreciation;
-
-        // Tax
-        if (isset($settings['corporate_tax_rate']) && !is_null($settings['corporate_tax_rate'])) {
-            $tax_rate = $settings['corporate_tax_rate'] / 100;
-            $income_tax_expense = ($profit_before_tax > 0) ? $profit_before_tax * $tax_rate : 0;
-        } else {
-            $income_tax_expense = calculate_individual_income_tax($profit_before_tax);
-        }
-
-        $net_profit_after_tax = $profit_before_tax - $income_tax_expense;
-
-        $data[$current_year] = [
-            'total_revenue' => $total_revenue,
-            'cogs' => $cogs,
-            'gross_profit' => $gross_profit,
-            'opex' => $opex,
-            'operating_profit' => $operating_profit,
-            'total_depreciation' => $total_depreciation,
-            'profit_before_tax' => $profit_before_tax,
-            'income_tax_expense' => $income_tax_expense,
-            'net_profit_after_tax' => $net_profit_after_tax,
-        ];
+    if ($target_currency !== 'TZS' && $rate > 0 && $rate != 1.0) {
+        $data = convert_all_monetary_values($data, $rate);
     }
+
     return $data;
 }
 
-function calculate_ar_balance($date) {
+function calculate_base_financials($target_year) {
     global $pdo;
-    // AR = Total Invoiced (excluding drafts) - Total Paid (via payments table)
-    // As of specific date
 
-    // 1. Total Billed
-    $stmt_billed = $pdo->prepare("SELECT SUM(total_amount) FROM invoices WHERE issue_date <= ? AND status != 'Draft'");
-    $stmt_billed->execute([$date]);
-    $total_billed = $stmt_billed->fetchColumn() ?: 0;
-
-    // 2. Total Received
-    $stmt_paid = $pdo->prepare("SELECT SUM(amount) FROM invoice_payments WHERE payment_date <= ?");
-    $stmt_paid->execute([$date]);
-    $total_paid = $stmt_paid->fetchColumn() ?: 0;
-
-    // Also include 'Receipt' type invoices which are paid immediately
-    $stmt_receipts = $pdo->prepare("SELECT SUM(total_amount) FROM invoices WHERE document_type = 'Receipt' AND issue_date <= ?");
-    $stmt_receipts->execute([$date]);
-    $receipt_total = $stmt_receipts->fetchColumn() ?: 0;
-
-    // Receipts are billed AND paid. So they are in Total Billed.
-    // If receipts are NOT in invoice_payments, we must add them to Total Paid.
-    $total_paid += $receipt_total;
-
-    return max(0, $total_billed - $total_paid);
-}
-
-function calculate_ap_balance($year) {
-    global $pdo;
-    // AP = Unpaid Approved Expenses
-
-    // Direct Expenses
-    $stmt = $pdo->prepare("SELECT SUM(amount) FROM direct_expenses WHERE YEAR(date) <= ? AND status IN ('Approved', 'Approved for Payment')");
-    $stmt->execute([$year]);
-    $ap_expenses = $stmt->fetchColumn() ?: 0;
-
-    // Payout Requests
-    $stmt_pay = $pdo->prepare("SELECT SUM(amount) FROM payout_requests WHERE YEAR(processed_at) <= ? AND status = 'Approved'");
-    $stmt_pay->execute([$year]);
-    $ap_payouts = $stmt_pay->fetchColumn() ?: 0;
-
-    return $ap_expenses + $ap_payouts;
-}
-
-function get_balance_sheet_data($year, $summary_data, $equity_data) {
-    global $pdo;
-    $balance_data = [];
-    for ($i = 0; $i <= 1; $i++) {
-        $current_year = $year - $i;
-        $date_end = "$current_year-12-31";
-
-        // ASSETS
-        // 1. Non-Current Assets (Fixed Assets)
-        $stmt_nca = $pdo->prepare("SELECT SUM(purchase_cost) FROM assets WHERE YEAR(purchase_date) <= ?");
-        $stmt_nca->execute([$current_year]);
-        $gross_fixed_assets = $stmt_nca->fetchColumn() ?: 0;
-        $accumulated_depreciation = calculate_accumulated_depreciation($current_year);
-        $net_fixed_assets = $gross_fixed_assets - $accumulated_depreciation;
-
-        $stmt_inv = $pdo->prepare("SELECT SUM(purchase_cost) FROM investments WHERE YEAR(purchase_date) <= ?");
-        $stmt_inv->execute([$current_year]);
-        $total_investments = $stmt_inv->fetchColumn() ?: 0;
-
-        $non_current_assets = $net_fixed_assets + $total_investments;
-
-        // 2. Current Assets
-        // Accounts Receivable (Refactored logic)
-        $accounts_receivable = calculate_ar_balance($date_end);
-
-        // Cash & Bank (Plug figure to balance the equation)
-
-        // LIABILITIES
-        // Accounts Payable (Refactored logic)
-        $accounts_payable = calculate_ap_balance($current_year);
-
-        // Tax Payable
-        $stmt_tax_paid = $pdo->prepare("SELECT SUM(amount) FROM tax_payments WHERE financial_year = ?");
-        $stmt_tax_paid->execute([$current_year]);
-        $prepaid_taxes = $stmt_tax_paid->fetchColumn() ?: 0;
-
-        $income_tax_expense = $summary_data[$current_year]['income_tax_expense'];
-        $tax_balance = $income_tax_expense - $prepaid_taxes;
-        $income_tax_payable = ($tax_balance > 0) ? $tax_balance : 0;
-        $tax_asset = ($tax_balance < 0) ? abs($tax_balance) : 0;
-
-        $current_liabilities = $accounts_payable + $income_tax_payable;
-        $non_current_liabilities = 0;
-        $total_liabilities = $current_liabilities + $non_current_liabilities;
-
-        // EQUITY
-        $equity = $equity_data[$current_year]['closing_balance'];
-
-        $total_liabilities_and_equity = $total_liabilities + $equity;
-
-        // BALANCE CHECK
-        $total_assets_target = $total_liabilities_and_equity;
-
-        $other_current_assets = $accounts_receivable + $tax_asset;
-
-        // Plug Cash to balance
-        $cash_position = $total_assets_target - $non_current_assets - $other_current_assets;
-
-        $current_assets = $other_current_assets + $cash_position;
-
-        $balance_data[$current_year] = [
-            'current_assets' => $current_assets,
-            'non_current_assets' => $non_current_assets,
-            'total_assets' => $total_assets_target,
-            'accounts_receivable' => $accounts_receivable,
-            'accounts_payable' => $accounts_payable,
-            'tax_payable' => $income_tax_payable,
-            'current_liabilities' => $current_liabilities,
-            'non_current_liabilities' => $non_current_liabilities,
-            'equity' => $equity,
-            'total_liabilities_and_equity' => $total_liabilities_and_equity,
-            'cash_position' => $cash_position
-        ];
-    }
-    return $balance_data;
-}
-
-function get_cash_flow_data($year, $summary_data, $balance_sheet_data) {
-    global $pdo;
+    // We calculate for Target Year and Previous Year (Comparative)
+    $years = [$target_year, $target_year - 1];
+    $summary = [];
+    $balance_sheet = [];
     $cash_flow = [];
+    $equity = [];
+    $ppe_movement = [];
+    $investments = [];
 
-    // Loop for Year and Year-1
-    for ($i = 0; $i <= 1; $i++) {
-        $current_year = $year - $i;
-        $prev_year = $current_year - 1;
+    // Fetch Asset Details for Notes (Global)
+    $investments = fetch_financial_investments();
 
-        // 1. Operating Activities
-        $profit_before_tax = $summary_data[$current_year]['profit_before_tax'];
-        $depreciation = $summary_data[$current_year]['total_depreciation'];
+    foreach ($years as $y) {
+        // A. Income Statement Components
+        $revenue = calculate_revenue($y);
+        $expenses = calculate_expenses_breakdown($y); // Split COGS vs OPEX
+        $depreciation_data = calculate_depreciation_and_ppe($y); // Returns [charge, net_book_value, movement_schedule]
 
-        // Changes in Working Capital
-        // Delta AR
-        $ar_end = $balance_sheet_data[$current_year]['accounts_receivable'];
-        $ar_start = 0;
-        if ($i == 0) {
-             $ar_start = $balance_sheet_data[$prev_year]['accounts_receivable'];
-        } else {
-             // Need to fetch AR for year-2 on the fly
-             $ar_start = calculate_ar_balance("$prev_year-12-31");
-        }
-        $increase_in_ar = $ar_end - $ar_start; // Negative impact on cash
+        $cogs = $expenses['cogs_total'];
+        $opex = $expenses['opex_total'];
+        $depreciation_charge = $depreciation_data['total_charge'];
 
-        // Delta AP
-        $ap_end = $balance_sheet_data[$current_year]['accounts_payable'];
-        $ap_start = 0;
-        if ($i == 0) {
-            $ap_start = $balance_sheet_data[$prev_year]['accounts_payable'];
-        } else {
-            $ap_start = calculate_ap_balance($prev_year);
-        }
-        $increase_in_ap = $ap_end - $ap_start; // Positive impact on cash
+        // Interest is typically manual, but we place it here for structure
+        $interest = 0; // Placeholder, populated by manual inputs later
 
-        // Tax Paid
-        $stmt_tax = $pdo->prepare("SELECT SUM(amount) FROM tax_payments WHERE financial_year = ?");
-        $stmt_tax->execute([$current_year]);
-        $tax_paid = $stmt_tax->fetchColumn() ?: 0;
+        $gross_profit = $revenue - $cogs;
+        $operating_profit = $gross_profit - $opex - $depreciation_charge;
+        $profit_before_tax = $operating_profit - $interest;
 
-        $operating_activities = $profit_before_tax + $depreciation - $increase_in_ar + $increase_in_ap - $tax_paid;
+        // Tax Calculation (Simplified 30% if profit > 0)
+        $tax_expense = ($profit_before_tax > 0) ? $profit_before_tax * 0.30 : 0;
+        $net_profit = $profit_before_tax - $tax_expense;
 
-        // 2. Investing Activities
-        $stmt_assets = $pdo->prepare("SELECT SUM(purchase_cost) FROM assets WHERE YEAR(purchase_date) = ?");
-        $stmt_assets->execute([$current_year]);
-        $assets_purchased = $stmt_assets->fetchColumn() ?: 0;
-
-        $stmt_inv = $pdo->prepare("SELECT SUM(purchase_cost) FROM investments WHERE YEAR(purchase_date) = ?");
-        $stmt_inv->execute([$current_year]);
-        $investments_purchased = $stmt_inv->fetchColumn() ?: 0;
-
-        $investing_activities = -($assets_purchased + $investments_purchased);
-
-        // 3. Financing Activities
-        // Assuming defaults for now as no Loans table exists
-        $financing_activities = 0;
-
-        $cash_flow[$current_year] = [
+        $summary[$y] = [
+            'total_revenue' => $revenue,
+            'cogs' => $cogs,
+            'gross_profit' => $gross_profit,
+            'opex' => $opex,
+            'total_depreciation' => $depreciation_charge,
+            'operating_profit' => $operating_profit,
+            'interest_expense' => $interest,
             'profit_before_tax' => $profit_before_tax,
-            'depreciation_add_back' => $depreciation,
-            'increase_in_ar' => $increase_in_ar,
-            'increase_in_ap' => $increase_in_ap,
+            'income_tax_expense' => $tax_expense,
+            'net_profit_after_tax' => $net_profit,
+            'expense_breakdown' => $expenses['breakdown']
+        ];
+
+        $ppe_movement[$y] = $depreciation_data['movement'];
+
+        // B. Balance Sheet Components
+        $ar = calculate_accounts_receivable($y);
+        $ap = calculate_accounts_payable($y);
+        $cash = calculate_cash_position($y);
+
+        // Tax Position
+        // If Tax Expense > Paid, Liability. If Paid > Expense (or Loss), Asset.
+        // For simplicity in this step, we assume Tax Payable = Tax Expense (unpaid at year end)
+        // Adjust logic: Tax Payable accumulates.
+        // Real logic: We need 'tax_paid' from DB.
+        $tax_paid = calculate_tax_paid($y);
+        $tax_liability_net = $tax_expense - $tax_paid;
+
+        $tax_payable = ($tax_liability_net > 0) ? $tax_liability_net : 0;
+        $tax_receivable = ($tax_liability_net < 0) ? abs($tax_liability_net) : 0;
+
+        // PPE & Investments
+        $net_ppe = $depreciation_data['net_book_value'];
+        $financial_investments = calculate_investment_value($y); // Cost basis for FVTPL
+
+        // Equity (Retained Earnings + Share Capital)
+        // Retained Earnings = Sum of Net Profit for all years <= y
+        $retained_earnings = calculate_retained_earnings_cumulative($y);
+        $share_capital = 0; // Manual input later
+
+        $total_assets = $net_ppe + $financial_investments + $ar + $cash + $tax_receivable;
+        // Logic Check: If Cash is negative (Overdraft), it's a Liability
+        $shareholder_loan = 0;
+        if ($cash < 0) {
+            $shareholder_loan = abs($cash); // Treat overdraft as Shareholder Loan/Injection
+            $cash = 0;
+            $total_assets = $net_ppe + $financial_investments + $ar + $cash + $tax_receivable;
+        }
+
+        $total_equity = $share_capital + $retained_earnings;
+        $total_liabilities = $ap + $tax_payable + $shareholder_loan;
+
+        $balance_sheet[$y] = [
+            'net_ppe' => $net_ppe,
+            'financial_investments' => $financial_investments,
+            'accounts_receivable' => $ar,
+            'tax_receivable' => $tax_receivable,
+            'cash_position' => $cash,
+            'total_assets' => $total_assets,
+            'equity' => $total_equity, // Base equity before manual
+            'share_capital' => $share_capital,
+            'retained_earnings' => $retained_earnings,
+            'accounts_payable' => $ap,
+            'tax_payable' => $tax_payable,
+            'shareholder_loan' => $shareholder_loan,
+            'loans_payable' => 0, // Manual
+            'total_liabilities_and_equity' => $total_equity + $total_liabilities
+        ];
+
+        // C. Cash Flow Components (Indirect Method)
+        // Needs deltas from Y-1
+        $cash_flow[$y] = [
+            'profit_before_tax' => $profit_before_tax,
+            'depreciation_add_back' => $depreciation_charge,
             'tax_paid' => $tax_paid,
-            'operating_activities' => $operating_activities,
-            'investing_activities' => $investing_activities,
-            'financing_activities' => $financing_activities,
-            'net_increase_in_cash' => $operating_activities + $investing_activities + $financing_activities,
+            // Changes calculated in post-processing
+            'increase_in_ar' => 0,
+            'increase_in_ap' => 0,
+            'additions_ppe' => $depreciation_data['additions'],
+            'purchase_investments' => calculate_investment_purchases($y),
+            'proceeds_shares' => 0, // Manual
+            'proceeds_borrowings' => 0 // Manual
         ];
     }
-    return $cash_flow;
-}
 
-function calculate_total_depreciation($year) {
-    global $pdo;
-
-    $depreciation_rates = [
-        'Furniture' => 0.125, 'Computer' => 0.375, 'Vehicle' => 0.25,
-        'Equipment' => 0.25, 'Other' => 0.10
-    ];
-
-    $total_depreciation = 0;
-    // Fetch all assets purchased on or before this year
-    $stmt = $pdo->prepare("SELECT purchase_cost, category, purchase_date FROM assets WHERE YEAR(purchase_date) <= ?");
-    $stmt->execute([$year]);
-    $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($assets as $asset) {
-        $rate = $depreciation_rates[$asset['category']] ?? 0.10;
-        try {
-            $purchase_date = new DateTime($asset['purchase_date']);
-        } catch (Exception $e) {
-            continue; // Skip invalid dates
-        }
-        $purchase_year = (int)$purchase_date->format('Y');
-        $cost = $asset['purchase_cost'];
-
-        // 1. Calculate previously accumulated depreciation (up to start of this year)
-        // We simulate the depreciation history to be accurate
-        $previously_accumulated = 0;
-        for ($y = $purchase_year; $y < $year; $y++) {
-            $year_dep = $cost * $rate;
-            if ($y == $purchase_year) {
-                // First year pro-rata
-                $m = (int)$purchase_date->format('m');
-                $months_active = 12 - $m + 1;
-                $year_dep = $year_dep * ($months_active / 12);
-            }
-            $previously_accumulated += $year_dep;
-        }
-
-        // 2. Calculate Tentative Current Year Expense
-        $tentative_expense = $cost * $rate;
-        if ($purchase_year == $year) {
-            // Pro-rata current year
-            $m = (int)$purchase_date->format('m');
-            $months_active = 12 - $m + 1;
-            $tentative_expense = $tentative_expense * ($months_active / 12);
-        }
-
-        // 3. Cap check: (Previous + Current) cannot exceed Cost
-        // Remaining Book Value at start of year
-        $remaining_value = $cost - $previously_accumulated;
-
-        // Actual expense is the lesser of the tentative expense or the remaining value
-        // Use max(0, ...) to ensure no negative depreciation if it was already fully depreciated
-        $actual_expense = min($tentative_expense, max(0, $remaining_value));
-
-        $total_depreciation += $actual_expense;
-    }
-    return $total_depreciation;
-}
-
-function calculate_accumulated_depreciation($year) {
-    global $pdo;
-    $depreciation_rates = [
-        'Furniture' => 0.125, 'Computer' => 0.375, 'Vehicle' => 0.25,
-        'Equipment' => 0.25, 'Other' => 0.10
-    ];
-    $total_accumulated = 0;
-    $stmt = $pdo->prepare("SELECT purchase_cost, category, purchase_date FROM assets WHERE YEAR(purchase_date) <= ?");
-    $stmt->execute([$year]);
-    $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($assets as $asset) {
-        $rate = $depreciation_rates[$asset['category']] ?? 0.10;
-        $purchase_date = new DateTime($asset['purchase_date']);
-        $purchase_year = (int)$purchase_date->format('Y');
-        $cost = $asset['purchase_cost'];
-
-        $asset_accumulated = 0;
-
-        // Iterate from purchase year to current year
-        for ($y = $purchase_year; $y <= $year; $y++) {
-            $annual_dep = $cost * $rate;
-            if ($y == $purchase_year) {
-                // Pro-rata for first year
-                $month = (int)$purchase_date->format('m');
-                $months_active = 12 - $month + 1;
-                $dep = $annual_dep * ($months_active / 12);
-            } else {
-                $dep = $annual_dep;
-            }
-            $asset_accumulated += $dep;
-        }
-
-        // Cap at cost
-        $total_accumulated += min($asset_accumulated, $cost);
-    }
-    return $total_accumulated;
-}
-
-function get_equity_data($year, $all_summary_data) {
-    // Opening balance is sum of net profits of previous years
-    $opening_balance = 0;
-    $start_year = 2020;
-    if ($year > $start_year) {
-         for ($y = $start_year; $y < $year; $y++) {
-             // Safe to call as no circular dep here
-             $hist_data = get_financial_summary_data($y);
-             $opening_balance += $hist_data[$y]['net_profit_after_tax'];
-         }
-    }
-
-    $net_profit = $all_summary_data[$year]['net_profit_after_tax'];
     return [
-        'opening_balance' => $opening_balance,
-        'net_profit' => $net_profit,
-        'closing_balance' => $opening_balance + $net_profit,
+        'summary_data' => $summary,
+        'balance_sheet_data' => $balance_sheet,
+        'cash_flow_data' => $cash_flow,
+        'equity_data' => [], // Populated in step 2
+        'ppe_movement' => $ppe_movement,
+        'investment_details' => $investments
     ];
 }
 
-function get_settings() {
-    global $pdo;
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-    $user_id = $_SESSION['user_id'] ?? 0;
+function apply_manual_adjustments($data, $target_year, $manual) {
+    // Apply inputs for Target Year
+    $y = $target_year;
 
-    $stmt = $pdo->prepare("
-        SELECT
-            s.business_name,
-            s.profile_picture_url,
-            s.business_address,
-            s.business_email,
-            s.default_currency,
-            u.tin_number,
-            u.vrn_number,
-            u.corporate_tax_rate,
-            s.business_stamp_url
-        FROM settings s
-        LEFT JOIN users u ON u.id = :user_id
-        WHERE s.id = 1
-    ");
-    $stmt->execute(['user_id' => $user_id]);
-    $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+    // 1. Income Statement Adjustments
+    $data['summary_data'][$y]['interest_expense'] = $manual['interest_expense'];
+    $data['summary_data'][$y]['profit_before_tax'] -= $manual['interest_expense'];
+    // Recalculate Tax & Net Profit
+    $pbt = $data['summary_data'][$y]['profit_before_tax'];
+    $tax = ($pbt > 0) ? $pbt * 0.30 : 0;
+    $data['summary_data'][$y]['income_tax_expense'] = $tax;
+    $data['summary_data'][$y]['net_profit_after_tax'] = $pbt - $tax;
 
-    if (!$settings) {
-        $settings = ['business_name' => 'My Company', 'default_currency' => 'TZS'];
-    }
-    if (empty($settings['default_currency'])) {
-        $settings['default_currency'] = 'TZS';
-    }
-    return $settings;
-}
+    // Update Retained Earnings for Balance Sheet
+    // We assume prior years are correct. We only adjust current year RE.
+    // New RE = Prev Year RE + New Net Profit
+    $new_retained_earnings = $data['balance_sheet_data'][$y-1]['retained_earnings'] + $data['summary_data'][$y]['net_profit_after_tax'];
+    $data['balance_sheet_data'][$y]['retained_earnings'] = $new_retained_earnings;
 
-function calculate_individual_income_tax($taxable_income) {
-    if ($taxable_income <= 0) { return 0; }
-    $annual_income = $taxable_income;
-    if ($annual_income <= 3240000) { return 0; }
-    elseif ($annual_income <= 6240000) { return ($annual_income - 3240000) * 0.08; }
-    elseif ($annual_income <= 9120000) { return 240000 + (($annual_income - 6240000) * 0.20); }
-    elseif ($annual_income <= 12000000) { return 816000 + (($annual_income - 9120000) * 0.25); }
-    else { return 1536000 + (($annual_income - 12000000) * 0.30); }
-}
+    // 2. Balance Sheet Adjustments
+    $data['balance_sheet_data'][$y]['loans_payable'] = $manual['bank_loans'];
 
-function generate_customer_statement_pdf($customerId, $period, $output_mode = 'download', $tenantId) {
-    global $pdo;
-    if (!class_exists('TCPDF')) { throw new Exception("TCPDF class not found."); }
+    // Calculate Share Capital
+    $share_capital_value = $manual['number_of_shares'] * $manual['par_value'];
 
-    $settings = get_settings();
-    $stmt_customer = $pdo->prepare("SELECT name, email, phone, address FROM customers WHERE id = ?");
-    $stmt_customer->execute([$customerId]);
-    $customer = $stmt_customer->fetch(PDO::FETCH_ASSOC);
-    if (!$customer) { throw new Exception("Customer not found."); }
+    // Calculate Net Cash Injection
+    // + Share Capital (Inflow)
+    // + Loans (Inflow)
+    // - Interest Expense (Outflow - assuming paid)
+    $cash_injection = $share_capital_value + $manual['bank_loans'] - $manual['interest_expense'];
 
-    $dateCondition = "";
-    $dateParams = [];
-    $endDate = new DateTime();
-    $startDate = null;
+    // Update Cash
+    $original_cash = $data['balance_sheet_data'][$y]['cash_position'];
+    $shareholder_loan = $data['balance_sheet_data'][$y]['shareholder_loan']; // This was covering overdraft
 
-    switch ($period) {
-        case 'day': $dateCondition = " AND i.issue_date = CURDATE()"; break;
-        case 'week': $startDate = new DateTime('monday this week'); $dateCondition = " AND i.issue_date >= ?"; $dateParams[] = $startDate->format('Y-m-d'); break;
-        case 'month': $startDate = new DateTime('first day of this month'); $dateCondition = " AND i.issue_date >= ?"; $dateParams[] = $startDate->format('Y-m-d'); break;
-        case 'year': $startDate = new DateTime('first day of January this year'); $dateCondition = " AND i.issue_date >= ?"; $dateParams[] = $startDate->format('Y-m-d'); break;
-    }
-    $allParams = array_merge([$customerId], $dateParams, [$customerId], $dateParams);
+    // Reconstruct Real Cash (could be negative)
+    $real_cash = ($original_cash > 0 ? $original_cash : -$shareholder_loan);
+    $final_cash = $real_cash + $cash_injection;
 
-    $sql = "
-        (SELECT i.invoice_number AS number, i.issue_date AS date, i.total_amount AS subtotal, i.tax_amount AS tax, 0 AS paid_amount, i.total_amount AS total FROM invoices i WHERE i.customer_id = ? AND i.document_type != 'Receipt' $dateCondition)
-        UNION ALL
-        (SELECT i.invoice_number AS number, p.payment_date AS date, 0 AS subtotal, 0 AS tax, p.amount AS paid_amount, 0 AS total FROM invoice_payments p JOIN invoices i ON p.invoice_id = i.id WHERE i.customer_id = ? $dateCondition)
-        ORDER BY date ASC
-    ";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($allParams);
-    $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-    $pdf->SetCreator(PDF_CREATOR);
-    $pdf->SetAuthor($settings['business_name']);
-    $pdf->SetTitle('Customer Statement');
-    $pdf->setPrintHeader(false);
-    $pdf->setPrintFooter(false);
-    $pdf->AddPage();
-    $pdf->SetFont('helvetica', '', 10);
-
-    $html = '<h1>Customer Statement</h1><p>Generated on ' . date('d/m/Y') . '</p>';
-    $html .= '<table border="1" cellpadding="5"><thead><tr><th>Date</th><th>Ref</th><th>Debit</th><th>Credit</th></tr></thead><tbody>';
-    foreach ($transactions as $t) {
-        $html .= '<tr><td>' . $t['date'] . '</td><td>' . $t['number'] . '</td><td>' . number_format($t['total'],2) . '</td><td>' . number_format($t['paid_amount'],2) . '</td></tr>';
-    }
-    $html .= '</tbody></table>';
-
-    $pdf->writeHTML($html);
-
-    $filename = 'Statement_' . $customerId . '.pdf';
-    if ($output_mode === 'save') {
-        $path = dirname(__DIR__) . '/uploads/statements/' . $filename;
-        $pdf->Output($path, 'F');
-        return $path;
+    if ($final_cash >= 0) {
+        $data['balance_sheet_data'][$y]['cash_position'] = $final_cash;
+        $data['balance_sheet_data'][$y]['shareholder_loan'] = 0;
     } else {
-        $pdf->Output($filename, 'I');
+        $data['balance_sheet_data'][$y]['cash_position'] = 0;
+        $data['balance_sheet_data'][$y]['shareholder_loan'] = abs($final_cash);
     }
-}
 
-function get_depreciation_details($year) {
-    global $pdo;
-    $depreciation_rates = [
-        'Furniture' => 0.125, 'Computer' => 0.375, 'Vehicle' => 0.25,
-        'Equipment' => 0.25, 'Other' => 0.10
+    $data['balance_sheet_data'][$y]['share_capital'] = $share_capital_value;
+    $data['balance_sheet_data'][$y]['equity'] = $share_capital_value + $new_retained_earnings; // Update Total Equity
+
+    // Recalculate Totals
+    $bs = $data['balance_sheet_data'][$y];
+    $data['balance_sheet_data'][$y]['total_assets'] = $bs['net_ppe'] + $bs['financial_investments'] + $bs['accounts_receivable'] + $bs['tax_receivable'] + $bs['cash_position'];
+    $data['balance_sheet_data'][$y]['total_liabilities_and_equity'] = $bs['equity'] + $bs['accounts_payable'] + $bs['tax_payable'] + $bs['shareholder_loan'] + $bs['loans_payable'];
+
+    // 3. Cash Flow Adjustments
+    $cf = &$data['cash_flow_data'][$y];
+    $cf_prev = $data['cash_flow_data'][$y-1];
+    $bs_prev = $data['balance_sheet_data'][$y-1];
+
+    $cf['profit_before_tax'] = $data['summary_data'][$y]['profit_before_tax'];
+    // Changes in WC
+    $cf['increase_in_ar'] = $data['balance_sheet_data'][$y]['accounts_receivable'] - $bs_prev['accounts_receivable'];
+    $cf['increase_in_ap'] = $data['balance_sheet_data'][$y]['accounts_payable'] - $bs_prev['accounts_payable'];
+
+    // Investing / Financing
+    $cf['proceeds_shares'] = $share_capital_value; // Assuming all new for this year
+    $cf['proceeds_borrowings'] = $manual['bank_loans']; // Assuming all new
+
+    // Calculate Activities
+    // Interest Paid usually Operating in IFRS or Financing. Let's deduct from Operating (as it reduced PBT).
+    // Wait, PBT is already reduced by Interest. In Indirect Method, if Interest is non-cash (accrued), we add back.
+    // If it is cash paid, we leave it (since PBT is lower).
+    // BUT usually "Interest Paid" is shown separately in Operating or Financing.
+    // Here: PBT is lower. Cash is lower. So it balances.
+
+    $cf['operating_activities'] = $cf['profit_before_tax'] + $cf['depreciation_add_back'] - $cf['tax_paid'] - $cf['increase_in_ar'] + $cf['increase_in_ap'];
+    $cf['investing_activities'] = -($cf['additions_ppe']) - ($cf['purchase_investments']);
+    $cf['financing_activities'] = $cf['proceeds_shares'] + $cf['proceeds_borrowings'];
+
+    $cf['net_increase_in_cash'] = $cf['operating_activities'] + $cf['investing_activities'] + $cf['financing_activities'];
+
+    // Equity Data for PDF
+    $data['equity_data'][$y] = [
+        'share_capital' => $share_capital_value,
+        'retained_earnings' => $new_retained_earnings
+    ];
+    // Fill prev year equity
+    $data['equity_data'][$y-1] = [
+        'share_capital' => 0, // Simplified
+        'retained_earnings' => $data['balance_sheet_data'][$y-1]['retained_earnings']
     ];
 
-    $all_details = [];
-    for ($i = 0; $i <= 1; $i++) {
-        $current_year = $year - $i;
-        $stmt = $pdo->prepare("SELECT name, category, purchase_cost, purchase_date FROM assets WHERE YEAR(purchase_date) <= ?");
-        $stmt->execute([$current_year]);
-        $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $details = [];
-        foreach ($assets as $asset) {
-            $rate = $depreciation_rates[$asset['category']] ?? 0.10;
-            try {
-                $purchase_date = new DateTime($asset['purchase_date']);
-            } catch (Exception $e) {
-                continue;
-            }
-            $purchase_year = (int)$purchase_date->format('Y');
-            $cost = $asset['purchase_cost'];
-
-            // Replicate the logic from calculate_total_depreciation to show correct "Current Expense" in the table
-
-            // 1. Previous Accumulation
-            $previously_accumulated = 0;
-            for ($y = $purchase_year; $y < $current_year; $y++) {
-                $year_dep = $cost * $rate;
-                if ($y == $purchase_year) {
-                     $m = (int)$purchase_date->format('m');
-                     $months_active = 12 - $m + 1;
-                     $year_dep = $year_dep * ($months_active / 12);
-                }
-                $previously_accumulated += $year_dep;
-            }
-
-            // 2. Tentative Current
-            $tentative_expense = $cost * $rate;
-            if ($purchase_year == $current_year) {
-                $m = (int)$purchase_date->format('m');
-                $months_active = 12 - $m + 1;
-                $tentative_expense = $tentative_expense * ($months_active / 12);
-            } else if ($purchase_year > $current_year) {
-                $tentative_expense = 0;
-            }
-
-            // 3. Cap
-            $remaining_value = $cost - $previously_accumulated;
-            $current_expense = min($tentative_expense, max(0, $remaining_value));
-
-            // Total Accum including current
-            $accumulated_depreciation = min($previously_accumulated + $current_expense, $cost);
-
-            $nbv = $cost - $accumulated_depreciation;
-
-            $details[] = [
-                'name' => $asset['name'], 'category' => $asset['category'],
-                'purchase_cost' => $asset['purchase_cost'], 'depreciation' => $current_expense,
-                'accumulated_depreciation' => $accumulated_depreciation, 'nbv' => $nbv,
-            ];
-        }
-        $all_details[$current_year] = $details;
-    }
-    return $all_details;
+    return $data;
 }
 
-function get_expenditure_breakdown($year) {
+// --- Helper Calculations ---
+
+function calculate_revenue($year) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT SUM(total_amount) FROM invoices WHERE status != 'cancelled' AND YEAR(issue_date) = ?");
+    $stmt->execute([$year]);
+    return (float)$stmt->fetchColumn();
+}
+
+function calculate_expenses_breakdown($year) {
+    global $pdo;
+    $breakdown = ['cogs' => [], 'opex' => []];
+    $cogs_total = 0;
+    $opex_total = 0;
+
+    // 1. Direct Expenses (Paid)
+    // Claim = Approved. Requisition = Paid.
+    // Use 'date' column instead of 'expense_date'
+    $stmt = $pdo->prepare("
+        SELECT expense_type, amount, 'direct' as source
+        FROM direct_expenses
+        WHERE YEAR(date) = ?
+        AND (
+            (type = 'Claim' AND status = 'Approved')
+            OR
+            (type = 'Requisition' AND status = 'Paid')
+        )
+    ");
+    $stmt->execute([$year]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 2. Payout Requests (Approved = Paid/Expense)
+    $stmt2 = $pdo->prepare("
+        SELECT service_type as expense_type, amount, 'payout' as source
+        FROM payout_requests
+        WHERE YEAR(processed_at) = ? AND status IN ('Approved', 'Paid')
+    ");
+    $stmt2->execute([$year]);
+    $rows = array_merge($rows, $stmt2->fetchAll(PDO::FETCH_ASSOC));
+
+    // 3. Payroll (Gross)
+    // Query `payroll_entries` joined with `payroll_batches`
+    $stmt3 = $pdo->prepare("
+        SELECT 'Payroll' as expense_type, SUM(pe.basic_salary + pe.allowances) as amount
+        FROM payroll_entries pe
+        JOIN payroll_batches pb ON pe.batch_id = pb.id
+        WHERE pb.status = 'Paid' AND pb.year = ?
+        GROUP BY expense_type
+    ");
+    $stmt3->execute([$year]);
+    $payroll = $stmt3->fetch(PDO::FETCH_ASSOC);
+    if ($payroll) $rows[] = $payroll;
+
+    foreach ($rows as $row) {
+        $type = strtolower(trim($row['expense_type']));
+        $amt = (float)$row['amount'];
+
+        // COGS Classification
+        if (in_array($type, ['materials', 'goods', 'production', 'goods_purchase', 'inventory'])) {
+            $cogs_total += $amt;
+            $breakdown['cogs'][$type] = ($breakdown['cogs'][$type] ?? 0) + $amt;
+        } else {
+            // Check for Investments (Asset) vs OPEX
+            // 'shares', 'bonds', 'treasury_bills' are Assets, not Expenses
+            if (in_array($type, ['shares', 'bonds', 'treasury_bills', 'machinery', 'equipment', 'vehicle', 'furniture', 'building'])) {
+                continue; // Skip capitalization items
+            }
+            $opex_total += $amt;
+            $breakdown['opex'][$type] = ($breakdown['opex'][$type] ?? 0) + $amt;
+        }
+    }
+
+    return ['cogs_total' => $cogs_total, 'opex_total' => $opex_total, 'breakdown' => $breakdown];
+}
+
+function calculate_depreciation_and_ppe($year) {
     global $pdo;
 
-     $breakdown_data = [];
+    // Fetch depreciable assets (direct_expenses or payouts) or legacy assets
+    $types = ['machinery', 'equipment', 'vehicle', 'furniture', 'building', 'computer'];
+    $placeholders = implode(',', array_fill(0, count($types), '?'));
 
-    for ($i = 0; $i <= 1; $i++) {
-        $current_year = $year - $i;
-        $sql = "
-            SELECT
-                expense_type,
-                SUM(total_amount) as total_amount
-            FROM (
-                SELECT expense_type, amount as total_amount FROM direct_expenses WHERE YEAR(date) = :year AND status IN ('Approved', 'Paid')
-                UNION ALL
-                SELECT service_type as expense_type, amount as total_amount FROM payout_requests WHERE YEAR(processed_at) = :year_payout AND status = 'Approved'
-            ) as combined_expenses
-            GROUP BY expense_type
-            ORDER BY total_amount DESC
-        ";
+    // 1. Direct Expenses
+    $sql = "SELECT id, expense_type, amount, date as date_acquired
+            FROM direct_expenses
+            WHERE status IN ('Approved', 'Paid')
+            AND expense_type IN ($placeholders)
+            AND YEAR(date) <= ?";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['year' => $current_year, 'year_payout' => $current_year]);
-        $breakdown_data[$current_year] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // 2. Payout Requests
+    $sql .= " UNION ALL
+              SELECT id, service_type as expense_type, amount, processed_at as date_acquired
+              FROM payout_requests
+              WHERE status IN ('Approved', 'Paid')
+              AND service_type IN ($placeholders)
+              AND YEAR(processed_at) <= ?";
+
+    // 3. Legacy Assets Table
+    // Columns: name (mapped to expense_type), purchase_cost, purchase_date
+    $sql .= " UNION ALL
+              SELECT id, category as expense_type, purchase_cost as amount, purchase_date as date_acquired
+              FROM assets
+              WHERE YEAR(purchase_date) <= ?";
+
+    // Bind Params (3 times: Direct, Payout, Assets)
+    $params = array_merge($types, [$year], $types, [$year], [$year]);
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $assets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $total_charge = 0;
+    $total_cost = 0;
+    $total_accum_dep = 0;
+    $additions_year = 0;
+    $movement = [];
+
+    foreach ($assets as $asset) {
+        $cost = (float)$asset['amount'];
+        $acq_date = new DateTime($asset['date_acquired']);
+        $acq_year = (int)$acq_date->format('Y');
+        $type_lower = strtolower($asset['expense_type']);
+
+        // Granular Rates
+        $rate = 0.20; // Default (Other)
+        if (strpos($type_lower, 'computer') !== false || strpos($type_lower, 'laptop') !== false) $rate = 0.375; // 37.5%
+        if (strpos($type_lower, 'vehicle') !== false || strpos($type_lower, 'car') !== false) $rate = 0.25; // 25%
+        if (strpos($type_lower, 'furniture') !== false) $rate = 0.125; // 12.5%
+        if (strpos($type_lower, 'building') !== false) $rate = 0.05; // 5%
+
+        // Calculate Accum Dep up to Start of Year
+        // Logic: Iterate from purchase year up to (but not including) current year
+        $accum_dep_opening = 0;
+
+        for ($y_hist = $acq_year; $y_hist < $year; $y_hist++) {
+             $months = 12;
+             if ($y_hist == $acq_year) {
+                 $months = 12 - (int)$acq_date->format('m') + 1; // Pro-rata for first year
+             }
+             $charge = ($cost * $rate * $months) / 12;
+             $accum_dep_opening += $charge;
+        }
+
+        // Cap Accum Dep at Cost
+        if ($accum_dep_opening > $cost) $accum_dep_opening = $cost;
+
+        // Current Year Charge
+        $charge_current = 0;
+        if ($accum_dep_opening < $cost) {
+            $months = 12;
+            if ($acq_year == $year) {
+                $months = 12 - (int)$acq_date->format('m') + 1; // Pro-rata
+                $additions_year += $cost; // Purchased this year
+            }
+            $charge_current = ($cost * $rate * $months) / 12;
+
+            // Cap at remaining value
+            if (($accum_dep_opening + $charge_current) > $cost) {
+                $charge_current = $cost - $accum_dep_opening;
+            }
+        }
+
+        $total_charge += $charge_current;
+        $total_cost += $cost;
+        $total_accum_dep += ($accum_dep_opening + $charge_current);
+
+        // Movement Data
+        $cat = ucfirst($asset['expense_type']);
+        if (!isset($movement[$cat])) {
+            $movement[$cat] = ['opening_cost' => 0, 'additions' => 0, 'charge_for_year' => 0, 'closing_accum_dep' => 0, 'closing_nbv' => 0];
+        }
+        if ($acq_year < $year) $movement[$cat]['opening_cost'] += $cost;
+        if ($acq_year == $year) $movement[$cat]['additions'] += $cost;
+
+        $movement[$cat]['charge_for_year'] += $charge_current;
+        $movement[$cat]['closing_accum_dep'] += ($accum_dep_opening + $charge_current);
+        $movement[$cat]['closing_nbv'] += ($cost - ($accum_dep_opening + $charge_current));
     }
-    return $breakdown_data;
+
+    return [
+        'total_charge' => $total_charge,
+        'net_book_value' => $total_cost - $total_accum_dep,
+        'additions' => $additions_year,
+        'movement' => $movement
+    ];
+}
+
+function fetch_financial_investments() {
+    global $pdo;
+    // Use 'date' column instead of 'expense_date'
+    // REKEBISHO: 'description' column does not exist. Use 'reference' for direct_expenses and 'transaction_reference' for payout_requests
+    $stmt = $pdo->prepare("
+        SELECT expense_type as investment_type, amount as purchase_cost, reference as description, date as expense_date
+        FROM direct_expenses
+        WHERE status IN ('Approved','Paid') AND expense_type IN ('shares', 'bonds', 'treasury_bills')
+        UNION ALL
+        SELECT service_type as investment_type, amount as purchase_cost, transaction_reference as description, processed_at as expense_date
+        FROM payout_requests
+        WHERE status IN ('Approved','Paid') AND service_type IN ('shares', 'bonds', 'treasury_bills')
+    ");
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function calculate_investment_value($year) {
+    global $pdo;
+    // Sum of cost for investments bought <= year
+    $types = ['shares', 'bonds', 'treasury_bills'];
+    $placeholders = implode(',', array_fill(0, count($types), '?'));
+
+    // Use 'date' column
+    $sql = "SELECT SUM(amount) FROM direct_expenses WHERE status IN ('Approved','Paid') AND expense_type IN ($placeholders) AND YEAR(date) <= ?
+            UNION ALL
+            SELECT SUM(amount) FROM payout_requests WHERE status IN ('Approved','Paid') AND service_type IN ($placeholders) AND YEAR(processed_at) <= ?";
+
+    $stmt = $pdo->prepare("SELECT SUM(s) FROM ($sql) as sub(s)");
+    $params = array_merge($types, [$year], $types, [$year]);
+    $stmt->execute($params);
+    return (float)$stmt->fetchColumn();
+}
+
+function calculate_investment_purchases($year) {
+    global $pdo;
+    $types = ['shares', 'bonds', 'treasury_bills'];
+    $placeholders = implode(',', array_fill(0, count($types), '?'));
+
+    // Use 'date' column
+    $sql = "SELECT SUM(amount) FROM direct_expenses WHERE status IN ('Approved','Paid') AND expense_type IN ($placeholders) AND YEAR(date) = ?
+            UNION ALL
+            SELECT SUM(amount) FROM payout_requests WHERE status IN ('Approved','Paid') AND service_type IN ($placeholders) AND YEAR(processed_at) = ?";
+
+    $stmt = $pdo->prepare("SELECT SUM(s) FROM ($sql) as sub(s)");
+    $params = array_merge($types, [$year], $types, [$year]);
+    $stmt->execute($params);
+    return (float)$stmt->fetchColumn();
+}
+
+function calculate_accounts_receivable($year) {
+    global $pdo;
+    // Invoices issued <= year and status not Paid/Cancelled
+    // Correct definition: Total Invoiced (Lifetime to date) - Total Paid (Lifetime to date)
+    // Actually, AR is strictly unpaid invoices at that date.
+    $stmt = $pdo->prepare("
+        SELECT SUM(total_amount - amount_paid)
+        FROM invoices
+        WHERE status != 'cancelled'
+        AND status != 'paid'
+        AND YEAR(issue_date) <= ?
+    ");
+    $stmt->execute([$year]);
+    return (float)$stmt->fetchColumn();
+}
+
+function calculate_accounts_payable($year) {
+    global $pdo;
+    // 1. Payout Requests: 'Submitted' only. (Approved = Paid/Expense)
+    // CORRECTED: Use 'submitted_at' instead of 'created_at' as per DB schema
+    $stmt = $pdo->prepare("SELECT SUM(amount) FROM payout_requests WHERE status = 'Submitted' AND YEAR(submitted_at) <= ?");
+    $stmt->execute([$year]);
+    $ap = (float)$stmt->fetchColumn();
+
+    // 2. Direct Expenses: 'Requisition' + 'Approved'. (Not Paid yet)
+    // STRICT RULE: Use 'date' column for ALL reporting.
+    $stmt2 = $pdo->prepare("SELECT SUM(amount) FROM direct_expenses WHERE type = 'Requisition' AND status = 'Approved' AND YEAR(date) <= ?");
+    $stmt2->execute([$year]);
+    $ap += (float)$stmt2->fetchColumn();
+
+    return $ap;
+}
+
+function calculate_tax_paid($year) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT SUM(amount) FROM tax_payments WHERE YEAR(payment_date) = ?");
+    $stmt->execute([$year]);
+    return (float)$stmt->fetchColumn();
+}
+
+function calculate_cash_position($year) {
+    global $pdo;
+    // Cash = Total Inflow - Total Outflow
+    // 1. Inflow: Invoice Payments
+    $stmt = $pdo->prepare("SELECT SUM(amount) FROM invoice_payments WHERE YEAR(payment_date) <= ?");
+    $stmt->execute([$year]);
+    $inflow = (float)$stmt->fetchColumn();
+
+    // 2. Outflow: Expenses (Direct Claims Approved, Requisitions Paid, Payouts Approved/Paid, Payroll Paid, Tax Paid)
+    $outflow = 0;
+
+    // Direct Exp (Claims Approved + Req Paid). Use 'date' column.
+    $stmt2 = $pdo->prepare("SELECT SUM(amount) FROM direct_expenses WHERE ((type='Claim' AND status='Approved') OR (type='Requisition' AND status='Paid')) AND YEAR(date) <= ?");
+    $stmt2->execute([$year]);
+    $outflow += (float)$stmt2->fetchColumn();
+
+    // Payouts (Approved/Paid)
+    $stmt3 = $pdo->prepare("SELECT SUM(amount) FROM payout_requests WHERE status IN ('Approved', 'Paid') AND YEAR(processed_at) <= ?");
+    $stmt3->execute([$year]);
+    $outflow += (float)$stmt3->fetchColumn();
+
+    // Payroll - Corrected Query using payroll_entries + payroll_batches
+    $stmt4 = $pdo->prepare("
+        SELECT SUM(pe.net_salary)
+        FROM payroll_entries pe
+        JOIN payroll_batches pb ON pe.batch_id = pb.id
+        WHERE pb.status = 'Paid' AND pb.year <= ?
+    ");
+    $stmt4->execute([$year]);
+    $outflow += (float)$stmt4->fetchColumn();
+
+    // Tax
+    $outflow += calculate_tax_paid($year);
+
+    return $inflow - $outflow;
+}
+
+function calculate_retained_earnings_cumulative($year) {
+    // Retained Earnings = Sum of Net Profit for all years up to $year
+    // We iterate from a base year (e.g. 2020) or just sum simplistic PBT-Tax
+    // For performance, let's just do a recursive sum of calculated profits
+    // Since we don't have stored annual close data, we calculate dynamic.
+    $start_year = $year - 5; // Look back 5 years max for this demo
+    $total_retained = 0;
+
+    for ($y = $start_year; $y <= $year; $y++) {
+        $rev = calculate_revenue($y);
+        $exp = calculate_expenses_breakdown($y);
+        $dep = calculate_depreciation_and_ppe($y)['total_charge'];
+        $pbt = ($rev - $exp['cogs_total']) - $exp['opex_total'] - $dep;
+        // Assume 0 interest for history
+        $tax = ($pbt > 0) ? $pbt * 0.30 : 0;
+        $net = $pbt - $tax;
+        $total_retained += $net;
+    }
+    return $total_retained;
+}
+
+function convert_all_monetary_values($data, $rate) {
+    array_walk_recursive($data, function(&$value, $key) use ($rate) {
+        if (is_numeric($value) && !in_array($key, ['year', 'number_of_shares'])) {
+            // Corrected Logic: Division for weaker -> stronger currency conversion
+            // e.g. TZS -> USD: Value / Rate
+             $value = $value / $rate;
+        }
+    });
+    return $data;
 }
 ?>
