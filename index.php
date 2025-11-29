@@ -4494,7 +4494,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 html: `
                     <div class="text-left space-y-3">
                         <p class="text-sm text-gray-500 mb-2">Enter details for IFRS compliance (${year}).</p>
-
+                        
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700">Long Term Bank Loans</label>
