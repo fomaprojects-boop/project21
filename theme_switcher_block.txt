@@ -1,0 +1,41 @@
+        function setupThemeSwitcher() {
+            const themeSwitcher = document.getElementById('theme-switcher');
+            const sunIcon = '<i class="fas fa-sun text-xl"></i>';
+            const moonIcon = '<i class="fas fa-moon text-xl"></i>';
+
+            // Function to apply theme
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    themeSwitcher.innerHTML = sunIcon;
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    themeSwitcher.innerHTML = moonIcon;
+                }
+            };
+
+            // Check for saved theme in localStorage
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else {
+                // Optional: Check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    applyTheme('dark');
+                } else {
+                    applyTheme('light');
+                }
+            }
+
+            // Add click event listener
+            themeSwitcher.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    applyTheme('light');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    applyTheme('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+        }

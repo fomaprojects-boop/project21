@@ -180,7 +180,10 @@ try {
 
     if ($stamp_is_paid) {
         // Current Month Accrual
-        $stamp_duty_sql = "SELECT SUM(amount * 0.01) FROM payout_requests WHERE service_type = 'Rent' AND MONTH(submitted_at) = ? AND YEAR(submitted_at) = ? AND (status = 'Approved' OR status = 'Paid' OR status = 'Processed')";
+        $stamp_duty_sql = "SELECT SUM(amount * 0.01) FROM payout_requests
+                           WHERE TRIM(LOWER(service_type)) = 'rent'
+                           AND MONTH(submitted_at) = ? AND YEAR(submitted_at) = ?
+                           AND (status = 'Approved' OR status = 'Paid' OR status = 'Processed')";
         $stmt_calc = $pdo->prepare($stamp_duty_sql);
         $stmt_calc->execute([$current_month, $current_year]);
         $stamp_amount = $stmt_calc->fetchColumn() ?: 0;
@@ -192,7 +195,10 @@ try {
         $stamp_is_paid = false;
     } else {
         // Previous Month Due
-        $stamp_duty_sql = "SELECT SUM(amount * 0.01) FROM payout_requests WHERE service_type = 'Rent' AND MONTH(submitted_at) = ? AND YEAR(submitted_at) = ? AND (status = 'Approved' OR status = 'Paid' OR status = 'Processed')";
+        $stamp_duty_sql = "SELECT SUM(amount * 0.01) FROM payout_requests
+                           WHERE TRIM(LOWER(service_type)) = 'rent'
+                           AND MONTH(submitted_at) = ? AND YEAR(submitted_at) = ?
+                           AND (status = 'Approved' OR status = 'Paid' OR status = 'Processed')";
         $stmt_calc = $pdo->prepare($stamp_duty_sql);
         $stmt_calc->execute([$prev_month, $prev_year]);
         $stamp_amount = $stmt_calc->fetchColumn() ?: 0;
@@ -285,7 +291,7 @@ try {
         (SELECT 'Expense' as type, expense_type as reference, amount, created_at
          FROM direct_expenses
          WHERE user_id = ?)
-        ORDER BY created_at DESC LIMIT 5
+        ORDER BY created_at DESC LIMIT 3
     ";
     $stmt = $pdo->prepare($activity_sql);
     $stmt->execute([$user_id, $user_id]);
