@@ -14,190 +14,297 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Helper function to check tax status
-function checkTaxStatus($pdo, $type, $month, $year, $dueDateDay) {
-    // Calculate due date
-    // If month is 12 (Dec), due month is 1 (Jan) of next year.
-    $dueYear = ($month == 12) ? $year + 1 : $year;
-    $dueMonth = ($month == 12) ? 1 : $month + 1;
-
-    $dueDate = date("$dueYear-$dueMonth-$dueDateDay");
-    $today = date('Y-m-d');
-
-    $stmt = $pdo->prepare("SELECT is_paid, date_paid FROM monthly_tax_status WHERE tax_type = ? AND month = ? AND year = ?");
-    $stmt->execute([$type, $month, $year]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    $is_paid = $row ? (bool)$row['is_paid'] : false;
-
-    $status = 'Pending';
-    $overdue_days = 0;
-
-    if ($is_paid) {
-        $status = 'Paid';
-    } elseif ($today > $dueDate) {
-        $status = 'Overdue';
-        $diff = strtotime($today) - strtotime($dueDate);
-        $overdue_days = ceil($diff / (60 * 60 * 24));
-    }
-
-    return [
-        'is_paid' => $is_paid,
-        'status' => $status,
-        'due_date' => $dueDate,
-        'overdue_days' => $overdue_days
-    ];
-}
-
-try {
-    // 1. REVENUE
-    // "paid invoices, receipts, estimates, quotation, tax invoice na proforma invoice.. zikiwa paid tu"
-    // We assume all these are in 'invoices' table with 'document_type'.
-    // Status must be 'Paid'.
-
-    $revenue_sql = "SELECT SUM(amount_paid)
-                    FROM invoices
-                    WHERE user_id = ?
-                    AND status = 'Paid'
-                    AND document_type IN ('Invoice', 'Receipt', 'Estimate', 'Quotation', 'Tax Invoice', 'Proforma Invoice')";
-    $stmt = $pdo->prepare($revenue_sql);
-    $stmt->execute([$user_id]);
-    $total_revenue = $stmt->fetchColumn() ?: 0;
-
-    // 2. VAT (Monthly)
-    // "kodi ya VAT ni ya mauzo ya mwezi huu" -> Sales (Invoices) of current month.
-    // Check if they are paid? "nyaraka yeyote hapo iliyokuwa paid ... kama ilikuwa na VAT"
-
-    $current_month = (int)date('m');
-    $current_year = (int)date('Y');
-
-    $vat_sql = "SELECT total_amount, tax_rate
+function getMonthlyTaxData($pdo, $user_id, $type, $targetMonth, $targetYear) {
+    if ($type === 'VAT') {
+        $sql = "SELECT total_amount, tax_rate
                 FROM invoices
                 WHERE user_id = ?
                 AND MONTH(issue_date) = ?
                 AND YEAR(issue_date) = ?
                 AND status = 'Paid'
                 AND tax_rate > 0";
-    $stmt = $pdo->prepare($vat_sql);
-    $stmt->execute([$user_id, $current_month, $current_year]);
-    $vat_invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id, $targetMonth, $targetYear]);
+        $invoices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $total_vat_due = 0;
-    foreach ($vat_invoices as $inv) {
-        // Calculate VAT component from Total Amount (inclusive)
-        // VAT = Total - (Total / (1 + rate/100))
-        $rate = floatval($inv['tax_rate']);
-        $total = floatval($inv['total_amount']);
-        if ($rate > 0) {
-            $vat_component = $total - ($total / (1 + ($rate / 100)));
-            $total_vat_due += $vat_component;
+        $total = 0;
+        foreach ($invoices as $inv) {
+            $rate = floatval($inv['tax_rate']);
+            $amt = floatval($inv['total_amount']);
+            if ($rate > 0) {
+                // VAT = Total - (Total / (1 + rate/100))
+                $total += $amt - ($amt / (1 + ($rate / 100)));
+            }
         }
-    }
-
-    $vat_info = checkTaxStatus($pdo, 'VAT', $current_month, $current_year, 20);
-
-    // 3. EXPENSES
-    // Requisition: Approved AND Paid.
-    // Claim: Approved (Only).
-    // Payout Requests: Paid (Processed).
-    // WHT from Vendor Payments.
-
-    $expenses_total = 0;
-
-    // Requisitions (Approved AND Paid)
-    $req_sql = "SELECT SUM(amount) FROM direct_expenses
-                WHERE user_id = ? AND type = 'requisition' AND status = 'Paid'";
-    $stmt = $pdo->prepare($req_sql);
-    $stmt->execute([$user_id]);
-    $expenses_total += ($stmt->fetchColumn() ?: 0);
-
-    // Claims (Approved - regardless of payment status, as they are liabilities/reimbursements)
-    // Including 'Approved for Payment' for backward compatibility
-    $claim_sql = "SELECT SUM(amount) FROM direct_expenses
-                  WHERE user_id = ? AND type = 'claim' AND (status = 'Approved' OR status = 'Approved for Payment' OR status = 'Paid' OR status = 'Posted to GL')";
-    $stmt = $pdo->prepare($claim_sql);
-    $stmt->execute([$user_id]);
-    $expenses_total += ($stmt->fetchColumn() ?: 0);
-
-    // Vendor Payments (Payouts) - Exclude Asset Purchases
-    // Assuming 'Asset Purchase' is a service type, or similar.
-    $payout_sql = "SELECT SUM(amount) FROM payout_requests
-                   WHERE (status = 'Approved' OR status = 'Paid' OR status = 'Processed')
-                   AND service_type NOT LIKE '%Asset%'";
-    $stmt = $pdo->prepare($payout_sql);
-    $stmt->execute();
-    $expenses_total += ($stmt->fetchColumn() ?: 0);
-
-    // WHT Calculation (from Payouts this month)
-    $wht_sql = "SELECT SUM(
-                    amount * CASE 
+        return $total;
+    } elseif ($type === 'WHT') {
+        $sql = "SELECT SUM(
+                    amount * CASE
                         WHEN service_type = 'Professional Service' THEN 0.05
                         WHEN service_type = 'Goods/Products' THEN 0.03
                         WHEN service_type = 'Rent' THEN 0.10
                         ELSE 0
                     END
-                ) 
+                )
                 FROM payout_requests
                 WHERE MONTH(submitted_at) = ?
                 AND YEAR(submitted_at) = ?
                 AND (status = 'Approved' OR status = 'Paid' OR status = 'Processed')";
-    $stmt = $pdo->prepare($wht_sql);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$targetMonth, $targetYear]);
+        return $stmt->fetchColumn() ?: 0;
+    }
+    return 0;
+}
+
+try {
+    $current_month = (int)date('m');
+    $current_year = (int)date('Y');
+    $today_day = (int)date('d');
+
+    // 1. REVENUE (Strictly Current Month)
+    $revenue_sql = "SELECT SUM(amount_paid)
+                    FROM invoices
+                    WHERE user_id = ?
+                    AND status = 'Paid'
+                    AND MONTH(issue_date) = ? AND YEAR(issue_date) = ?
+                    AND document_type IN ('Invoice', 'Receipt', 'Estimate', 'Quotation', 'Tax Invoice', 'Proforma Invoice')";
+    $stmt = $pdo->prepare($revenue_sql);
+    $stmt->execute([$user_id, $current_month, $current_year]);
+    $total_revenue = $stmt->fetchColumn() ?: 0;
+
+    // 2. EXPENSES (Strictly Current Month)
+    $expenses_total = 0;
+
+    $exp_sql = "SELECT SUM(amount) FROM direct_expenses
+                WHERE user_id = ?
+                AND (status = 'Paid' OR status = 'Approved' OR status = 'Posted to GL')
+                AND MONTH(date) = ? AND YEAR(date) = ?";
+    $stmt = $pdo->prepare($exp_sql);
+    $stmt->execute([$user_id, $current_month, $current_year]);
+    $expenses_total += ($stmt->fetchColumn() ?: 0);
+
+    $payout_sql = "SELECT SUM(amount) FROM payout_requests
+                   WHERE (status = 'Approved' OR status = 'Paid' OR status = 'Processed')
+                   AND service_type NOT LIKE '%Asset%'
+                   AND MONTH(submitted_at) = ? AND YEAR(submitted_at) = ?";
+    $stmt = $pdo->prepare($payout_sql);
     $stmt->execute([$current_month, $current_year]);
-    $total_wht_due = $stmt->fetchColumn() ?: 0;
+    $expenses_total += ($stmt->fetchColumn() ?: 0);
 
-    // Stamp Duty (Rent) Calculation (1% of Rent amount)
-    $stamp_duty_sql = "SELECT SUM(amount * 0.01)
-                       FROM payout_requests
-                       WHERE service_type = 'Rent'
-                       AND MONTH(submitted_at) = ?
-                       AND YEAR(submitted_at) = ?
-                       AND (status = 'Approved' OR status = 'Paid' OR status = 'Processed')";
-    $stmt = $pdo->prepare($stamp_duty_sql);
-    $stmt->execute([$current_month, $current_year]);
-    $total_stamp_duty = $stmt->fetchColumn() ?: 0;
 
-    // Add WHT to total expenses? Usually WHT is deducted from payment, but the expense is the Gross.
-    // But user asked for "total expenses... onesha pia Withholding Taxes".
-    // Usually Total Expense = Gross Amount.
-    // If we summed 'amount' from payout_requests, check if that 'amount' is Gross or Net.
-    // Usually 'amount' is the requested amount (Gross). WHT is a deduction.
-    // So expenses_total already includes the WHT portion (as part of gross expense).
-    // We will just display WHT separately as requested.
+    // 3. TAX LOGIC (Rolling)
+    $prev_month = $current_month - 1;
+    $prev_year = $current_year;
+    if ($prev_month == 0) {
+        $prev_month = 12;
+        $prev_year = $current_year - 1;
+    }
 
-    $wht_info = checkTaxStatus($pdo, 'WHT', $current_month, $current_year, 7);
+    $stmt = $pdo->prepare("SELECT is_paid FROM monthly_tax_status WHERE tax_type = ? AND month = ? AND year = ?");
 
-    // 4. RECENT ACTIVITY
-    // "kitendo anachokifanya user aliyelogin"
-    // We'll try to find logs. If no logs table, we synthesize from their actions (Created Invoice, Expense, etc).
+    // --- VAT ---
+    $stmt->execute(['VAT', $prev_month, $prev_year]);
+    $vat_is_paid = $stmt->fetchColumn();
 
-    $activity = [];
+    $vat_amount = 0;
+    $vat_status = '';
+    $vat_days_overdue = 0;
+    $vat_display_period = '';
+    $vat_due_date = '';
 
-    // Recent Invoices
-    $stmt = $pdo->prepare("SELECT 'Created Invoice' as action, invoice_number as details, created_at FROM invoices WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
+    if ($vat_is_paid) {
+        $vat_amount = getMonthlyTaxData($pdo, $user_id, 'VAT', $current_month, $current_year);
+        $vat_status = 'Accruing';
+        $dateObj = DateTime::createFromFormat('!m', $current_month);
+        $vat_display_period = $dateObj->format('M');
+        $vat_due_date = date('Y-m-20', strtotime('+1 month'));
+        // Correctly set is_paid to false for the current accruing month
+        $vat_is_paid = false;
+    } else {
+        $vat_amount = getMonthlyTaxData($pdo, $user_id, 'VAT', $prev_month, $prev_year);
+        $dateObj = DateTime::createFromFormat('!m', $prev_month);
+        $vat_display_period = $dateObj->format('M');
+        $vat_due_date = date('Y-m-20');
+
+        if ($today_day > 20) {
+            $vat_status = 'Overdue';
+            $vat_days_overdue = $today_day - 20;
+        } else {
+            $vat_status = 'Due';
+        }
+    }
+
+    // --- WHT ---
+    $stmt->execute(['WHT', $prev_month, $prev_year]);
+    $wht_is_paid = $stmt->fetchColumn();
+
+    $wht_amount = 0;
+    $wht_status = '';
+    $wht_days_overdue = 0;
+    $wht_display_period = '';
+    $wht_due_date = '';
+
+    if ($wht_is_paid) {
+        $wht_amount = getMonthlyTaxData($pdo, $user_id, 'WHT', $current_month, $current_year);
+        $wht_status = 'Accruing';
+        $dateObj = DateTime::createFromFormat('!m', $current_month);
+        $wht_display_period = $dateObj->format('M');
+        $wht_due_date = date('Y-m-07', strtotime('+1 month'));
+        // Correctly set is_paid to false for the current accruing month
+        $wht_is_paid = false;
+    } else {
+        $wht_amount = getMonthlyTaxData($pdo, $user_id, 'WHT', $prev_month, $prev_year);
+        $dateObj = DateTime::createFromFormat('!m', $prev_month);
+        $wht_display_period = $dateObj->format('M');
+        $wht_due_date = date('Y-m-07');
+
+        if ($today_day > 7) {
+            $wht_status = 'Overdue';
+            $wht_days_overdue = $today_day - 7;
+        } else {
+            $wht_status = 'Due';
+        }
+    }
+
+    // --- STAMP DUTY ---
+    // Check Status (Using Rent Payouts logic, similar to WHT rolling)
+    $stmt->execute(['Stamp Duty', $prev_month, $prev_year]);
+    $stamp_is_paid = $stmt->fetchColumn();
+
+    $stamp_amount = 0;
+    $stamp_status = '';
+    $stamp_days_overdue = 0;
+    $stamp_display_period = '';
+    $stamp_due_date = '';
+
+    if ($stamp_is_paid) {
+        // Current Month Accrual
+        $stamp_duty_sql = "SELECT SUM(amount * 0.01) FROM payout_requests WHERE service_type = 'Rent' AND MONTH(submitted_at) = ? AND YEAR(submitted_at) = ? AND (status = 'Approved' OR status = 'Paid' OR status = 'Processed')";
+        $stmt_calc = $pdo->prepare($stamp_duty_sql);
+        $stmt_calc->execute([$current_month, $current_year]);
+        $stamp_amount = $stmt_calc->fetchColumn() ?: 0;
+
+        $stamp_status = 'Accruing';
+        $dateObj = DateTime::createFromFormat('!m', $current_month);
+        $stamp_display_period = $dateObj->format('M');
+        $stamp_due_date = date('Y-m-07', strtotime('+1 month')); // Due 7th like WHT
+        $stamp_is_paid = false;
+    } else {
+        // Previous Month Due
+        $stamp_duty_sql = "SELECT SUM(amount * 0.01) FROM payout_requests WHERE service_type = 'Rent' AND MONTH(submitted_at) = ? AND YEAR(submitted_at) = ? AND (status = 'Approved' OR status = 'Paid' OR status = 'Processed')";
+        $stmt_calc = $pdo->prepare($stamp_duty_sql);
+        $stmt_calc->execute([$prev_month, $prev_year]);
+        $stamp_amount = $stmt_calc->fetchColumn() ?: 0;
+
+        $dateObj = DateTime::createFromFormat('!m', $prev_month);
+        $stamp_display_period = $dateObj->format('M');
+        $stamp_due_date = date('Y-m-07');
+
+        if ($today_day > 7) {
+            $stamp_status = 'Overdue';
+            $stamp_days_overdue = $today_day - 7;
+        } else {
+            $stamp_status = 'Due';
+        }
+    }
+
+
+    // 4. INTELLIGENT INSIGHTS
+    $insights = [];
+
+    if ($total_revenue > 0) {
+        $burn_ratio = ($expenses_total - $total_revenue) / $total_revenue;
+        if ($burn_ratio > 0.10) {
+            $insights[] = [
+                'type' => 'warning',
+                'message' => 'High Burn Rate: Expenses are ' . round($burn_ratio * 100) . '% higher than revenue.'
+            ];
+        }
+    } elseif ($expenses_total > 0) {
+         $insights[] = [
+            'type' => 'warning',
+            'message' => 'High Burn Rate: You have expenses but zero revenue this month.'
+        ];
+    }
+
+    $last_month_revenue_sql = "SELECT SUM(amount_paid) FROM invoices
+                               WHERE user_id = ? AND status = 'Paid'
+                               AND issue_date BETWEEN ? AND ?";
+    $last_month_start = date('Y-m-01', strtotime("last month"));
+    $days_in_last_month = date('t', strtotime("last month"));
+    $target_day = min($today_day, $days_in_last_month);
+    $last_month_end = date('Y-m-', strtotime("last month")) . $target_day;
+
+    $stmt = $pdo->prepare($last_month_revenue_sql);
+    $stmt->execute([$user_id, $last_month_start, $last_month_end]);
+    $last_month_revenue = $stmt->fetchColumn() ?: 0;
+
+    if ($total_revenue > $last_month_revenue) {
+        $insights[] = [
+            'type' => 'success',
+            'message' => 'Growth Trend: Revenue is up compared to last month (same period).'
+        ];
+    }
+
+    $overdue_sql = "SELECT COUNT(*) FROM invoices
+                    WHERE user_id = ?
+                    AND status = 'Overdue'
+                    AND due_date < CURRENT_DATE";
+    $stmt = $pdo->prepare($overdue_sql);
     $stmt->execute([$user_id]);
-    while($row = $stmt->fetch(PDO::FETCH_ASSOC)) $activity[] = $row;
+    $overdue_count = $stmt->fetchColumn();
 
-    // Recent Expenses
-    $stmt = $pdo->prepare("SELECT 'Submitted Expense' as action, expense_type as details, created_at FROM direct_expenses WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
-    $stmt->execute([$user_id]);
-    while($row = $stmt->fetch(PDO::FETCH_ASSOC)) $activity[] = $row;
+    if ($overdue_count > 5) {
+        $insights[] = [
+            'type' => 'danger',
+            'message' => 'Collection Alert: ' . $overdue_count . ' invoices are overdue. Initiate debt collection.'
+        ];
+    }
 
-    // Recent Logins? (Optional, if we tracked it)
+    if ($today_day >= 18 && $vat_status !== 'Accruing' && !$vat_is_paid) {
+        $insights[] = [
+            'type' => 'danger',
+            'message' => 'Critical Tax Deadline: VAT for ' . $vat_display_period . ' is due soon or overdue.'
+        ];
+    }
 
-    // Sort by time and take top 3
-    usort($activity, function($a, $b) {
-        return strtotime($b['created_at']) - strtotime($a['created_at']);
-    });
-    $activity = array_slice($activity, 0, 3);
+    if (empty($insights)) {
+        $insights[] = [
+            'type' => 'success',
+            'message' => 'System is running smoothly. No critical actions needed.'
+        ];
+    }
 
+    // 5. ACTIVITY (Refined Query & Formatting)
+    $activity_sql = "
+        (SELECT document_type as type, invoice_number as reference, total_amount as amount, created_at
+         FROM invoices
+         WHERE user_id = ? AND document_type IN ('Invoice', 'Receipt'))
+        UNION ALL
+        (SELECT 'Expense' as type, expense_type as reference, amount, created_at
+         FROM direct_expenses
+         WHERE user_id = ?)
+        ORDER BY created_at DESC LIMIT 5
+    ";
+    $stmt = $pdo->prepare($activity_sql);
+    $stmt->execute([$user_id, $user_id]);
+    $activity = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 5. GRAPH DATA (Revenue Overview)
-    // "week, mwezi, miezi 3, miezi 6 na mwaka 1... style ya trend bullish au bearish"
+    // Format Activity Data
+    foreach ($activity as &$item) {
+        if ($item['type'] === 'Expense') {
+            // "prepaid_electricity" -> "Prepaid Electricity"
+            $item['reference'] = ucwords(str_replace('_', ' ', $item['reference']));
+        }
+    }
+    unset($item);
 
+    // 6. CHART DATA
     function getRevenueData($pdo, $user_id, $startDate, $endDate, $groupBy = 'day') {
         $format = ($groupBy === 'day') ? '%Y-%m-%d' : '%Y-%m';
         $phpFormat = ($groupBy === 'day') ? 'Y-m-d' : 'Y-m';
-        
+
         $sql = "SELECT DATE_FORMAT(issue_date, '$format') as period, SUM(amount_paid) as total
                 FROM invoices
                 WHERE user_id = ?
@@ -209,7 +316,6 @@ try {
         $stmt->execute([$user_id, $startDate, $endDate]);
         $dbData = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
-        // Fill missing dates/months
         $filledData = [];
         $current = strtotime($startDate);
         $end = strtotime($endDate);
@@ -220,139 +326,63 @@ try {
             $filledData[$key] = isset($dbData[$key]) ? (float)$dbData[$key] : 0;
             $current = strtotime($step, $current);
         }
-
         return $filledData;
     }
 
     function calculateTrend($data) {
         if (count($data) < 2) return 'neutral';
         $values = array_values($data);
-        
-        // If all values are 0, it's neutral
         if (array_sum($values) == 0) return 'neutral';
-
-        // Linear regression for better trend analysis
-        $n = count($values);
-        $sumX = 0;
-        $sumY = 0;
-        $sumXY = 0;
-        $sumXX = 0;
-
-        for ($i = 0; $i < $n; $i++) {
-            $sumX += $i;
-            $sumY += $values[$i];
-            $sumXY += ($i * $values[$i]);
-            $sumXX += ($i * $i);
-        }
-        
-        $denominator = ($n * $sumXX - $sumX * $sumX);
-        if ($denominator == 0) return 'neutral';
-
-        $slope = ($n * $sumXY - $sumX * $sumY) / $denominator;
-
-        // Use a small threshold to avoid floating point noise
-        if ($slope > 0.01) return 'bullish';
-        if ($slope < -0.01) return 'bearish';
+        $first = $values[0];
+        $last = end($values);
+        if ($last > $first) return 'bullish';
+        if ($last < $first) return 'bearish';
         return 'neutral';
     }
 
-    // Week (Last 7 days)
     $week_data = getRevenueData($pdo, $user_id, date('Y-m-d', strtotime('-6 days')), date('Y-m-d'), 'day');
-
-    // Month (Last 30 days)
     $month_data = getRevenueData($pdo, $user_id, date('Y-m-d', strtotime('-29 days')), date('Y-m-d'), 'day');
-
-    // 3 Months
     $three_months_data = getRevenueData($pdo, $user_id, date('Y-m-01', strtotime('-2 months')), date('Y-m-t'), 'month');
-
-    // 6 Months
     $six_months_data = getRevenueData($pdo, $user_id, date('Y-m-01', strtotime('-5 months')), date('Y-m-t'), 'month');
-
-    // 1 Year
     $year_data = getRevenueData($pdo, $user_id, date('Y-m-01', strtotime('-11 months')), date('Y-m-t'), 'month');
 
     $charts = [
-        'week' => [
-            'labels' => array_keys($week_data),
-            'data' => array_values($week_data),
-            'trend' => calculateTrend($week_data)
-        ],
-        'month' => [
-            'labels' => array_keys($month_data),
-            'data' => array_values($month_data),
-            'trend' => calculateTrend($month_data)
-        ],
-        'three_months' => [
-            'labels' => array_keys($three_months_data),
-            'data' => array_values($three_months_data),
-            'trend' => calculateTrend($three_months_data)
-        ],
-        'six_months' => [
-            'labels' => array_keys($six_months_data),
-            'data' => array_values($six_months_data),
-            'trend' => calculateTrend($six_months_data)
-        ],
-        'year' => [
-            'labels' => array_keys($year_data),
-            'data' => array_values($year_data),
-            'trend' => calculateTrend($year_data)
-        ]
+        'week' => ['labels' => array_keys($week_data), 'data' => array_values($week_data), 'trend' => calculateTrend($week_data)],
+        'month' => ['labels' => array_keys($month_data), 'data' => array_values($month_data), 'trend' => calculateTrend($month_data)],
+        'three_months' => ['labels' => array_keys($three_months_data), 'data' => array_values($three_months_data), 'trend' => calculateTrend($three_months_data)],
+        'six_months' => ['labels' => array_keys($six_months_data), 'data' => array_values($six_months_data), 'trend' => calculateTrend($six_months_data)],
+        'year' => ['labels' => array_keys($year_data), 'data' => array_values($year_data), 'trend' => calculateTrend($year_data)]
     ];
-
-    // 6. INTELLIGENT ANALYSIS (Insights)
-    $insights = [];
-
-    // Revenue Insight
-    $current_month_rev = end($month_data); // Approx current month or last day
-    // A better revenue comparison: This month total vs Last month total
-    $this_month_total = $year_data[date('Y-m')] ?? 0;
-    $last_month_total = $year_data[date('Y-m', strtotime('-1 month'))] ?? 0;
-
-    if ($this_month_total > $last_month_total) {
-        $diff = $this_month_total - $last_month_total;
-        $insights[] = [
-            'type' => 'success',
-            'message' => 'Revenue is up by ' . number_format($diff) . ' compared to last month. Good job!'
-        ];
-    } elseif ($this_month_total < $last_month_total) {
-        $insights[] = [
-            'type' => 'warning',
-            'message' => 'Revenue is lower than last month. Consider following up on pending estimates.'
-        ];
-    }
-
-    // Expense Insight
-    if ($expenses_total > $total_revenue && $total_revenue > 0) {
-        $insights[] = [
-            'type' => 'danger',
-            'message' => 'High burn rate detected. Expenses exceed revenue. Review your spending.'
-        ];
-    }
-
-    // Tax Insight
-    if ($vat_info['status'] === 'Overdue' || $wht_info['status'] === 'Overdue') {
-        $insights[] = [
-            'type' => 'danger',
-            'message' => 'You have overdue tax payments. Pay immediately to avoid penalties from TRA.'
-        ];
-    }
-
-    // Default Insight if empty
-    if (empty($insights)) {
-        $insights[] = [
-            'type' => 'success',
-            'message' => 'System is running smoothly. No urgent issues detected.'
-        ];
-    }
 
     echo json_encode([
         'status' => 'success',
         'revenue' => $total_revenue,
         'expenses' => $expenses_total,
         'taxes' => [
-            'vat' => array_merge(['amount' => $total_vat_due], $vat_info),
-            'wht' => array_merge(['amount' => $total_wht_due], $wht_info),
-            'stamp_duty' => $total_stamp_duty
+            'vat' => [
+                'amount' => $vat_amount,
+                'status' => $vat_status,
+                'overdue_days' => $vat_days_overdue,
+                'period' => $vat_display_period,
+                'due_date' => $vat_due_date,
+                'is_paid' => $vat_is_paid
+            ],
+            'wht' => [
+                'amount' => $wht_amount,
+                'status' => $wht_status,
+                'overdue_days' => $wht_days_overdue,
+                'period' => $wht_display_period,
+                'due_date' => $wht_due_date,
+                'is_paid' => $wht_is_paid
+            ],
+            'stamp_duty' => [
+                'amount' => $stamp_amount,
+                'status' => $stamp_status,
+                'overdue_days' => $stamp_days_overdue,
+                'period' => $stamp_display_period,
+                'due_date' => $stamp_due_date,
+                'is_paid' => $stamp_is_paid
+            ]
         ],
         'activity' => $activity,
         'charts' => $charts,
