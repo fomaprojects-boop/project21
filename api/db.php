@@ -36,6 +36,22 @@ try {
         }
     }
 
+    // --- Schema Auto-Fix: Add exchange_rate column to users ---
+    // Allows currency conversion logic
+    $schema_lock_exchange_rate = __DIR__ . '/schema_exchange_rate.lock';
+    if (!file_exists($schema_lock_exchange_rate)) {
+        try {
+            $pdo->exec("ALTER TABLE users ADD COLUMN exchange_rate DECIMAL(10, 2) DEFAULT 1.00");
+            file_put_contents($schema_lock_exchange_rate, date('Y-m-d H:i:s'));
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1060) {
+                file_put_contents($schema_lock_exchange_rate, date('Y-m-d H:i:s'));
+            } else {
+                file_put_contents(__DIR__ . '/../db_migration_error.log', date('Y-m-d H:i:s') . " - Exchange Rate Column Migration Failed: " . $e->getMessage() . "\n", FILE_APPEND);
+            }
+        }
+    }
+
     // --- Schema Auto-Fix: Ensure provider_message_id exists for Status Ticks ---
     $schema_lock_ticks = __DIR__ . '/schema_provider_msg_id.lock';
     if (!file_exists($schema_lock_ticks)) {
