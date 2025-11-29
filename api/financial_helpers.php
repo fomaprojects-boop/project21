@@ -217,13 +217,11 @@ function calculate_ap_balance($year) {
     $ap_total = 0;
 
     // 1. Vendor Payout Requests
-    // Rule: Status 'Submitted' -> Treat as AP. Use created_at.
-    // Note: If column is missing, fallback logic handles it in SQL or application level?
-    // Assuming 'created_at' exists as per instructions.
+    // Rule: Status 'Submitted' -> Treat as AP. Use submitted_at.
     $stmt_pay = $pdo->prepare("
         SELECT SUM(amount)
         FROM payout_requests
-        WHERE YEAR(created_at) <= ?
+        WHERE YEAR(submitted_at) <= ?
         AND status = 'Submitted'
     ");
     $stmt_pay->execute([$year]);
