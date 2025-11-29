@@ -1788,6 +1788,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                         <label class="block text-sm font-medium text-gray-700">Corporate Tax Rate (%)</label>
                                         <input type="number" name="corporate_tax_rate" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100 client-settings-input" step="0.01" placeholder="e.g., 30.00" disabled>
                                     </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Exchange Rate (1 USD = ? TZS)</label>
+                                        <input type="number" name="exchange_rate" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100 client-settings-input" step="0.01" placeholder="e.g., 2500" disabled>
+                                        <p class="text-xs text-gray-500 mt-1">Used for converting financial reports if currency is changed.</p>
+                                    </div>
                                 </div>
                             </div>
                              <!-- VFD Integration Section -->
@@ -4479,11 +4484,52 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         function generateFinancialStatement() {
             const year = document.getElementById('financial-year').value;
             if (!year) {
-                showToast('Please select a financial year.', 'success');
+                showToast('Please select a financial year.', 'error');
                 return;
             }
-            const pdfUrl = `${BASE_URL}/api/generate_financial_statement.php?year=${year}`;
-            window.open(pdfUrl, '_blank');
+
+            Swal.fire({
+                title: 'Closing Adjustments',
+                html: `
+                    <div class="text-left space-y-3">
+                        <p class="text-sm text-gray-500 mb-2">Enter closing values for ${year} (if any).</p>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700">Long Term Bank Loans</label>
+                            <input type="number" id="swal-bank-loans" class="swal2-input w-full m-0" placeholder="0.00" step="0.01">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700">Finance Costs (Interest)</label>
+                            <input type="number" id="swal-interest" class="swal2-input w-full m-0" placeholder="0.00" step="0.01">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700">Share Capital Injection</label>
+                            <input type="number" id="swal-capital" class="swal2-input w-full m-0" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Generate Report',
+                confirmButtonColor: '#7c3aed',
+                cancelButtonColor: '#d33',
+                preConfirm: () => {
+                    return {
+                        loans: document.getElementById('swal-bank-loans').value || 0,
+                        interest: document.getElementById('swal-interest').value || 0,
+                        capital: document.getElementById('swal-capital').value || 0
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const params = new URLSearchParams({
+                        year: year,
+                        bank_loans: result.value.loans,
+                        interest_expense: result.value.interest,
+                        share_capital: result.value.capital
+                    });
+                    const pdfUrl = `${BASE_URL}/api/generate_financial_statement.php?${params.toString()}`;
+                    window.open(pdfUrl, '_blank');
+                }
+            });
         }
 
         async function loadInvestments(page = 1) {
@@ -6464,6 +6510,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 form.querySelector('[name="tin_number"]').value = settings.tin_number || '';
                 form.querySelector('[name="vrn_number"]').value = settings.vrn_number || '';
                 form.querySelector('[name="default_currency"]').value = settings.default_currency || 'TZS';
+                form.querySelector('[name="exchange_rate"]').value = settings.exchange_rate || '';
 
                 // VFD Fields
                 const vfdStatusEl = document.getElementById('vfd-verification-status');

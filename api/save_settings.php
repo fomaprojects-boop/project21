@@ -31,7 +31,8 @@ $system_columns = [
 $user_columns = [
     'flw_public_key', 'flw_secret_key', 'flw_encryption_key',
     'flw_display_name', 'flw_test_mode', 'flw_active', 'flw_webhook_secret_hash',
-    'corporate_tax_rate', 'tin_number', 'vrn_number', 'vfd_enabled', 'vfd_frequency', 'vfd_is_verified'
+    'corporate_tax_rate', 'tin_number', 'vrn_number', 'vfd_enabled', 'vfd_frequency', 'vfd_is_verified',
+    'exchange_rate'
 ];
 
 // --- Upload ya Picha (Hii inabaki kama ilivyo) ---
