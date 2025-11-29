@@ -900,78 +900,112 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         dashboard: `
             <div class="p-8 space-y-8">
                 <!-- Welcome Section -->
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h2 class="text-3xl font-bold text-gray-800">Overview</h2>
+                        <h2 class="text-3xl font-bold text-gray-800 tracking-tight">Overview</h2>
                         <p class="text-gray-500 mt-1">Here's what's happening with your business today.</p>
                     </div>
-                    <button class="bg-violet-600 text-white px-4 py-2 rounded-lg shadow hover:bg-violet-700 transition flex items-center">
+                    <button onclick="window.open('api/generate_dashboard_pdf.php', '_blank')" class="bg-gray-900 text-white px-5 py-2.5 rounded-xl shadow-lg hover:bg-gray-800 transition-all flex items-center font-medium transform hover:-translate-y-0.5">
                         <i class="fas fa-download mr-2"></i> Download Report
                     </button>
                 </div>
 
-                <!-- Stats Grid -->
+                <!-- Stats Grid (Modern Gradients) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Revenue -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-violet-100 rounded-full text-violet-600"><i class="fas fa-wallet text-xl"></i></div>
+                    <div class="bg-gradient-to-br from-violet-600 to-indigo-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:opacity-20 transition-opacity"></div>
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-wallet text-xl"></i></div>
+                            <span class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Paid</span>
                         </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Total Revenue (Paid)</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-revenue">Loading...</p>
+                        <h3 class="text-indigo-100 text-sm font-medium">Total Revenue</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-revenue">Loading...</p>
                     </div>
 
                     <!-- Expenses -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-rose-100 rounded-full text-rose-600"><i class="fas fa-file-invoice-dollar text-xl"></i></div>
+                    <div class="bg-gradient-to-br from-rose-500 to-pink-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:opacity-20 transition-opacity"></div>
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-file-invoice-dollar text-xl"></i></div>
                         </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Total Expenses</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-expenses">Loading...</p>
+                        <h3 class="text-rose-100 text-sm font-medium">Total Expenses</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-expenses">Loading...</p>
                     </div>
 
                     <!-- VAT Tax -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-sky-100 rounded-full text-sky-600"><i class="fas fa-percent text-xl"></i></div>
-                            <span id="vat-status-badge" class="text-xs font-bold px-2 py-1 rounded-full"></span>
+                    <div class="bg-gradient-to-br from-blue-500 to-cyan-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-percent text-xl"></i></div>
+                            <span id="vat-status-badge" class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Loading</span>
                         </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Monthly VAT (<span id="vat-period"></span>)</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-vat">Loading...</p>
-                        <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                            <div class="text-xs text-gray-500" id="vat-due-text"></div>
+                        <h3 class="text-blue-100 text-sm font-medium">Monthly VAT (<span id="vat-period"></span>)</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-vat">Loading...</p>
+                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                            <div class="text-xs text-blue-50" id="vat-due-text"></div>
                             <div class="flex space-x-2">
-                                <button onclick="openTaxHistory('VAT')" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 shadow-sm" title="View History"><i class="fas fa-history"></i></button>
-                                <button id="btn-pay-vat" class="hidden text-xs bg-sky-600 text-white px-3 py-1 rounded hover:bg-sky-700 shadow-sm">Set Paid</button>
+                                <button onclick="openTaxHistory('VAT')" class="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors" title="View History"><i class="fas fa-history"></i></button>
+                                <button id="btn-pay-vat" class="hidden text-xs bg-white text-blue-600 font-bold px-3 py-1 rounded hover:bg-blue-50 shadow-sm transition-colors">Pay Now</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- WHT Tax -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-amber-100 rounded-full text-amber-600"><i class="fas fa-hand-holding-usd text-xl"></i></div>
-                            <span id="wht-status-badge" class="text-xs font-bold px-2 py-1 rounded-full"></span>
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-hand-holding-usd text-xl"></i></div>
+                            <span id="wht-status-badge" class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Loading</span>
                         </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Withholding Tax (<span id="wht-period"></span>)</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-wht">Loading...</p>
-                        <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                            <div class="text-xs text-gray-500" id="wht-due-text"></div>
+                        <h3 class="text-amber-100 text-sm font-medium">Withholding Tax (<span id="wht-period"></span>)</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-wht">Loading...</p>
+                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                            <div class="text-xs text-amber-50" id="wht-due-text"></div>
                             <div class="flex space-x-2">
-                                <button onclick="openTaxHistory('WHT')" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 shadow-sm" title="View History"><i class="fas fa-history"></i></button>
-                                <button id="btn-pay-wht" class="hidden text-xs bg-amber-600 text-white px-3 py-1 rounded hover:bg-amber-700 shadow-sm">Set Paid</button>
+                                <button onclick="openTaxHistory('WHT')" class="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors" title="View History"><i class="fas fa-history"></i></button>
+                                <button id="btn-pay-wht" class="hidden text-xs bg-white text-amber-600 font-bold px-3 py-1 rounded hover:bg-amber-50 shadow-sm transition-colors">Pay Now</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Main Content Grid (Charts & Activity) -->
+                <!-- Insights & Stamp Duty (Moved Up) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Stamp Duty -->
+                    <div id="dash-stamp-duty-card" class="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-stamp text-xl"></i></div>
+                            <span class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Liability</span>
+                        </div>
+                        <h3 class="text-emerald-100 text-sm font-medium">Stamp Duty (Rent 1%)</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-stamp-duty">Loading...</p>
+                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                            <div class="text-xs text-emerald-50">Payable to TRA</div>
+                             <button onclick="openTaxHistory('Stamp Duty')" class="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors" title="View History"><i class="fas fa-history"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- System Insights -->
+                    <div id="dashboard-insights" class="lg:col-span-2 hidden bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-lightbulb text-amber-400 mr-2 text-2xl"></i>
+                            <span>System Insights</span>
+                        </h3>
+                        <div id="insights-list" class="space-y-3">
+                            <!-- JS will populate -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid (Chart & Activity) -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Chart Section -->
-                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-bold text-gray-800">Revenue Overview <span id="chart-trend-text" class="text-sm font-normal ml-2"></span></h3>
-                            <select id="revenue-chart-filter" class="border-gray-300 border rounded-md text-sm p-1 text-gray-600" onchange="updateRevenueChart()">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Revenue Overview</h3>
+                                <div id="chart-trend-text" class="text-sm font-medium mt-1"></div>
+                            </div>
+                            <select id="revenue-chart-filter" class="bg-gray-50 border-none text-gray-600 text-sm font-semibold rounded-lg focus:ring-2 focus:ring-violet-500 py-2 px-4 cursor-pointer hover:bg-gray-100 transition-colors" onchange="updateRevenueChart()">
                                 <option value="week">Last 7 Days</option>
                                 <option value="month">Last 30 Days</option>
                                 <option value="three_months">Last 3 Months</option>
@@ -979,49 +1013,27 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                 <option value="year">Last Year</option>
                             </select>
                         </div>
-                        <div class="h-80 bg-gray-50 rounded-lg p-2">
+                        <div class="h-80 w-full">
                             <canvas id="revenueChart"></canvas>
                         </div>
                     </div>
 
                     <!-- Recent Activity -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold text-gray-800 mb-6">Recent Activity</h3>
-                        <div id="recent-activity-list" class="space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-clock text-violet-500 mr-2"></i> Recent Activity
+                        </h3>
+                        <div id="recent-activity-list" class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                              <div class="flex justify-center items-center h-40">
                                 <div class="loader"></div>
                             </div>
                         </div>
-                        <button onclick="showView('activity_log', event)" class="w-full mt-6 text-center text-sm text-violet-600 font-semibold hover:text-violet-800">View All Activity</button>
+                        <button onclick="showView('activity_log', event)" class="w-full mt-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all text-sm">
+                            View All Activity
+                        </button>
                     </div>
                 </div>
-
-                <!-- Bottom Section: Stamp Duty & Insights -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Stamp Duty (Rent) -->
-                    <div id="dash-stamp-duty-card" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-teal-100 rounded-full text-teal-600"><i class="fas fa-stamp text-xl"></i></div>
-                            <span class="text-xs font-bold px-2 py-1 rounded-full bg-orange-100 text-orange-800">Liability</span>
-                        </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Stamp Duty (Rent 1%)</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-stamp-duty">Loading...</p>
-                        <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                            <div class="text-xs text-gray-500">Payable to TRA (Auto-calculated)</div>
-                             <button onclick="openTaxHistory('Stamp Duty')" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 shadow-sm" title="View History"><i class="fas fa-history"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- System Insights (Intelligent Analysis) -->
-                    <div id="dashboard-insights" class="lg:col-span-2 hidden bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i>System Insights & Recommendations</h3>
-                        <div id="insights-list" class="space-y-3">
-                            <!-- JS will populate -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            `,
+            </div>`,
             conversations: `<div class="flex-1 flex flex-col h-full overflow-hidden">
                 <div class="flex-1 flex overflow-hidden">
                     <!-- Conversations Sidebar -->
@@ -2544,61 +2556,35 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     </table>
                 </div>
             </div>`,
-            taxHistoryModal: `<div id="taxHistoryModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
-                <div class="relative mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
-                    <div class="mt-3">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 id="tax-history-title" class="text-xl font-bold text-gray-800">Tax Payment History</h3>
-                            <button onclick="closeModal('taxHistoryModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
-                        </div>
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden border max-h-96 overflow-y-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead class="bg-gray-100 sticky top-0">
-                                    <tr>
-                                        <th class="p-3 font-semibold">Date Paid</th>
-                                        <th class="p-3 font-semibold">Amount</th>
-                                        <th class="p-3 font-semibold">Period</th>
-                                        <th class="p-3 font-semibold">Reference</th>
-                                        <th class="p-3 font-semibold">Receipt</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tax-history-table-body" class="divide-y">
-                                    <!-- History rows loaded here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>`,
-            taxHistoryModal: `<div id="taxHistoryModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
-                <div class="relative mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
-                    <div class="mt-3">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 id="tax-history-title" class="text-xl font-bold text-gray-800">Tax Payment History</h3>
-                            <button onclick="closeModal('taxHistoryModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
-                        </div>
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden border max-h-96 overflow-y-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead class="bg-gray-100 sticky top-0">
-                                    <tr>
-                                        <th class="p-3 font-semibold">Date Paid</th>
-                                        <th class="p-3 font-semibold">Amount</th>
-                                        <th class="p-3 font-semibold">Period</th>
-                                        <th class="p-3 font-semibold">Reference</th>
-                                        <th class="p-3 font-semibold">Receipt</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tax-history-table-body" class="divide-y">
-                                    <!-- History rows loaded here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>`,
         };
         const modalTemplates = {
-                        fillTemplateVariablesModal: `<div id="fillTemplateVariablesModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 h-full w-full hidden items-center justify-center z-50 backdrop-blur-sm">
+            taxHistoryModal: `<div id="taxHistoryModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
+                <div class="relative mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 id="tax-history-title" class="text-xl font-bold text-gray-800">Tax Payment History</h3>
+                            <button onclick="closeModal('taxHistoryModal')" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden border max-h-96 overflow-y-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-100 sticky top-0">
+                                    <tr>
+                                        <th class="p-3 font-semibold">Date Paid</th>
+                                        <th class="p-3 font-semibold">Amount</th>
+                                        <th class="p-3 font-semibold">Period</th>
+                                        <th class="p-3 font-semibold">Reference</th>
+                                        <th class="p-3 font-semibold">Receipt</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tax-history-table-body" class="divide-y">
+                                    <!-- History rows loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>`,
+            fillTemplateVariablesModal: `<div id="fillTemplateVariablesModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 h-full w-full hidden items-center justify-center z-50 backdrop-blur-sm">
                 <div class="relative mx-auto p-0 border-0 w-full max-w-5xl shadow-2xl rounded-xl bg-white overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
 
                     <!-- LEFT COLUMN: Inputs -->
@@ -3359,8 +3345,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                     tbody.innerHTML += `
                         <tr>
-                            <td class="p-3">${new Date(item.date_paid).toLocaleDateString()}</td>
-                            <td class="p-3 font-semibold">${DEFAULT_CURRENCY} ${number_format(item.amount, 2)}</td>
+                            <td class="p-3 text-gray-700">${item.formatted_date || new Date(item.date_paid).toLocaleDateString()}</td>
+                            <td class="p-3 font-bold text-gray-900">${DEFAULT_CURRENCY} ${item.formatted_amount || number_format(item.amount, 2)}</td>
                             <td class="p-3">${item.period_month} ${item.period_year}</td>
                             <td class="p-3 font-mono text-xs text-gray-600">${item.reference_number || 'N/A'}</td>
                             <td class="p-3">${receiptLink}</td>
@@ -7870,7 +7856,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             // Switch to Editor
             document.getElementById('workflow-main-view').style.display = 'none';
             document.getElementById('workflow-editor-view').style.display = 'block';
-            
+
             // Populate Inputs
             document.getElementById('workflow-name-input').value = currentWorkflow.name;
             document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
@@ -9313,7 +9299,13 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             if (!dashboardChartData || !dashboardChartData[filter]) return;
 
             const chartData = dashboardChartData[filter];
-            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const canvas = document.getElementById('revenueChart');
+            const ctx = canvas.getContext('2d');
+
+            // Create Gradient: Violet to Transparent
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(124, 58, 237, 0.5)');
+            gradient.addColorStop(1, 'rgba(124, 58, 237, 0)');
 
             // Update Trend Text
             const trendTextEl = document.getElementById('chart-trend-text');
@@ -9339,7 +9331,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         label: 'Revenue',
                         data: chartData.data,
                         borderColor: '#7c3aed', // Violet-600
-                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                        backgroundColor: gradient,
                         borderWidth: 2,
                         tension: 0.4,
                         fill: true,
@@ -9438,50 +9430,50 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                 amountEl.textContent = DEFAULT_CURRENCY + ' ' + number_format(info.amount, 2);
 
-                // Current month name
-                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
                 const d = new Date();
-                if (periodEl) periodEl.textContent = monthNames[d.getMonth()];
+                if (periodEl) periodEl.textContent = info.period || d.toLocaleString('default', { month: 'short' });
 
-                let statusColor = 'bg-blue-100 text-blue-800';
                 let statusText = info.status;
+                let badgeClass = 'bg-white/20 backdrop-blur-sm border border-white/10 text-white'; // Default Glass
 
-                if (payBtn) payBtn.classList.add('hidden'); // Reset
-
-                if (info.status === 'Paid') {
-                    statusColor = 'bg-green-100 text-green-800';
-                    if (payBtn) payBtn.classList.add('hidden');
-                    if (dueText) dueText.textContent = 'Paid on ' + (info.date_paid || new Date().toLocaleDateString()); // Fallback if date_paid null
-                } else if (info.status === 'Overdue') {
-                    statusColor = 'bg-red-100 text-red-800';
+                if (info.status === 'Overdue') {
                     statusText = `Overdue (${info.overdue_days} days)`;
-                    if (payBtn) payBtn.classList.remove('hidden');
-
-                    // Format due date
-                    const dueDateObj = new Date(info.due_date);
-                    const dueMonthName = monthNames[dueDateObj.getMonth()];
-                    if (dueText) dueText.textContent = `Due: ${dueDateObj.getDate()} ${dueMonthName}`;
-
-                } else {
-                    // Pending
-                    statusColor = 'bg-yellow-100 text-yellow-800';
-                    if (payBtn) payBtn.classList.remove('hidden');
-
-                    const dueDateObj = new Date(info.due_date);
-                    const dueMonthName = monthNames[dueDateObj.getMonth()];
-                    if (dueText) dueText.textContent = `Due: ${dueDateObj.getDate()} ${dueMonthName}`;
+                    badgeClass = 'bg-red-500/80 text-white border border-red-400';
+                } else if (info.status === 'Paid') {
+                    badgeClass = 'bg-emerald-500/80 text-white border border-emerald-400';
                 }
 
                 if (statusBadge) {
-                    statusBadge.className = `text-xs font-bold px-2 py-1 rounded-full ${statusColor}`;
+                    statusBadge.className = `text-xs font-bold px-2 py-1 rounded-lg ${badgeClass}`;
                     statusBadge.textContent = statusText;
                 }
 
-                // Remove old listeners to prevent duplicates
+                // Pay Button Visibility
                 if (payBtn) {
-                    const newPayBtn = payBtn.cloneNode(true);
-                    payBtn.parentNode.replaceChild(newPayBtn, payBtn);
-                    newPayBtn.onclick = () => markTaxPaid(type.toUpperCase(), info.amount);
+                    if (info.status === 'Due' || info.status === 'Overdue') {
+                        payBtn.classList.remove('hidden');
+                        payBtn.onclick = () => markTaxPaid(type.toUpperCase(), info.amount);
+                    } else {
+                        payBtn.classList.add('hidden');
+                    }
+                }
+
+                // Due Date Text
+                if (dueText) {
+                    if (info.is_paid) {
+                         dueText.textContent = 'Paid - Thank you';
+                    } else if (info.due_date) {
+                        const dueDateObj = new Date(info.due_date);
+                        if (!isNaN(dueDateObj.getTime())) {
+                             const day = dueDateObj.getDate();
+                             const month = dueDateObj.toLocaleString('default', { month: 'short' });
+                             dueText.textContent = `Due: ${day} ${month}`;
+                        } else {
+                             dueText.textContent = 'Due date unavailable';
+                        }
+                    } else {
+                        dueText.textContent = '';
+                    }
                 }
             };
 
@@ -9489,7 +9481,6 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 updateTaxCard('vat', data.taxes.vat, 'vat');
                 updateTaxCard('wht', data.taxes.wht, 'wht');
 
-                // Always show stamp duty card (removed hidden class check)
                 const stampAmount = document.getElementById('dash-stamp-duty');
                 if (stampAmount) {
                     stampAmount.textContent = DEFAULT_CURRENCY + ' ' + number_format(data.taxes.stamp_duty, 2);
@@ -9498,43 +9489,53 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
             renderInsights(data.insights);
 
-            // 3. Recent Activity
+            // 3. Recent Activity (Modern List)
             const activityList = document.getElementById('recent-activity-list');
             if (activityList) {
                 activityList.innerHTML = '';
                 if (data.activity && data.activity.length > 0) {
                     data.activity.forEach(item => {
                         const timeAgo = getTimeAgo(new Date(item.created_at));
-                        let iconClass = 'fa-info-circle';
+                        let iconClass = 'fa-arrow-right';
                         let bgClass = 'bg-gray-100';
                         let textClass = 'text-gray-600';
+                        let amountClass = 'text-gray-800';
+                        let sign = '';
 
-                        if (item.action.includes('Invoice')) {
-                            iconClass = 'fa-file-invoice'; bgClass = 'bg-violet-100'; textClass = 'text-violet-600';
-                        } else if (item.action.includes('Expense')) {
-                            iconClass = 'fa-file-invoice-dollar'; bgClass = 'bg-rose-100'; textClass = 'text-rose-600';
+                        // Check type from API (Invoice/Receipt/Expense)
+                        const typeLower = (item.type || '').toLowerCase();
+
+                        if (typeLower === 'invoice' || typeLower === 'receipt') {
+                            iconClass = 'fa-arrow-down'; // Money In
+                            bgClass = 'bg-violet-100';
+                            textClass = 'text-violet-600';
+                            amountClass = 'text-green-600';
+                            sign = '+';
+                        } else if (typeLower === 'expense') {
+                            iconClass = 'fa-arrow-up'; // Money Out
+                            bgClass = 'bg-rose-100';
+                            textClass = 'text-rose-600';
+                            amountClass = 'text-gray-800';
+                            sign = '-';
                         }
 
-                        // XSS Prevention: Use textContent for user input
-                        const div = document.createElement('div');
-                        div.className = 'flex items-start';
-                        div.innerHTML = `
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full ${bgClass} flex items-center justify-center ${textClass}">
-                                <i class="fas ${iconClass}"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-900"></p>
-                                <p class="text-xs text-gray-500"></p>
-                                <p class="text-xs text-gray-400 mt-1">${timeAgo}</p>
+                        activityList.innerHTML += `
+                            <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-10 rounded-full ${bgClass} flex items-center justify-center ${textClass} mr-4 shadow-sm">
+                                        <i class="fas ${iconClass}"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-800">${item.reference}</p>
+                                        <p class="text-xs text-gray-500 font-medium capitalize">${item.type} &bull; ${timeAgo}</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-sm ${amountClass}">${sign}${DEFAULT_CURRENCY} ${number_format(item.amount, 2)}</span>
                             </div>
                         `;
-                        div.querySelector('p.text-sm').textContent = item.action;
-                        div.querySelector('p.text-xs.text-gray-500').textContent = item.details || '';
-
-                        activityList.appendChild(div);
                     });
                 } else {
-                    activityList.innerHTML = '<p class="text-gray-500 text-center text-sm">No recent activity.</p>';
+                    activityList.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-gray-400"><i class="far fa-calendar-times text-3xl mb-2 opacity-50"></i><p class="text-sm">No recent activity.</p></div>';
                 }
             }
 

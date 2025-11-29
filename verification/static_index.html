@@ -882,78 +882,84 @@
                         dashboard: `
             <div class="p-8 space-y-8">
                 <!-- Welcome Section -->
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h2 class="text-3xl font-bold text-gray-800">Overview</h2>
+                        <h2 class="text-3xl font-bold text-gray-800 tracking-tight">Overview</h2>
                         <p class="text-gray-500 mt-1">Here's what's happening with your business today.</p>
                     </div>
-                    <button class="bg-violet-600 text-white px-4 py-2 rounded-lg shadow hover:bg-violet-700 transition flex items-center">
+                    <button onclick="window.open('api/generate_dashboard_pdf.php', '_blank')" class="bg-gray-900 text-white px-5 py-2.5 rounded-xl shadow-lg hover:bg-gray-800 transition-all flex items-center font-medium transform hover:-translate-y-0.5">
                         <i class="fas fa-download mr-2"></i> Download Report
                     </button>
                 </div>
 
-                <!-- Stats Grid -->
+                <!-- Stats Grid (Modern Gradients) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Revenue -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-violet-100 rounded-full text-violet-600"><i class="fas fa-wallet text-xl"></i></div>
+                    <div class="bg-gradient-to-br from-violet-600 to-indigo-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:opacity-20 transition-opacity"></div>
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-wallet text-xl"></i></div>
+                            <span class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Paid</span>
                         </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Total Revenue (Paid)</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-revenue">Loading...</p>
+                        <h3 class="text-indigo-100 text-sm font-medium">Total Revenue</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-revenue">Loading...</p>
                     </div>
 
                     <!-- Expenses -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-rose-100 rounded-full text-rose-600"><i class="fas fa-file-invoice-dollar text-xl"></i></div>
+                    <div class="bg-gradient-to-br from-rose-500 to-pink-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:opacity-20 transition-opacity"></div>
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-file-invoice-dollar text-xl"></i></div>
                         </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Total Expenses</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-expenses">Loading...</p>
+                        <h3 class="text-rose-100 text-sm font-medium">Total Expenses</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-expenses">Loading...</p>
                     </div>
 
                     <!-- VAT Tax -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-sky-100 rounded-full text-sky-600"><i class="fas fa-percent text-xl"></i></div>
-                            <span id="vat-status-badge" class="text-xs font-bold px-2 py-1 rounded-full"></span>
+                    <div class="bg-gradient-to-br from-blue-500 to-cyan-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-percent text-xl"></i></div>
+                            <span id="vat-status-badge" class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Loading</span>
                         </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Monthly VAT (<span id="vat-period"></span>)</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-vat">Loading...</p>
-                        <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                            <div class="text-xs text-gray-500" id="vat-due-text"></div>
+                        <h3 class="text-blue-100 text-sm font-medium">Monthly VAT (<span id="vat-period"></span>)</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-vat">Loading...</p>
+                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                            <div class="text-xs text-blue-50" id="vat-due-text"></div>
                             <div class="flex space-x-2">
-                                <button onclick="openTaxHistory('VAT')" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 shadow-sm" title="View History"><i class="fas fa-history"></i></button>
-                                <button id="btn-pay-vat" class="hidden text-xs bg-sky-600 text-white px-3 py-1 rounded hover:bg-sky-700 shadow-sm">Set Paid</button>
+                                <button onclick="openTaxHistory('VAT')" class="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors" title="View History"><i class="fas fa-history"></i></button>
+                                <button id="btn-pay-vat" class="hidden text-xs bg-white text-blue-600 font-bold px-3 py-1 rounded hover:bg-blue-50 shadow-sm transition-colors">Pay Now</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- WHT Tax -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-amber-100 rounded-full text-amber-600"><i class="fas fa-hand-holding-usd text-xl"></i></div>
-                            <span id="wht-status-badge" class="text-xs font-bold px-2 py-1 rounded-full"></span>
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-hand-holding-usd text-xl"></i></div>
+                            <span id="wht-status-badge" class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Loading</span>
                         </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Withholding Tax (<span id="wht-period"></span>)</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-wht">Loading...</p>
-                        <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                            <div class="text-xs text-gray-500" id="wht-due-text"></div>
+                        <h3 class="text-amber-100 text-sm font-medium">Withholding Tax (<span id="wht-period"></span>)</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-wht">Loading...</p>
+                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                            <div class="text-xs text-amber-50" id="wht-due-text"></div>
                             <div class="flex space-x-2">
-                                <button onclick="openTaxHistory('WHT')" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 shadow-sm" title="View History"><i class="fas fa-history"></i></button>
-                                <button id="btn-pay-wht" class="hidden text-xs bg-amber-600 text-white px-3 py-1 rounded hover:bg-amber-700 shadow-sm">Set Paid</button>
+                                <button onclick="openTaxHistory('WHT')" class="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors" title="View History"><i class="fas fa-history"></i></button>
+                                <button id="btn-pay-wht" class="hidden text-xs bg-white text-amber-600 font-bold px-3 py-1 rounded hover:bg-amber-50 shadow-sm transition-colors">Pay Now</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Main Content Grid (Charts & Activity) -->
+                <!-- Main Content Grid -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Chart Section -->
-                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-bold text-gray-800">Revenue Overview <span id="chart-trend-text" class="text-sm font-normal ml-2"></span></h3>
-                            <select id="revenue-chart-filter" class="border-gray-300 border rounded-md text-sm p-1 text-gray-600" onchange="updateRevenueChart()">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Revenue Overview</h3>
+                                <div id="chart-trend-text" class="text-sm font-medium mt-1"></div>
+                            </div>
+                            <select id="revenue-chart-filter" class="bg-gray-50 border-none text-gray-600 text-sm font-semibold rounded-lg focus:ring-2 focus:ring-violet-500 py-2 px-4 cursor-pointer hover:bg-gray-100 transition-colors" onchange="updateRevenueChart()">
                                 <option value="week">Last 7 Days</option>
                                 <option value="month">Last 30 Days</option>
                                 <option value="three_months">Last 3 Months</option>
@@ -961,49 +967,55 @@
                                 <option value="year">Last Year</option>
                             </select>
                         </div>
-                        <div class="h-80 bg-gray-50 rounded-lg p-2">
+                        <div class="h-80 w-full">
                             <canvas id="revenueChart"></canvas>
                         </div>
                     </div>
 
                     <!-- Recent Activity -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold text-gray-800 mb-6">Recent Activity</h3>
-                        <div id="recent-activity-list" class="space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-clock text-violet-500 mr-2"></i> Recent Activity
+                        </h3>
+                        <div id="recent-activity-list" class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                              <div class="flex justify-center items-center h-40">
                                 <div class="loader"></div>
                             </div>
                         </div>
-                        <button onclick="showView('activity_log', event)" class="w-full mt-6 text-center text-sm text-violet-600 font-semibold hover:text-violet-800">View All Activity</button>
+                        <button onclick="showView('activity_log', event)" class="w-full mt-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all text-sm">
+                            View All Activity
+                        </button>
                     </div>
                 </div>
 
                 <!-- Bottom Section: Stamp Duty & Insights -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Stamp Duty (Rent) -->
-                    <div id="dash-stamp-duty-card" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="p-3 bg-teal-100 rounded-full text-teal-600"><i class="fas fa-stamp text-xl"></i></div>
-                            <span class="text-xs font-bold px-2 py-1 rounded-full bg-orange-100 text-orange-800">Liability</span>
+                    <!-- Stamp Duty -->
+                    <div id="dash-stamp-duty-card" class="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fas fa-stamp text-xl"></i></div>
+                            <span class="text-xs font-bold px-2 py-1 rounded-lg bg-white/20 backdrop-blur-sm border border-white/10">Liability</span>
                         </div>
-                        <h3 class="text-gray-500 text-sm font-medium">Stamp Duty (Rent 1%)</h3>
-                        <p class="text-2xl font-bold text-gray-800 mt-1" id="dash-stamp-duty">Loading...</p>
-                        <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                            <div class="text-xs text-gray-500">Payable to TRA (Auto-calculated)</div>
-                             <button onclick="openTaxHistory('Stamp Duty')" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 shadow-sm" title="View History"><i class="fas fa-history"></i></button>
+                        <h3 class="text-emerald-100 text-sm font-medium">Stamp Duty (Rent 1%)</h3>
+                        <p class="text-3xl font-bold mt-1 tracking-tight" id="dash-stamp-duty">Loading...</p>
+                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                            <div class="text-xs text-emerald-50">Payable to TRA</div>
+                             <button onclick="openTaxHistory('Stamp Duty')" class="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded transition-colors" title="View History"><i class="fas fa-history"></i></button>
                         </div>
                     </div>
 
-                    <!-- System Insights (Intelligent Analysis) -->
-                    <div id="dashboard-insights" class="lg:col-span-2 hidden bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i>System Insights & Recommendations</h3>
+                    <!-- System Insights -->
+                    <div id="dashboard-insights" class="lg:col-span-2 hidden bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-lightbulb text-amber-400 mr-2 text-2xl"></i>
+                            <span>System Insights</span>
+                        </h3>
                         <div id="insights-list" class="space-y-3">
                             <!-- JS will populate -->
                         </div>
                     </div>
                 </div>
-            </div>
-            `,
+            </div>`,
             conversations: `<div class="flex-1 flex flex-col h-full overflow-hidden">
                 <div class="flex-1 flex overflow-hidden">
                     <!-- Conversations Sidebar -->
@@ -1442,26 +1454,32 @@
                 <div class="max-w-2xl mx-auto">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-bold text-gray-800">Workflow Steps</h3>
-                        <div class="relative group">
-                            <button class="bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 font-semibold shadow-sm flex items-center transition-all">
+                        <div class="relative">
+                            <button onclick="toggleAddStepMenu()" class="bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 font-semibold shadow-sm flex items-center transition-all">
                                 <i class="fas fa-plus mr-2"></i> Add Step
                             </button>
                             <!-- Dropdown -->
-                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 hidden group-hover:block z-50 overflow-hidden">
-                                <button onclick="addWorkflowStep('SEND_MESSAGE')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
-                                    <i class="fas fa-comment-alt w-5 mr-2 text-violet-400"></i> Send Message
+                            <div id="add-step-menu" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 hidden z-50 overflow-hidden transform transition-all origin-top-right">
+                                <div class="bg-gray-50 px-4 py-2 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">Select Action</div>
+                                <button onclick="addWorkflowStep('SEND_MESSAGE')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-50 flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center mr-3 text-violet-600"><i class="fas fa-comment-alt"></i></div>
+                                    Send Message
                                 </button>
-                                <button onclick="addWorkflowStep('ASSIGN_AGENT')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
-                                    <i class="fas fa-user-tag w-5 mr-2 text-blue-400"></i> Assign Agent
+                                <button onclick="addWorkflowStep('ASSIGN_AGENT')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-50 flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 text-blue-600"><i class="fas fa-user-tag"></i></div>
+                                    Assign Agent
                                 </button>
-                                <button onclick="addWorkflowStep('ADD_TAG')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
-                                    <i class="fas fa-tag w-5 mr-2 text-pink-400"></i> Add Tag
+                                <button onclick="addWorkflowStep('ADD_TAG')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-50 flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center mr-3 text-pink-600"><i class="fas fa-tag"></i></div>
+                                    Add Tag
                                 </button>
-                                <button onclick="addWorkflowStep('ASK_QUESTION')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-100">
-                                    <i class="fas fa-question-circle w-5 mr-2 text-amber-400"></i> Ask Question (Interactive)
+                                <button onclick="addWorkflowStep('ASK_QUESTION')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors border-b border-gray-50 flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center mr-3 text-amber-600"><i class="fas fa-question-circle"></i></div>
+                                    Ask Question
                                 </button>
-                                <button onclick="addWorkflowStep('DELAY')" class="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors">
-                                    <i class="fas fa-hourglass-half w-5 mr-2 text-gray-400"></i> Delay / Wait
+                                <button onclick="addWorkflowStep('DELAY')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-3 text-gray-600"><i class="fas fa-hourglass-half"></i></div>
+                                    Delay / Wait
                                 </button>
                             </div>
                         </div>
@@ -2966,8 +2984,8 @@
                 </div>
             </div>`,
             newBroadcastModal: `<div id="newBroadcastModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center"><div class="relative mx-auto p-5 border w-[700px] shadow-lg rounded-md bg-white"><div class="mt-3"><h3 class="text-lg text-center font-medium text-gray-900">Create New Broadcast</h3><form id="newBroadcastForm" class="mt-4 space-y-4 p-4"><input name="campaign_name" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Campaign Name" required><div><label class="block text-sm font-medium text-gray-700 mb-2">Recipients</label><div class="flex space-x-4"><label class="inline-flex items-center"><input type="radio" name="recipient_type" value="all" class="form-radio" checked onchange="toggleContactSelect(this.value)"> <span class="ml-2">All</span></label><label class="inline-flex items-center"><input type="radio" name="recipient_type" value="select" class="form-radio" onchange="toggleContactSelect(this.value)"> <span class="ml-2">Select</span></label></div><div id="contact-select-container" class="mt-2 hidden"><label for="selectContacts" class="block text-sm font-medium">Choose contacts</label><select name="selected_contacts[]" id="selectContacts" multiple class="mt-1 block w-full rounded-md h-40 border-gray-300"></select></div></div><div><label class="block text-sm font-medium text-gray-700 mb-2">Message Type</label><div class="flex space-x-4"><label class="inline-flex items-center"><input type="radio" name="message_type" value="custom" class="form-radio" checked onchange="toggleBroadcastMessageType(this.value)"> <span class="ml-2">Custom Message</span></label><label class="inline-flex items-center"><input type="radio" name="message_type" value="template" class="form-radio" onchange="toggleBroadcastMessageType(this.value)"> <span class="ml-2">Use Template</span></label></div></div><div id="broadcast-custom-message-container"><label class="block text-sm font-medium text-gray-700 mb-2">Message</label><textarea name="message_body" class="px-3 py-2 border rounded-md w-full" rows="4" placeholder="Type your message..."></textarea></div><div id="broadcast-template-select-container" class="hidden"><label for="selectTemplate" class="block text-sm font-medium">Choose an approved template</label><select name="template_id" id="selectTemplate" class="mt-1 block w-full rounded-md border-gray-300"></select></div><div><label class="block text-sm font-medium text-gray-700 mb-2">Schedule</label><div class="flex space-x-4"><label class="inline-flex items-center"><input type="radio" name="schedule_type" value="now" class="form-radio" checked onchange="toggleScheduleDate(this.value)"> <span class="ml-2">Now</span></label><label class="inline-flex items-center"><input type="radio" name="schedule_type" value="later" class="form-radio" onchange="toggleScheduleDate(this.value)"> <span class="ml-2">Later</span></label></div><div id="schedule-date-container" class="mt-2 hidden"><input name="scheduled_at" class="px-3 py-2 border rounded-md w-full" type="datetime-local"></div></div><div class="items-center pt-4 flex justify-end space-x-2"><button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md" onclick="closeModal('newBroadcastModal')">Cancel</button><button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Schedule/Send</button></div></form></div></div></div>`,
-            configureNodeModal: `<div id="configureNodeModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-1/3 shadow-lg rounded-md bg-white"><h3 id="configure-node-title" class="text-lg font-medium text-gray-900 mb-4"></h3><div id="configure-node-body"></div><div class="mt-4 flex justify-end gap-2"><button type="button" onclick="closeModal('configureNodeModal')" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="button" onclick="updateNodeContent()" class="px-4 py-2 bg-violet-600 text-white rounded-md">Save</button></div></div></div>`,
-            selectTriggerModal: `<div id="selectTriggerModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"><div class="relative mx-auto p-6 border w-full max-w-3xl shadow-xl rounded-2xl bg-white"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-gray-800">Select a Trigger</h3><button onclick="closeModal('selectTriggerModal')" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-times text-2xl"></i></button></div><div class="grid grid-cols-2 md:grid-cols-3 gap-4"><button onclick="selectTrigger('Conversation Started')" class="p-4 border border-gray-200 rounded-xl hover:bg-violet-50 hover:border-violet-200 hover:shadow-md transition-all text-left group"><div class="bg-violet-100 text-violet-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-comments"></i></div><h4 class="font-semibold text-gray-800">Conversation Started</h4><p class="text-xs text-gray-500 mt-1">When a new chat begins</p></button><button onclick="selectTrigger('Message Received')" class="p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 hover:shadow-md transition-all text-left group"><div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-envelope"></i></div><h4 class="font-semibold text-gray-800">Message Received</h4><p class="text-xs text-gray-500 mt-1">When any message arrives</p></button><button onclick="selectTrigger('Payment Completed')" class="p-4 border border-gray-200 rounded-xl hover:bg-green-50 hover:border-green-200 hover:shadow-md transition-all text-left group"><div class="bg-green-100 text-green-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-gray-800">Payment Completed</h4><p class="text-xs text-gray-500 mt-1">When a payment is successful</p></button><button onclick="selectTrigger('Order Status Changed')" class="p-4 border border-gray-200 rounded-xl hover:bg-orange-50 hover:border-orange-200 hover:shadow-md transition-all text-left group"><div class="bg-orange-100 text-orange-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-shipping-fast"></i></div><h4 class="font-semibold text-gray-800">Order Status</h4><p class="text-xs text-gray-500 mt-1">When an order updates</p></button><button onclick="selectTrigger('New Contact')" class="p-4 border border-gray-200 rounded-xl hover:bg-pink-50 hover:border-pink-200 hover:shadow-md transition-all text-left group"><div class="bg-pink-100 text-pink-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-user-plus"></i></div><h4 class="font-semibold text-gray-800">New Contact</h4><p class="text-xs text-gray-500 mt-1">When a contact is created</p></button><button onclick="selectTrigger('Tag Added')" class="p-4 border border-gray-200 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 hover:shadow-md transition-all text-left group"><div class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-tag"></i></div><h4 class="font-semibold text-gray-800">Tag Added</h4><p class="text-xs text-gray-500 mt-1">When a specific tag is added</p></button><button onclick="selectTrigger('Deal Stage Updated')" class="p-4 border border-gray-200 rounded-xl hover:bg-teal-50 hover:border-teal-200 hover:shadow-md transition-all text-left group"><div class="bg-teal-100 text-teal-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-handshake"></i></div><h4 class="font-semibold text-gray-800">Deal Stage Updated</h4><p class="text-xs text-gray-500 mt-1">When a deal moves stages</p></button><button onclick="selectTrigger('Form Submitted')" class="p-4 border border-gray-200 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 hover:shadow-md transition-all text-left group"><div class="bg-yellow-100 text-yellow-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-file-alt"></i></div><h4 class="font-semibold text-gray-800">Form Submitted</h4><p class="text-xs text-gray-500 mt-1">When a form is filled</p></button><button onclick="selectTrigger('Conversation Closed')" class="p-4 border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 hover:shadow-md transition-all text-left group"><div class="bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-times-circle"></i></div><h4 class="font-semibold text-gray-800">Conversation Closed</h4><p class="text-xs text-gray-500 mt-1">When a chat ends</p></button></div></div></div>`,
+            configureNodeModal: `<div id="configureNodeModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-[60]"><div class="relative mx-auto p-5 border w-1/3 shadow-lg rounded-md bg-white"><h3 id="configure-node-title" class="text-lg font-medium text-gray-900 mb-4"></h3><div id="configure-node-body"></div><div class="mt-4 flex justify-end gap-2"><button type="button" onclick="closeModal('configureNodeModal')" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="button" onclick="updateNodeContent()" class="px-4 py-2 bg-violet-600 text-white rounded-md">Save</button></div></div></div>`,
+            selectTriggerModal: `<div id="selectTriggerModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-[60]"><div class="relative mx-auto p-6 border w-full max-w-3xl shadow-xl rounded-2xl bg-white"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-gray-800">Select a Trigger</h3><button onclick="closeModal('selectTriggerModal')" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-times text-2xl"></i></button></div><div class="grid grid-cols-2 md:grid-cols-3 gap-4"><button onclick="selectTrigger('Conversation Started')" class="p-4 border border-gray-200 rounded-xl hover:bg-violet-50 hover:border-violet-200 hover:shadow-md transition-all text-left group"><div class="bg-violet-100 text-violet-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-comments"></i></div><h4 class="font-semibold text-gray-800">Conversation Started</h4><p class="text-xs text-gray-500 mt-1">When a new chat begins</p></button><button onclick="selectTrigger('Message Received')" class="p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 hover:shadow-md transition-all text-left group"><div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-envelope"></i></div><h4 class="font-semibold text-gray-800">Message Received</h4><p class="text-xs text-gray-500 mt-1">When any message arrives</p></button><button onclick="selectTrigger('Payment Completed')" class="p-4 border border-gray-200 rounded-xl hover:bg-green-50 hover:border-green-200 hover:shadow-md transition-all text-left group"><div class="bg-green-100 text-green-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-gray-800">Payment Completed</h4><p class="text-xs text-gray-500 mt-1">When a payment is successful</p></button><button onclick="selectTrigger('Order Status Changed')" class="p-4 border border-gray-200 rounded-xl hover:bg-orange-50 hover:border-orange-200 hover:shadow-md transition-all text-left group"><div class="bg-orange-100 text-orange-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-shipping-fast"></i></div><h4 class="font-semibold text-gray-800">Order Status</h4><p class="text-xs text-gray-500 mt-1">When an order updates</p></button><button onclick="selectTrigger('New Contact')" class="p-4 border border-gray-200 rounded-xl hover:bg-pink-50 hover:border-pink-200 hover:shadow-md transition-all text-left group"><div class="bg-pink-100 text-pink-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-user-plus"></i></div><h4 class="font-semibold text-gray-800">New Contact</h4><p class="text-xs text-gray-500 mt-1">When a contact is created</p></button><button onclick="selectTrigger('Tag Added')" class="p-4 border border-gray-200 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 hover:shadow-md transition-all text-left group"><div class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-tag"></i></div><h4 class="font-semibold text-gray-800">Tag Added</h4><p class="text-xs text-gray-500 mt-1">When a specific tag is added</p></button><button onclick="selectTrigger('Deal Stage Updated')" class="p-4 border border-gray-200 rounded-xl hover:bg-teal-50 hover:border-teal-200 hover:shadow-md transition-all text-left group"><div class="bg-teal-100 text-teal-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-handshake"></i></div><h4 class="font-semibold text-gray-800">Deal Stage Updated</h4><p class="text-xs text-gray-500 mt-1">When a deal moves stages</p></button><button onclick="selectTrigger('Form Submitted')" class="p-4 border border-gray-200 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 hover:shadow-md transition-all text-left group"><div class="bg-yellow-100 text-yellow-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-file-alt"></i></div><h4 class="font-semibold text-gray-800">Form Submitted</h4><p class="text-xs text-gray-500 mt-1">When a form is filled</p></button><button onclick="selectTrigger('Conversation Closed')" class="p-4 border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 hover:shadow-md transition-all text-left group"><div class="bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-times-circle"></i></div><h4 class="font-semibold text-gray-800">Conversation Closed</h4><p class="text-xs text-gray-500 mt-1">When a chat ends</p></button></div></div></div>`,
             addVendorModal: `<div id="addVendorModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"><div class="mt-3 text-center"><h3 class="text-lg leading-6 font-medium text-gray-900">Add New Vendor</h3><form id="addVendorForm" class="mt-4 space-y-4 p-4 text-left"><input id="vendorName" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Full Name or Business Name" required><input id="vendorEmail" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="email" placeholder="Email Address" required><input id="vendorPhone" class="px-3 py-2 text-gray-700 border rounded-md w-full" type="text" placeholder="Phone (e.g. +255...)" required><div class="items-center pt-4 flex justify-end space-x-2"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('addVendorModal')">Cancel</button><button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Save Vendor</button></div></form></div></div></div>`,
             rejectPayoutModal: `<div id="rejectPayoutModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"><div class="mt-3"><h3 class="text-lg text-center leading-6 font-medium text-gray-900">Reject Payout</h3><form id="rejectPayoutForm" class="mt-4 space-y-4 p-4 text-left"><label for="rejectionReason" class="block text-sm font-medium text-gray-700">Reason for Rejection</label><textarea id="rejectionReason" class="px-3 py-2 text-gray-700 border rounded-md w-full" rows="3" placeholder="e.g., Invoice amount is incorrect..." required></textarea><div class="items-center pt-4 flex justify-end space-x-2"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('rejectPayoutModal')">Cancel</button><button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md">Submit Rejection</button></div></form></div></div></div>`,
             uploadReceiptModal: `<div id="uploadReceiptModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"><div class="mt-3"><h3 class="text-lg text-center leading-6 font-medium text-gray-900">Upload Payment Receipt</h3><form id="uploadReceiptForm" class="mt-4 space-y-4 p-4 text-left"><input id="receiptPayoutId" type="hidden"><label for="receiptFile" class="block text-sm font-medium text-gray-700">Select Receipt (PDF, JPG, PNG)</label><input type="file" id="receiptFile" name="receipt_file" class="mt-1 w-full p-2 border-gray-300 border rounded-md" required><div class="items-center pt-4 flex justify-end space-x-2"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('uploadReceiptModal')">Cancel</button><button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Upload</button></div></form></div></div></div>`,
@@ -3232,6 +3250,8 @@
                     </div>
                 </div>
             </div>`,
+            configureNodeModal: `<div id="configureNodeModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"><div class="relative mx-auto p-5 border w-1/3 shadow-lg rounded-md bg-white"><h3 id="configure-node-title" class="text-lg font-medium text-gray-900 mb-4"></h3><div id="configure-node-body"></div><div class="mt-4 flex justify-end gap-2"><button type="button" onclick="closeModal('configureNodeModal')" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="button" onclick="updateNodeContent()" class="px-4 py-2 bg-violet-600 text-white rounded-md">Save</button></div></div></div>`,
+            selectTriggerModal: `<div id="selectTriggerModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-[60]"><div class="relative mx-auto p-6 border w-full max-w-3xl shadow-xl rounded-2xl bg-white"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-gray-800">Select a Trigger</h3><button onclick="closeModal('selectTriggerModal')" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fas fa-times text-2xl"></i></button></div><div class="grid grid-cols-2 md:grid-cols-3 gap-4"><button onclick="selectTrigger('Conversation Started')" class="p-4 border border-gray-200 rounded-xl hover:bg-violet-50 hover:border-violet-200 hover:shadow-md transition-all text-left group"><div class="bg-violet-100 text-violet-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-comments"></i></div><h4 class="font-semibold text-gray-800">Conversation Started</h4><p class="text-xs text-gray-500 mt-1">When a new chat begins</p></button><button onclick="selectTrigger('Message Received')" class="p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 hover:shadow-md transition-all text-left group"><div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-envelope"></i></div><h4 class="font-semibold text-gray-800">Message Received</h4><p class="text-xs text-gray-500 mt-1">When any message arrives</p></button><button onclick="selectTrigger('Payment Completed')" class="p-4 border border-gray-200 rounded-xl hover:bg-green-50 hover:border-green-200 hover:shadow-md transition-all text-left group"><div class="bg-green-100 text-green-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-check-circle"></i></div><h4 class="font-semibold text-gray-800">Payment Completed</h4><p class="text-xs text-gray-500 mt-1">When a payment is successful</p></button><button onclick="selectTrigger('Order Status Changed')" class="p-4 border border-gray-200 rounded-xl hover:bg-orange-50 hover:border-orange-200 hover:shadow-md transition-all text-left group"><div class="bg-orange-100 text-orange-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-shipping-fast"></i></div><h4 class="font-semibold text-gray-800">Order Status</h4><p class="text-xs text-gray-500 mt-1">When an order updates</p></button><button onclick="selectTrigger('New Contact')" class="p-4 border border-gray-200 rounded-xl hover:bg-pink-50 hover:border-pink-200 hover:shadow-md transition-all text-left group"><div class="bg-pink-100 text-pink-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-user-plus"></i></div><h4 class="font-semibold text-gray-800">New Contact</h4><p class="text-xs text-gray-500 mt-1">When a contact is created</p></button><button onclick="selectTrigger('Tag Added')" class="p-4 border border-gray-200 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 hover:shadow-md transition-all text-left group"><div class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-tag"></i></div><h4 class="font-semibold text-gray-800">Tag Added</h4><p class="text-xs text-gray-500 mt-1">When a specific tag is added</p></button><button onclick="selectTrigger('Deal Stage Updated')" class="p-4 border border-gray-200 rounded-xl hover:bg-teal-50 hover:border-teal-200 hover:shadow-md transition-all text-left group"><div class="bg-teal-100 text-teal-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-handshake"></i></div><h4 class="font-semibold text-gray-800">Deal Stage Updated</h4><p class="text-xs text-gray-500 mt-1">When a deal moves stages</p></button><button onclick="selectTrigger('Form Submitted')" class="p-4 border border-gray-200 rounded-xl hover:bg-yellow-50 hover:border-yellow-200 hover:shadow-md transition-all text-left group"><div class="bg-yellow-100 text-yellow-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-file-alt"></i></div><h4 class="font-semibold text-gray-800">Form Submitted</h4><p class="text-xs text-gray-500 mt-1">When a form is filled</p></button><button onclick="selectTrigger('Conversation Closed')" class="p-4 border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 hover:shadow-md transition-all text-left group"><div class="bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fas fa-times-circle"></i></div><h4 class="font-semibold text-gray-800">Conversation Closed</h4><p class="text-xs text-gray-500 mt-1">When a chat ends</p></button></div></div></div>`,
             convertDocumentModal: `<div id="convertDocumentModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
                 <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
                     <div class="mt-3">
@@ -3333,8 +3353,8 @@
 
                     tbody.innerHTML += `
                         <tr>
-                            <td class="p-3">${new Date(item.date_paid).toLocaleDateString()}</td>
-                            <td class="p-3 font-semibold">${DEFAULT_CURRENCY} ${number_format(item.amount, 2)}</td>
+                            <td class="p-3 text-gray-700">${item.formatted_date || new Date(item.date_paid).toLocaleDateString()}</td>
+                            <td class="p-3 font-bold text-gray-900">${DEFAULT_CURRENCY} ${item.formatted_amount || number_format(item.amount, 2)}</td>
                             <td class="p-3">${item.period_month} ${item.period_year}</td>
                             <td class="p-3 font-mono text-xs text-gray-600">${item.reference_number || 'N/A'}</td>
                             <td class="p-3">${receiptLink}</td>
@@ -6308,6 +6328,7 @@
                 useWorkflowTemplate(template);
             }
         }
+
         async function loadWorkflows() {
             const list = document.getElementById('workflows-list');
             if (!list) return;
@@ -7771,7 +7792,21 @@
         }
 
         // --- NEW LINEAR WORKFLOW BUILDER FUNCTIONS ---
+        async function loadApprovedTemplates() {
+            try {
+                console.log("Loading approved templates...");
+                const templates = await fetchApi('get_templates.php?status=APPROVED');
+                console.log("Templates loaded:", templates);
+                window.approvedTemplates = (templates && Array.isArray(templates)) ? templates : [];
+            } catch (e) {
+                console.error("Failed to load templates", e);
+                window.approvedTemplates = [];
+            }
+        }
+
         async function openWorkflowEditor(workflowId = null) {
+            await loadApprovedTemplates();
+
             if (workflowId) {
                 const response = await fetchApi(`get_workflow_details.php?id=${workflowId}`);
                 if (response && response.status === 'success') {
@@ -7810,9 +7845,41 @@
             renderLinearSteps();
         }
 
+        async function useWorkflowTemplate(template) {
+            await loadApprovedTemplates();
+
+            // Deep copy steps to avoid reference issues
+            const stepsCopy = template.workflow_data.steps ? JSON.parse(JSON.stringify(template.workflow_data.steps)) : [];
+
+            // Populate currentWorkflow with template data
+            currentWorkflow = {
+                id: null, // New workflow, so ID is null
+                name: template.title || 'New Workflow',
+                trigger_type: template.workflow_data.trigger_type || 'KEYWORD',
+                keywords: template.workflow_data.keywords || '',
+                steps: stepsCopy,
+                is_active: 0
+            };
+
+            // Switch to Editor
+            document.getElementById('workflow-main-view').style.display = 'none';
+            document.getElementById('workflow-editor-view').style.display = 'block';
+
+            // Populate Inputs
+            document.getElementById('workflow-name-input').value = currentWorkflow.name;
+            document.getElementById('wf-trigger-type').value = currentWorkflow.trigger_type;
+            document.getElementById('wf-keywords').value = currentWorkflow.keywords;
+
+            // Refresh UI
+            toggleTriggerInputs();
+            renderLinearSteps();
+        }
+
         function closeWorkflowEditor() {
             document.getElementById('workflow-main-view').style.display = 'block';
             document.getElementById('workflow-editor-view').style.display = 'none';
+            // Reset current workflow to avoid glitches
+            currentWorkflow = { id: null, name: 'Untitled Workflow', steps: [] };
             loadWorkflows();
         }
 
@@ -7839,42 +7906,56 @@
             }
         }
 
+
         function renderLinearSteps() {
             const container = document.getElementById('workflow-steps-container');
-            const emptyState = document.getElementById('workflow-empty-state');
             container.innerHTML = ''; // Clear
 
             if (!currentWorkflow.steps || currentWorkflow.steps.length === 0) {
+                // Dynamically recreate Empty State
+                const emptyState = document.createElement('div');
+                emptyState.id = 'workflow-empty-state';
+                emptyState.className = 'text-center py-12 border-2 border-dashed border-gray-300 rounded-xl';
+                emptyState.innerHTML = `
+                    <div class="text-gray-400 mb-3 text-4xl"><i class="fas fa-layer-group"></i></div>
+                    <p class="text-gray-500 font-medium">No steps defined yet.</p>
+                    <p class="text-gray-400 text-sm">Add a step to define what happens when triggered.</p>
+                `;
                 container.appendChild(emptyState);
-                emptyState.style.display = 'block';
                 return;
             }
-            emptyState.style.display = 'none';
 
+            // Ensure templates are loaded if list is empty
+            if (!window.approvedTemplates || window.approvedTemplates.length === 0) {
+                loadApprovedTemplates().then(() => {
+                    // Re-render only if still empty to avoid loops, but since we modify DOM, just render again
+                    // Better approach: check inside the loop or just render what we have.
+                    // The async load will finish and we might need to trigger update.
+                    // For now, assume openWorkflowEditor called it.
+                });
+            }
             currentWorkflow.steps.forEach((step, index) => {
-                // Initialize editing state if not set (default to false for existing, true for new handled in add)
-                if (typeof step.is_editing === 'undefined') {
-                    step.is_editing = false;
-                }
+                try {
+                    // Force editing/expanded state for all steps per user request
+                    step.is_editing = true;
 
-                const stepEl = document.createElement('div');
-                stepEl.className = `bg-white border ${step.is_editing ? 'border-violet-400 ring-2 ring-violet-50' : 'border-gray-200'} rounded-lg shadow-sm relative group mb-4 transition-all`;
+                    const stepEl = document.createElement('div');
+                    stepEl.className = `bg-white border border-violet-200 rounded-lg shadow-sm relative group mb-4 transition-all`;
 
-                let contentHtml = '';
-                let iconClass = '';
-                let bgIconClass = '';
-                let summaryText = '';
+                    let contentHtml = '';
+                    let iconClass = '';
+                    let bgIconClass = '';
 
-                // Determine Icon & Summary
-                if (step.action_type === 'SEND_MESSAGE') {
-                    iconClass = 'fa-comment-alt text-violet-600';
-                    bgIconClass = 'bg-violet-100';
-                    const meta = step.meta_data || {};
-                    const isTemplate = meta.type === 'template';
-                    summaryText = isTemplate ? `Template: ${meta.template_id || 'N/A'}` : `"${step.content || 'Empty message'}"`;
+                    const actionType = step.action_type || 'UNKNOWN';
 
-                    if (step.is_editing) {
+                    // Determine Icon
+                    if (actionType === 'SEND_MESSAGE') {
+                        iconClass = 'fa-comment-alt text-violet-600';
+                        bgIconClass = 'bg-violet-100';
+                        const meta = step.meta_data || {};
+                        const isTemplate = meta.type === 'template';
                         const textBody = step.content || '';
+
                         contentHtml = `
                         <div class="mt-4 p-1">
                             <div class="flex space-x-4 mb-3">
@@ -7895,18 +7976,19 @@
                             </div>
 
                             <div id="msg-input-template-${index}" class="${!isTemplate ? 'hidden' : ''}">
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Template Name</label>
-                                <input type="text" oninput="updateStepMeta(${index}, 'template_id', this.value)" value="${meta.template_id || ''}" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500" placeholder="e.g. welcome_msg">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Select Template</label>
+                                <select onchange="updateStepMeta(${index}, 'template_id', this.value)" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-violet-500 focus:ring-1 focus:ring-violet-500">
+                                    <option value="">-- Choose a Template --</option>
+                                    ${(window.approvedTemplates || []).map(t => `<option value="${t.name}" ${meta.template_id === t.name ? 'selected' : ''}>${t.name} (${t.language})</option>`).join('')}
+                                </select>
                             </div>
                         </div>`;
-                    }
-                } else if (step.action_type === 'ASK_QUESTION') {
-                    iconClass = 'fa-question-circle text-amber-500';
-                    bgIconClass = 'bg-amber-100';
-                    const meta = step.meta_data || {};
-                    summaryText = `Question: "${step.content || ''}" (Options: ${meta.options || 'None'})`;
 
-                    if (step.is_editing) {
+                    } else if (actionType === 'ASK_QUESTION') {
+                        iconClass = 'fa-question-circle text-amber-500';
+                        bgIconClass = 'bg-amber-100';
+                        const meta = step.meta_data || {};
+
                         contentHtml = `
                         <div class="mt-4 p-1">
                             <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Question Text</label>
@@ -7917,25 +7999,21 @@
                             <input type="text" oninput="updateStepMeta(${index}, 'options', this.value)" value="${meta.options || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Yes, No, Maybe">
                             <p class="text-[10px] text-gray-400 mt-1">Comma separated. Max 3 buttons.</p>
                         </div>`;
-                    }
-                } else if (step.action_type === 'DELAY') {
-                    iconClass = 'fa-hourglass-half text-gray-500';
-                    bgIconClass = 'bg-gray-200';
-                    summaryText = `Wait for ${step.content || '0'} minutes`;
 
-                    if (step.is_editing) {
+                    } else if (actionType === 'DELAY') {
+                        iconClass = 'fa-hourglass-half text-gray-500';
+                        bgIconClass = 'bg-gray-200';
+
                         contentHtml = `
                         <div class="mt-4 p-1">
                             <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Wait Time (Minutes)</label>
                             <input type="number" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. 5">
                         </div>`;
-                    }
-                } else if (step.action_type === 'ASSIGN_AGENT') {
-                    iconClass = 'fa-user-tag text-blue-600';
-                    bgIconClass = 'bg-blue-100';
-                    summaryText = `Logic: ${step.content || 'Round Robin'}`;
 
-                    if (step.is_editing) {
+                    } else if (actionType === 'ASSIGN_AGENT') {
+                        iconClass = 'fa-user-tag text-blue-600';
+                        bgIconClass = 'bg-blue-100';
+
                         contentHtml = `
                         <div class="mt-4 p-1">
                             <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Assignment Logic</label>
@@ -7944,92 +8022,105 @@
                                 <option value="Fewest Conversations" ${step.content === 'Fewest Conversations' ? 'selected' : ''}>Fewest Conversations</option>
                             </select>
                         </div>`;
-                    }
-                } else if (step.action_type === 'ADD_TAG') {
-                    iconClass = 'fa-tag text-pink-600';
-                    bgIconClass = 'bg-pink-100';
-                    summaryText = `Tag: ${step.content || 'None'}`;
 
-                    if (step.is_editing) {
+                    } else if (actionType === 'ADD_TAG') {
+                        iconClass = 'fa-tag text-pink-600';
+                        bgIconClass = 'bg-pink-100';
+
                         contentHtml = `
                         <div class="mt-4 p-1">
                             <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tag Name</label>
                             <input type="text" oninput="updateStepContent(${index}, this.value)" value="${step.content || ''}" class="w-full text-sm p-2 border border-gray-300 rounded" placeholder="e.g. Lead, VIP">
                         </div>`;
                     }
-                }
 
-                // Build Action Buttons (Edit vs Save)
-                let actionButtons = '';
-                if (step.is_editing) {
-                    actionButtons = `
-                        <button onclick="toggleStepEdit(${index}, false)" class="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-md font-semibold hover:bg-violet-700 transition-colors shadow-sm mr-2">
-                            <i class="fas fa-check mr-1"></i> Save Step
-                        </button>
-                        <button onclick="removeWorkflowStep(${index})" class="text-xs bg-white border border-red-200 text-red-500 px-3 py-1.5 rounded-md font-semibold hover:bg-red-50 transition-colors">
-                            <i class="fas fa-trash-alt"></i>
+                    // Build Action Buttons (Simplified)
+                    let actionButtons = `
+                        <button onclick="removeWorkflowStep(${index})" class="text-xs bg-white border border-red-200 text-red-500 px-3 py-1.5 rounded-md font-semibold hover:bg-red-50 transition-colors shadow-sm">
+                            <i class="fas fa-trash-alt mr-1"></i> Remove
                         </button>
                     `;
-                } else {
-                    actionButtons = `
-                        <button onclick="toggleStepEdit(${index}, true)" class="text-gray-400 hover:text-violet-600 transition-colors p-1">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
-                        <button onclick="removeWorkflowStep(${index})" class="text-gray-400 hover:text-red-500 transition-colors p-1 ml-1">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    `;
-                }
 
-                stepEl.innerHTML = `
-                    <div class="flex justify-between items-center ${step.is_editing ? 'border-b border-gray-100 pb-3' : ''}">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 rounded-full ${bgIconClass} flex items-center justify-center mr-3 shrink-0">
-                                <i class="fas ${iconClass}"></i>
+                    stepEl.innerHTML = `
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-3 p-3 bg-gray-50 rounded-t-lg">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full ${bgIconClass} flex items-center justify-center mr-3 shrink-0">
+                                    <i class="fas ${iconClass}"></i>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-gray-800 text-sm block">Step ${index + 1}: ${actionType.replace('_', ' ')}</span>
+                                </div>
                             </div>
-                            <div>
-                                <span class="font-bold text-gray-800 text-sm block">Step ${index + 1}: ${step.action_type.replace('_', ' ')}</span>
-                                ${!step.is_editing ? `<span class="text-xs text-gray-500 truncate max-w-[200px] block">${summaryText}</span>` : ''}
+                            <div class="flex items-center">
+                                ${actionButtons}
                             </div>
                         </div>
-                        <div class="flex items-center">
-                            ${actionButtons}
+                        <div class="p-3">
+                            ${contentHtml}
                         </div>
-                    </div>
-                    ${contentHtml}
-                `;
-                container.appendChild(stepEl);
+                    `;
+                    container.appendChild(stepEl);
+                } catch(e) {
+                    console.error('Error rendering step ' + index, e);
+                }
             });
         }
 
         function addWorkflowStep(type) {
-            // Collapse all existing steps first
-            currentWorkflow.steps.forEach(s => s.is_editing = false);
+            // Check if currentWorkflow exists, initialize if not
+            if (!currentWorkflow || typeof currentWorkflow !== 'object') {
+                currentWorkflow = { steps: [] };
+            }
+            if (!currentWorkflow.steps) {
+                currentWorkflow.steps = [];
+            }
 
+            // No auto-collapse, user wants all steps visible
             currentWorkflow.steps.push({
                 action_type: type,
                 content: '',
                 meta_data: {},
-                is_editing: true // New step starts in edit mode
+                is_editing: true
             });
             renderLinearSteps();
 
+            // Toggle menu off after adding
+            toggleAddStepMenu(false);
+
             // Scroll to bottom
             setTimeout(() => {
+                 // Scroll the PARENT container (the right canvas), not the steps container itself
                  const container = document.getElementById('workflow-steps-container');
-                 container.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+                 if (container && container.lastElementChild) {
+                     container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                 }
             }, 50);
         }
 
         function toggleStepEdit(index, isEditing) {
-            if (isEditing) {
-                // Close others if opening one
-                currentWorkflow.steps.forEach((s, i) => {
-                    if (i !== index) s.is_editing = false;
-                });
+            // Function deprecated as steps are always editable, but kept empty to prevent errors if referenced
+        }
+
+        function toggleAddStepMenu(show) {
+            const menu = document.getElementById('add-step-menu');
+            if (!menu) return;
+
+            if (show === undefined) {
+                // Toggle
+                if (menu.classList.contains('hidden')) {
+                    menu.classList.remove('hidden');
+                    setTimeout(() => menu.classList.add('scale-100', 'opacity-100'), 10);
+                } else {
+                    menu.classList.remove('scale-100', 'opacity-100');
+                    setTimeout(() => menu.classList.add('hidden'), 200);
+                }
+            } else if (show) {
+                menu.classList.remove('hidden');
+                setTimeout(() => menu.classList.add('scale-100', 'opacity-100'), 10);
+            } else {
+                menu.classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => menu.classList.add('hidden'), 200);
             }
-            currentWorkflow.steps[index].is_editing = isEditing;
-            renderLinearSteps();
         }
 
         function removeWorkflowStep(index) {
@@ -9216,7 +9307,13 @@
             if (!dashboardChartData || !dashboardChartData[filter]) return;
 
             const chartData = dashboardChartData[filter];
-            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const canvas = document.getElementById('revenueChart');
+            const ctx = canvas.getContext('2d');
+
+            // Create Gradient: Violet to Transparent
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(124, 58, 237, 0.5)');
+            gradient.addColorStop(1, 'rgba(124, 58, 237, 0)');
 
             // Update Trend Text
             const trendTextEl = document.getElementById('chart-trend-text');
@@ -9242,7 +9339,7 @@
                         label: 'Revenue',
                         data: chartData.data,
                         borderColor: '#7c3aed', // Violet-600
-                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                        backgroundColor: gradient,
                         borderWidth: 2,
                         tension: 0.4,
                         fill: true,
@@ -9341,50 +9438,50 @@
 
                 amountEl.textContent = DEFAULT_CURRENCY + ' ' + number_format(info.amount, 2);
 
-                // Current month name
-                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
                 const d = new Date();
-                if (periodEl) periodEl.textContent = monthNames[d.getMonth()];
+                if (periodEl) periodEl.textContent = info.period || d.toLocaleString('default', { month: 'short' });
 
-                let statusColor = 'bg-blue-100 text-blue-800';
                 let statusText = info.status;
+                let badgeClass = 'bg-white/20 backdrop-blur-sm border border-white/10 text-white'; // Default Glass
 
-                if (payBtn) payBtn.classList.add('hidden'); // Reset
-
-                if (info.status === 'Paid') {
-                    statusColor = 'bg-green-100 text-green-800';
-                    if (payBtn) payBtn.classList.add('hidden');
-                    if (dueText) dueText.textContent = 'Paid on ' + (info.date_paid || new Date().toLocaleDateString()); // Fallback if date_paid null
-                } else if (info.status === 'Overdue') {
-                    statusColor = 'bg-red-100 text-red-800';
+                if (info.status === 'Overdue') {
                     statusText = `Overdue (${info.overdue_days} days)`;
-                    if (payBtn) payBtn.classList.remove('hidden');
-
-                    // Format due date
-                    const dueDateObj = new Date(info.due_date);
-                    const dueMonthName = monthNames[dueDateObj.getMonth()];
-                    if (dueText) dueText.textContent = `Due: ${dueDateObj.getDate()} ${dueMonthName}`;
-
-                } else {
-                    // Pending
-                    statusColor = 'bg-yellow-100 text-yellow-800';
-                    if (payBtn) payBtn.classList.remove('hidden');
-
-                    const dueDateObj = new Date(info.due_date);
-                    const dueMonthName = monthNames[dueDateObj.getMonth()];
-                    if (dueText) dueText.textContent = `Due: ${dueDateObj.getDate()} ${dueMonthName}`;
+                    badgeClass = 'bg-red-500/80 text-white border border-red-400';
+                } else if (info.status === 'Paid') {
+                    badgeClass = 'bg-emerald-500/80 text-white border border-emerald-400';
                 }
 
                 if (statusBadge) {
-                    statusBadge.className = `text-xs font-bold px-2 py-1 rounded-full ${statusColor}`;
+                    statusBadge.className = `text-xs font-bold px-2 py-1 rounded-lg ${badgeClass}`;
                     statusBadge.textContent = statusText;
                 }
 
-                // Remove old listeners to prevent duplicates
+                // Pay Button Visibility
                 if (payBtn) {
-                    const newPayBtn = payBtn.cloneNode(true);
-                    payBtn.parentNode.replaceChild(newPayBtn, payBtn);
-                    newPayBtn.onclick = () => markTaxPaid(type.toUpperCase(), info.amount);
+                    if (info.status === 'Due' || info.status === 'Overdue') {
+                        payBtn.classList.remove('hidden');
+                        payBtn.onclick = () => markTaxPaid(type.toUpperCase(), info.amount);
+                    } else {
+                        payBtn.classList.add('hidden');
+                    }
+                }
+
+                // Due Date Text
+                if (dueText) {
+                    if (info.is_paid) {
+                         dueText.textContent = 'Paid - Thank you';
+                    } else if (info.due_date) {
+                        const dueDateObj = new Date(info.due_date);
+                        if (!isNaN(dueDateObj.getTime())) {
+                             const day = dueDateObj.getDate();
+                             const month = dueDateObj.toLocaleString('default', { month: 'short' });
+                             dueText.textContent = `Due: ${day} ${month}`;
+                        } else {
+                             dueText.textContent = 'Due date unavailable';
+                        }
+                    } else {
+                        dueText.textContent = '';
+                    }
                 }
             };
 
@@ -9392,7 +9489,6 @@
                 updateTaxCard('vat', data.taxes.vat, 'vat');
                 updateTaxCard('wht', data.taxes.wht, 'wht');
 
-                // Always show stamp duty card (removed hidden class check)
                 const stampAmount = document.getElementById('dash-stamp-duty');
                 if (stampAmount) {
                     stampAmount.textContent = DEFAULT_CURRENCY + ' ' + number_format(data.taxes.stamp_duty, 2);
@@ -9401,43 +9497,53 @@
 
             renderInsights(data.insights);
 
-            // 3. Recent Activity
+            // 3. Recent Activity (Modern List)
             const activityList = document.getElementById('recent-activity-list');
             if (activityList) {
                 activityList.innerHTML = '';
                 if (data.activity && data.activity.length > 0) {
                     data.activity.forEach(item => {
                         const timeAgo = getTimeAgo(new Date(item.created_at));
-                        let iconClass = 'fa-info-circle';
+                        let iconClass = 'fa-arrow-right';
                         let bgClass = 'bg-gray-100';
                         let textClass = 'text-gray-600';
+                        let amountClass = 'text-gray-800';
+                        let sign = '';
 
-                        if (item.action.includes('Invoice')) {
-                            iconClass = 'fa-file-invoice'; bgClass = 'bg-violet-100'; textClass = 'text-violet-600';
-                        } else if (item.action.includes('Expense')) {
-                            iconClass = 'fa-file-invoice-dollar'; bgClass = 'bg-rose-100'; textClass = 'text-rose-600';
+                        // Check type from API (Invoice/Receipt/Expense)
+                        const typeLower = (item.type || '').toLowerCase();
+
+                        if (typeLower === 'invoice' || typeLower === 'receipt') {
+                            iconClass = 'fa-arrow-down'; // Money In
+                            bgClass = 'bg-violet-100';
+                            textClass = 'text-violet-600';
+                            amountClass = 'text-green-600';
+                            sign = '+';
+                        } else if (typeLower === 'expense') {
+                            iconClass = 'fa-arrow-up'; // Money Out
+                            bgClass = 'bg-rose-100';
+                            textClass = 'text-rose-600';
+                            amountClass = 'text-gray-800';
+                            sign = '-';
                         }
 
-                        // XSS Prevention: Use textContent for user input
-                        const div = document.createElement('div');
-                        div.className = 'flex items-start';
-                        div.innerHTML = `
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full ${bgClass} flex items-center justify-center ${textClass}">
-                                <i class="fas ${iconClass}"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-900"></p>
-                                <p class="text-xs text-gray-500"></p>
-                                <p class="text-xs text-gray-400 mt-1">${timeAgo}</p>
+                        activityList.innerHTML += `
+                            <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-10 rounded-full ${bgClass} flex items-center justify-center ${textClass} mr-4 shadow-sm">
+                                        <i class="fas ${iconClass}"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-800">${item.reference}</p>
+                                        <p class="text-xs text-gray-500 font-medium capitalize">${item.type} &bull; ${timeAgo}</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold text-sm ${amountClass}">${sign}${DEFAULT_CURRENCY} ${number_format(item.amount, 2)}</span>
                             </div>
                         `;
-                        div.querySelector('p.text-sm').textContent = item.action;
-                        div.querySelector('p.text-xs.text-gray-500').textContent = item.details || '';
-
-                        activityList.appendChild(div);
                     });
                 } else {
-                    activityList.innerHTML = '<p class="text-gray-500 text-center text-sm">No recent activity.</p>';
+                    activityList.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-gray-400"><i class="far fa-calendar-times text-3xl mb-2 opacity-50"></i><p class="text-sm">No recent activity.</p></div>';
                 }
             }
 
