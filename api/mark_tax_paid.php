@@ -18,10 +18,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-$tax_type = $_POST['tax_type'] ?? ''; // 'VAT' or 'WHT'
+$tax_type = $_POST['tax_type'] ?? ''; // 'VAT', 'WHT', or 'Stamp Duty'
 $amount = $_POST['amount'] ?? 0;
 
-if (!in_array($tax_type, ['VAT', 'WHT'])) {
+// Normalize 'Stamp Duty' input (Handle Uppercase from JS)
+if (strtoupper($tax_type) === 'STAMP DUTY') {
+    $tax_type = 'Stamp Duty';
+}
+
+if (!in_array($tax_type, ['VAT', 'WHT', 'Stamp Duty'])) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid tax type']);
     exit();
 }
