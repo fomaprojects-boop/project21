@@ -9341,6 +9341,11 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 dashboardChartInstance.destroy();
             }
 
+            // Gradient Fill: Violet to Transparent
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(124, 58, 237, 0.8)');
+            gradient.addColorStop(1, 'rgba(124, 58, 237, 0)');
+
             dashboardChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {

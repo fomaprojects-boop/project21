@@ -73,19 +73,27 @@ try {
     $stmt->execute([$user_id, $current_month, $current_year]);
     $total_revenue = $stmt->fetchColumn() ?: 0;
 
-    // 2. EXPENSES (Strictly Current Month)
+    // 2. EXPENSES (Strictly Current Month - Logic Matrix Applied)
     $expenses_total = 0;
 
+    // Direct Expenses: Claims (Approved/Paid), Requisitions (Paid only)
     $exp_sql = "SELECT SUM(amount) FROM direct_expenses
                 WHERE user_id = ?
-                AND (status = 'Paid' OR status = 'Approved' OR status = 'Posted to GL')
-                AND MONTH(date) = ? AND YEAR(date) = ?";
+                AND MONTH(date) = ? AND YEAR(date) = ?
+                AND (
+                    (type = 'claim' AND status IN ('Approved', 'Paid'))
+                    OR
+                    (type = 'requisition' AND status = 'Paid')
+                    OR
+                    (status = 'Posted to GL')
+                )";
     $stmt = $pdo->prepare($exp_sql);
     $stmt->execute([$user_id, $current_month, $current_year]);
     $expenses_total += ($stmt->fetchColumn() ?: 0);
 
+    // Payout Requests: Approved or Paid
     $payout_sql = "SELECT SUM(amount) FROM payout_requests
-                   WHERE (status = 'Approved' OR status = 'Paid' OR status = 'Processed')
+                   WHERE status IN ('Approved', 'Paid')
                    AND service_type NOT LIKE '%Asset%'
                    AND MONTH(submitted_at) = ? AND YEAR(submitted_at) = ?";
     $stmt = $pdo->prepare($payout_sql);
@@ -224,13 +232,13 @@ try {
         if ($burn_ratio > 0.10) {
             $insights[] = [
                 'type' => 'warning',
-                'message' => 'High Burn Rate: Expenses are ' . round($burn_ratio * 100) . '% higher than revenue.'
+                'message' => 'High Burn Rate detected. Expenses are significantly higher than revenue.'
             ];
         }
     } elseif ($expenses_total > 0) {
          $insights[] = [
             'type' => 'warning',
-            'message' => 'High Burn Rate: You have expenses but zero revenue this month.'
+            'message' => 'High Burn Rate detected. You have expenses but zero revenue this month.'
         ];
     }
 
@@ -249,7 +257,7 @@ try {
     if ($total_revenue > $last_month_revenue) {
         $insights[] = [
             'type' => 'success',
-            'message' => 'Growth Trend: Revenue is up compared to last month (same period).'
+            'message' => 'Revenue is growing.'
         ];
     }
 
@@ -264,7 +272,7 @@ try {
     if ($overdue_count > 5) {
         $insights[] = [
             'type' => 'danger',
-            'message' => 'Collection Alert: ' . $overdue_count . ' invoices are overdue. Initiate debt collection.'
+            'message' => 'Initiate Debt Collection for overdue accounts.'
         ];
     }
 
