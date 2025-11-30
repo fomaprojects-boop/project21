@@ -34,8 +34,17 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         window.currentUser = {
             id: <?php echo $userId; ?>,
             full_name: '<?php echo htmlspecialchars($userName, ENT_QUOTES); ?>',
-            role: '<?php echo $userRole; ?>'
+            role: '<?php echo $userRole; ?>',
+            permissions: <?php echo json_encode($_SESSION['permissions'] ?? []); ?>
         };
+
+        // Permission Helper
+        function hasPermission(permissionSlug) {
+            if (!window.currentUser || !window.currentUser.permissions) return false;
+            // Admin role bypass (Legacy support + safety net)
+            if (window.currentUser.role === 'Admin') return true;
+            return window.currentUser.permissions.includes(permissionSlug);
+        }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -592,6 +601,22 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
     </script>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col">
+    <?php if (isset($_SESSION['is_impersonating']) && $_SESSION['is_impersonating']): ?>
+    <div class="bg-red-600 text-white text-center p-2 font-bold z-50 flex justify-center items-center gap-4">
+        <span><i class="fas fa-user-secret mr-2"></i> You are impersonating a tenant admin.</span>
+        <button onclick="exitImpersonation()" class="bg-white text-red-600 px-3 py-1 rounded text-sm hover:bg-gray-100 transition-colors">Exit Mode</button>
+    </div>
+    <script>
+        async function exitImpersonation() {
+            const res = await fetchApi('super_admin/logout_impersonation.php');
+            if (res && res.status === 'success') {
+                window.location.href = res.redirect;
+            } else {
+                window.location.href = 'super_admin/dashboard.php'; // Fallback
+            }
+        }
+    </script>
+    <?php endif; ?>
     <div id="page-loader" style="display: none;">
         <div class="loader">
             <div class="dot"></div>
@@ -605,12 +630,27 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
              <div class="flex items-center justify-center p-4 border-b border-gray-800 h-20 flex-shrink-0 bg-gray-900">
                 <img src="uploads/LOGO_Chatme1.png" alt="ChatMe Logo" class="h-12 object-contain">
              </div>
+            <?php
+            // Permission Helper for Server-Side Rendering
+            function checkPerm($slug) {
+                return in_array($slug, $_SESSION['permissions'] ?? []) || (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'Admin');
+            }
+            ?>
             <nav class="flex-1 px-3 py-6 space-y-1">
+                <?php if (checkPerm('view_dashboard')): ?>
                 <a href="#" onclick="showView('dashboard', event)" class="sidebar-link active flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-tachometer-alt w-6 mr-3"></i><span>Dashboard</span></a>
+                <?php endif; ?>
+
+                <?php if (checkPerm('view_whatsapp_inbox')): ?>
                 <a href="#" onclick="showView('conversations', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-inbox w-6 mr-3"></i><span>Inbox</span></a>
+                <?php endif; ?>
+
+                <?php if (checkPerm('view_contacts')): ?>
                 <a href="#" onclick="showView('contacts', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-address-book w-6 mr-3"></i><span>Contacts</span></a>
+                <?php endif; ?>
 
                 <!-- Business Dropdown -->
+                <?php if (checkPerm('view_financials') || checkPerm('manage_invoices')): ?>
                 <div>
                     <button type="button" class="sidebar-link w-full flex items-center justify-between px-4 py-2.5 rounded-r-md" onclick="toggleDropdown('business-menu')">
                         <span class="flex items-center">
@@ -620,9 +660,12 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <i id="business-menu-icon" class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div id="business-menu" class="hidden pl-8 space-y-2 py-2">
-                        <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+                        <?php if (checkPerm('manage_invoices')): ?>
                         <a href="#" onclick="showView('vendors', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-store w-6 mr-3"></i><span>Vendors</span></a>
                         <a href="#" onclick="showView('invoices', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-file-invoice-dollar w-6 mr-3"></i><span>Invoices</span></a>
+                        <?php endif; ?>
+
+                        <?php if (checkPerm('view_financials')): ?>
                         <a href="#" onclick="showView('assets', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-box-open w-6 mr-3"></i><span>Assets</span></a>
                         <a href="#" onclick="showView('investments', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-chart-line w-6 mr-3"></i><span>Investments</span></a>
                         <a href="#" onclick="showView('tax_payments', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-landmark w-6 mr-3"></i><span>Tax Payments</span></a>
@@ -631,14 +674,16 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <?php endif; ?>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <a href="#" onclick="showView('youtube-ads', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fab fa-youtube w-6 mr-3"></i><span>YouTube Ads</span></a>
 
-                <?php if (FEATURE_ENHANCED_EXPENSE_WORKFLOW): ?>
+                <?php if (checkPerm('view_own_expenses') || checkPerm('view_all_expenses')): ?>
                 <a href="#" onclick="showView('expenses', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-cash-register w-6 mr-3"></i><span>Expenses</span></a>
                 <?php endif; ?>
 
                 <!-- Whatsapp Dropdown -->
+                <?php if (checkPerm('manage_whatsapp_config') || checkPerm('manage_whatsapp_templates')): ?>
                 <div>
                     <button type="button" class="sidebar-link w-full flex items-center justify-between px-4 py-2.5 rounded-r-md" onclick="toggleDropdown('whatsapp-menu')">
                         <span class="flex items-center">
@@ -648,19 +693,26 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <i id="whatsapp-menu-icon" class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div id="whatsapp-menu" class="hidden pl-8 space-y-2 py-2">
+                        <?php if (checkPerm('manage_whatsapp_templates')): ?>
                         <a href="#" onclick="showView('broadcast', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-bullhorn w-6 mr-3"></i><span>Broadcast</span></a>
                         <a href="#" onclick="showView('templates', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-file-alt w-6 mr-3"></i><span>Templates</span></a>
+                        <?php endif; ?>
+
+                        <?php if (checkPerm('manage_workflows')): ?>
                         <a href="#" onclick="showView('workflows', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-project-diagram w-6 mr-3"></i><span>Workflows</span></a>
+                        <?php endif; ?>
+
                         <a href="#" onclick="showView('reports', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-chart-line w-6 mr-3"></i><span>Reports</span></a>
-                        <a href="#" onclick="showView('contacts', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-address-book w-6 mr-3"></i><span>Contacts</span></a>
                     </div>
                 </div>
+                <?php endif; ?>
 
-                <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
-                <a href="#" onclick="showView('users', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-users w-6 mr-3"></i><span>Users</span></a>
+                <?php if (checkPerm('manage_users') || checkPerm('manage_roles')): ?>
+                <a href="#" onclick="showView('users', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-users w-6 mr-3"></i><span>Team</span></a>
                 <?php endif; ?>
 
                 <!-- Print & Design Workflow Dropdown -->
+                <?php if (checkPerm('access_print_design') || $userRole === 'Client'): ?>
                 <div>
                     <button type="button" class="sidebar-link w-full flex items-center justify-between px-4 py-2.5 rounded-r-md" onclick="toggleDropdown('print-design-menu')">
                         <span class="flex items-center">
@@ -670,9 +722,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <i id="print-design-menu-icon" class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div id="print-design-menu" class="hidden pl-8 space-y-2 py-2">
-                        <?php if ($userRole === 'Admin' || $userRole === 'Staff' || $userRole === 'Accountant'): ?>
+                        <?php if (checkPerm('access_print_design')): ?>
                             <a href="#" onclick="showView('analytics', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-chart-pie w-6 mr-3"></i><span>Analytics</span></a>
-                            <?php if ($userRole === 'Admin' || $userRole === 'Accountant'): ?>
+                            <?php if (checkPerm('manage_job_orders')): ?>
                                 <a href="#" onclick="showView('costs', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-dollar-sign w-6 mr-3"></i><span>Material Costs</span></a>
                             <?php endif; ?>
                             <a href="#" onclick="showView('online-job-order', event)" class="sidebar-link flex items-center px-4 py-2.5 rounded-r-md"><i class="fas fa-clipboard-list w-6 mr-3"></i><span>Job Orders</span></a>
@@ -686,6 +738,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <?php endif; ?>
                     </div>
                 </div>
+                <?php endif; ?>
             </nav>
         </aside>
 
@@ -720,14 +773,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         const viewTemplates = {
 
             "youtube-ads": `<div class="p-8">
-                <div id="youtube-ads-cta" class="text-center p-12 bg-white rounded-lg shadow-md border">
-                    <i class="fab fa-youtube text-red-500 text-6xl mb-4"></i>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Connect Your YouTube Channel</h2>
-                    <p class="text-gray-600 mb-6 max-w-2xl mx-auto">To start managing and automating your YouTube ads, you first need to connect your YouTube channel. This will allow our system to access your videos and performance data securely.</p>
-                    <a href="api/modules/youtube_ads/controllers/AuthController.php" class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 font-semibold inline-block"><i class="fab fa-youtube mr-2"></i>Connect YouTube Channel</a>
-                </div>
-
-                <div id="youtube-ads-main" class="hidden">
+                <div id="youtube-ads-main">
                     <div id="success-notification" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-lg">
                         <div class="flex">
                             <div class="py-1"><i class="fas fa-check-circle fa-2x"></i></div>
@@ -738,14 +784,29 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         </div>
                     </div>
 
-                    <div class="mb-6 bg-white p-6 rounded-lg shadow-md border">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">Connected Channel</h3>
-                        <div id="connected-channel-info" class="flex items-center">
-                            <!-- JS will populate this -->
+                    <div class="mb-6 bg-white p-6 rounded-lg shadow-md border flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center gap-4 flex-1 w-full">
+                            <div id="connected-channel-info" class="flex items-center gap-3">
+                                <!-- JS will populate this -->
+                                <div class="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+                                <div class="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                            <div class="h-8 w-px bg-gray-300 mx-2"></div>
+                            <div class="flex-1 max-w-sm">
+                                <label for="activeChannelSelect" class="text-xs text-gray-500 font-bold uppercase block mb-1">Active Channel</label>
+                                <select id="activeChannelSelect" onchange="switchYouTubeChannel(this.value)" class="w-full p-2 text-sm border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500 bg-gray-50">
+                                    <option value="">Loading channels...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="api/modules/youtube_ads/controllers/AuthController.php" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-semibold text-sm flex items-center shadow-sm whitespace-nowrap">
+                                <i class="fab fa-youtube mr-2"></i> Add Channel
+                            </a>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div id="youtube-content-area" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Sehemu ya Kushoto: Active Campaigns & Add Advertiser -->
                         <div class="lg:col-span-1">
                             <button onclick="openModal('addAdvertiserModal')" class="w-full bg-violet-600 text-white px-5 py-3 rounded-lg hover:bg-violet-700 font-semibold mb-6 shadow-md"><i class="fas fa-user-plus mr-2"></i>Add New Advertiser</button>
@@ -832,6 +893,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         </div>
                     </div>
                 </div>
+                </div> <!-- End content area -->
 </div>`,
             youtube: `<div class="p-8">
                 <div class="flex justify-between items-center mb-6">
@@ -1520,7 +1582,54 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         </div>
     </div>
 </div>`, reports: `<div class="p-8"><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white p-6 rounded-lg shadow-md border"><h4 class="text-gray-500 font-semibold">New Conversations</h4><p id="report-new-conv" class="text-4xl font-bold mt-2">N/A</p></div><div class="bg-white p-6 rounded-lg shadow-md border"><h4 class="text-gray-500 font-semibold">Messages Sent</h4><p id="report-msg-sent" class="text-4xl font-bold mt-2">N/A</p></div><div class="bg-white p-6 rounded-lg shadow-md border"><h4 class="text-gray-500 font-semibold">Avg. Response Time</h4><p id="report-avg-time" class="text-4xl font-bold mt-2">N/A</p></div></div><div class="bg-white p-6 rounded-lg shadow-md border"><h4 class="font-bold text-lg mb-4">Conversations Overview</h4><div class="h-96 relative"><canvas id="reportsChart"></canvas><div id="reports-chart-overlay" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 hidden"><p class="text-gray-500 font-semibold">No data available to display chart.</p></div></div></div></div>`,
-            users: `<div class="p-8"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-gray-800">Manage Team</h2><button onclick="openModal('addUserModal')" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-user-plus mr-2"></i>Invite User</button></div><div class="bg-white rounded-lg shadow-md overflow-hidden border"><table class="w-full text-left"><thead class="bg-gray-100"><tr><th class="p-4 font-semibold">Name</th><th class="p-4 font-semibold">Email</th><th class="p-4 font-semibold">Role</th><th class="p-4 font-semibold">Status</th><th class="p-4 font-semibold">Actions</th></tr></thead><tbody id="users-table-body" class="divide-y"></tbody></table></div></div>`,
+            users: `<div class="p-8">
+                <div class="mb-6 border-b border-gray-200">
+                    <div class="flex">
+                        <button onclick="showTeamTab('users', event)" class="settings-tab active-tab py-2 px-4 font-semibold border-b-2">Users</button>
+                        <button onclick="showTeamTab('roles', event)" class="settings-tab text-gray-500 py-2 px-4 font-semibold border-b-2 border-transparent">Roles & Permissions</button>
+                    </div>
+                </div>
+
+                <div id="team-users-view">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Team Members</h2>
+                        <button onclick="openAddUserModal()" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-user-plus mr-2"></i>Invite User</button>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden border">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-4 font-semibold">Name</th>
+                                    <th class="p-4 font-semibold">Email</th>
+                                    <th class="p-4 font-semibold">Role</th>
+                                    <th class="p-4 font-semibold">Status</th>
+                                    <th class="p-4 font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="team-roles-view" class="hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Roles</h2>
+                        <button onclick="openRoleModal()" class="bg-violet-600 text-white px-5 py-2 rounded-lg hover:bg-violet-700 font-semibold"><i class="fas fa-plus mr-2"></i>Create Role</button>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden border mb-8">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-4 font-semibold">Role Name</th>
+                                    <th class="p-4 font-semibold">Description</th>
+                                    <th class="p-4 font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="roles-table-body" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`,
             settings: `<div class="p-8 h-full flex flex-col">
                 <div class="mb-8">
                     <h2 class="text-3xl font-bold text-gray-800">Settings</h2>
@@ -1574,6 +1683,27 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                                         <div><label class="block text-sm font-medium text-gray-700">Business Name</label><input type="text" name="business_name" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled></div>
                                         <div><label class="block text-sm font-medium text-gray-700">Business Email</label><input type="email" name="business_email" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled></div>
                                         <div><label class="block text-sm font-medium text-gray-700">Business Address</label><textarea name="business_address" rows="3" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled></textarea></div>
+                                    </div>
+                                </div>
+                                <div class="md:col-span-3 border-t pt-6 mt-6">
+                                    <h4 class="font-bold text-lg text-gray-800 mb-4 flex items-center">
+                                        <i class="fas fa-headset text-violet-600 mr-2"></i> Remote Support Access
+                                    </h4>
+                                    <div class="flex items-center justify-between bg-violet-50 p-4 rounded-lg border border-violet-100">
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-800">Allow Super Admin Access</p>
+                                            <p class="text-xs text-gray-500 mt-1">Enable this to allow support staff to log in to your account for troubleshooting.</p>
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            <div id="support-pin-container" class="hidden text-right">
+                                                <span class="text-xs text-gray-500 block uppercase tracking-wider">Support PIN</span>
+                                                <span id="support-pin-display" class="text-xl font-mono font-bold text-violet-700 tracking-widest">------</span>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" id="remote-access-toggle" class="sr-only peer" onchange="toggleRemoteAccess()">
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-violet-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2998,23 +3128,53 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         <form id="addUserForm" class="mt-4 space-y-4 p-4 text-left">
                             <div>
                                 <label for="userName" class="block text-sm font-medium text-gray-700">Full Name</label>
-                                <input id="userName" type="text" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" required>
+                                <input id="userName" name="name" type="text" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" required>
                             </div>
                             <div>
                                 <label for="userEmail" class="block text-sm font-medium text-gray-700">Email Address</label>
-                                <input id="userEmail" type="email" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" required>
+                                <input id="userEmail" name="email" type="email" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" required>
                             </div>
                             <div>
                                 <label for="userRole" class="block text-sm font-medium text-gray-700">Role</label>
-                                <select id="userRole" class="mt-1 block w-full rounded-md border-gray-300">
-                                    <option value="Admin">Admin</option>
-                                    <option value="Accountant">Accountant</option>
-                                    <option value="Staff" selected>Staff</option>
+                                <select id="userRole" name="role_id" class="mt-1 block w-full rounded-md border-gray-300">
+                                    <option value="">Loading Roles...</option>
                                 </select>
                             </div>
                             <div class="items-center pt-4 flex justify-end space-x-2 border-t mt-6">
                                 <button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('addUserModal')">Cancel</button>
                                 <button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Send Invitation</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>`,
+            roleModal: `<div id="roleModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden items-center justify-center z-50">
+                <div class="relative mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white max-h-[90vh] flex flex-col">
+                    <div class="mt-3 flex flex-col h-full">
+                        <h3 id="role-modal-title" class="text-lg text-center leading-6 font-medium text-gray-900 mb-4">Create Role</h3>
+                        <form id="roleForm" class="flex flex-col h-full">
+                            <input type="hidden" id="roleId" name="id">
+                            <div class="px-4 pb-4">
+                                <div>
+                                    <label for="roleName" class="block text-sm font-medium text-gray-700">Role Name</label>
+                                    <input id="roleName" name="name" type="text" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full" required>
+                                </div>
+                                <div class="mt-4">
+                                    <label for="roleDesc" class="block text-sm font-medium text-gray-700">Description</label>
+                                    <input id="roleDesc" name="description" type="text" class="mt-1 px-3 py-2 text-gray-700 border rounded-md w-full">
+                                </div>
+                            </div>
+
+                            <div class="flex-1 overflow-y-auto px-4 border-t border-b py-4 bg-gray-50">
+                                <h4 class="font-bold text-gray-700 mb-2">Permissions</h4>
+                                <div id="permissions-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Permissions loaded via JS -->
+                                </div>
+                            </div>
+
+                            <div class="items-center pt-4 flex justify-end space-x-2 mt-auto p-4 bg-white">
+                                <button type="button" class="px-4 py-2 bg-gray-200 rounded-md" onclick="closeModal('roleModal')">Cancel</button>
+                                <button type="submit" class="px-4 py-2 bg-violet-500 text-white rounded-md">Save Role</button>
                             </div>
                         </form>
                     </div>
@@ -3299,6 +3459,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         let currentExpensesPage = 1;
         let isEmojiPickerInitialized = false;
         let displayedMessageIds = new Set();
+        let activeYouTubeChannelId = null;
 
         // --- ONGEZA FUNCTION HII MPYA HAPA ---
         // --- INITIALIZATION FUNCTIONS ---
@@ -3873,7 +4034,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const activeListDiv = document.getElementById('active-campaigns-list');
             activeListDiv.innerHTML = '<p class="text-sm text-gray-500">Loading active campaigns...</p>';
 
-            const activeData = await fetchApi(`modules/youtube_ads/controllers/AdController.php?action=getActiveCampaigns&page=${page}&limit=3`);
+            const channelParam = activeYouTubeChannelId ? `&channel_id=${activeYouTubeChannelId}` : '';
+            const activeData = await fetchApi(`modules/youtube_ads/controllers/AdController.php?action=getActiveCampaigns&page=${page}&limit=3${channelParam}`);
 
             activeListDiv.innerHTML = '';
             if (activeData && activeData.status === 'success' && activeData.campaigns.length > 0) {
@@ -3916,7 +4078,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             const pendingListDiv = document.getElementById('pending-campaigns-list');
             pendingListDiv.innerHTML = '<p class="text-sm text-gray-500">Loading pending campaigns...</p>';
 
-            const pendingData = await fetchApi(`modules/youtube_ads/controllers/AdController.php?action=getPendingCampaigns&page=${page}&limit=3`);
+            const channelParam = activeYouTubeChannelId ? `&channel_id=${activeYouTubeChannelId}` : '';
+            const pendingData = await fetchApi(`modules/youtube_ads/controllers/AdController.php?action=getPendingCampaigns&page=${page}&limit=3${channelParam}`);
 
             pendingListDiv.innerHTML = '';
             if (pendingData && pendingData.status === 'success' && pendingData.campaigns.length > 0) {
@@ -3959,22 +4122,33 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         async function loadYouTubeAds() {
-            const channelData = await fetchApi('modules/youtube_ads/controllers/get_channel_info.php');
+            // 1. Load Channel List for Dropdown
+            const channelsData = await fetchApi('modules/youtube_ads/controllers/get_channels.php');
+            const select = document.getElementById('activeChannelSelect');
+            const contentArea = document.getElementById('youtube-content-area');
 
-            if (channelData && channelData.status === 'success' && channelData.channel) {
-                document.getElementById('youtube-ads-cta').classList.add('hidden');
-                document.getElementById('youtube-ads-main').classList.remove('hidden');
+            if (channelsData && channelsData.status === 'success' && channelsData.channels.length > 0) {
+                // Populate Dropdown
+                select.innerHTML = '';
+                channelsData.channels.forEach(ch => {
+                    const selected = (activeYouTubeChannelId && activeYouTubeChannelId == ch.id) ? 'selected' : '';
+                    select.innerHTML += `<option value="${ch.id}" ${selected}>${ch.channel_name}</option>`;
+                });
 
-                const channelInfoDiv = document.getElementById('connected-channel-info');
-                channelInfoDiv.innerHTML = `<img src="${channelData.channel.thumbnail_url}" alt="Channel Thumbnail" class="w-12 h-12 rounded-full mr-4"><p class="font-semibold">${channelData.channel.channel_name}</p>`;
+                // Set active channel (default to first if not set)
+                if (!activeYouTubeChannelId) {
+                    activeYouTubeChannelId = channelsData.channels[0].id;
+                }
+                select.value = activeYouTubeChannelId;
 
+                // Load Info for Active Channel
+                await switchYouTubeChannel(activeYouTubeChannelId);
+
+                // Show Content
+                contentArea.classList.remove('hidden');
                 document.getElementById('currency-symbol').textContent = DEFAULT_CURRENCY;
 
-                // Initial loads
-                loadActiveCampaigns(1);
-                loadPendingCampaigns(1);
-                loadGeneratedReports(1);
-
+                // Load Advertisers (Global)
                 const advertisersData = await fetchApi('modules/youtube_ads/controllers/AdController.php?action=getAdvertisers');
                 const adAdvertiserSelect = document.getElementById('adAdvertiser');
                 adAdvertiserSelect.innerHTML = '';
@@ -3983,28 +4157,52 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     advertisersData.advertisers.forEach(advertiser => {
                         adAdvertiserSelect.innerHTML += `<option value="${advertiser.id}">${advertiser.name}</option>`;
                     });
-                }
-
-                if (adAdvertiserSelect.innerHTML === '') {
+                    document.querySelector('#createAdForm button[type="submit"]').disabled = false;
+                } else {
                     adAdvertiserSelect.innerHTML = '<option value="">No verified advertisers found</option>';
                     document.querySelector('#createAdForm button[type="submit"]').disabled = true;
-                } else {
-                    document.querySelector('#createAdForm button[type="submit"]').disabled = false;
                 }
 
                 document.getElementById('createAdForm').onsubmit = handleCreateAdSubmit;
+
             } else {
-                document.getElementById('youtube-ads-cta').classList.remove('hidden');
-                document.getElementById('youtube-ads-main').classList.add('hidden');
+                // No Channels Connected
+                select.innerHTML = '<option value="">No Channels</option>';
+                select.disabled = true;
+                contentArea.classList.add('hidden');
+                document.getElementById('connected-channel-info').innerHTML = `<p class="text-gray-500 text-sm">Please add a channel to get started.</p>`;
             }
             togglePlacementField();
+        }
+
+        async function switchYouTubeChannel(channelId) {
+            activeYouTubeChannelId = channelId;
+
+            // Update Header Info
+            const channelData = await fetchApi(`modules/youtube_ads/controllers/get_channel_info.php?id=${channelId}`);
+            if (channelData && channelData.status === 'success') {
+                const infoDiv = document.getElementById('connected-channel-info');
+                infoDiv.innerHTML = `
+                    <img src="${channelData.channel.thumbnail_url}" alt="Channel Thumbnail" class="w-12 h-12 rounded-full border-2 border-violet-100 shadow-sm">
+                    <div>
+                        <p class="font-bold text-gray-800 text-lg leading-tight">${channelData.channel.channel_name}</p>
+                        <p class="text-xs text-green-600 font-semibold flex items-center gap-1"><i class="fas fa-circle text-[8px]"></i> Connected</p>
+                    </div>
+                `;
+            }
+
+            // Reload Data for this Channel
+            loadActiveCampaigns(1);
+            loadPendingCampaigns(1);
+            loadGeneratedReports(1);
         }
 
         async function loadGeneratedReports(page = 1) {
             const listDiv = document.getElementById('generated-reports-list');
             listDiv.innerHTML = '<p class="text-gray-500 p-4">Loading reports...</p>';
 
-            const data = await fetchApi(`modules/youtube_ads/controllers/get_ad_reports.php?page=${page}&limit=3`);
+            const channelParam = activeYouTubeChannelId ? `&channel_id=${activeYouTubeChannelId}` : '';
+            const data = await fetchApi(`modules/youtube_ads/controllers/get_ad_reports.php?page=${page}&limit=3${channelParam}`);
 
             if (data && data.status === 'success' && data.reports.length > 0) {
                 listDiv.innerHTML = ''; // Futa loading
@@ -4910,6 +5108,23 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
         // function loadDashboard() { console.log("Dashboard loaded"); }
 
+        function showTeamTab(tabId, event) {
+            if (event) event.preventDefault();
+            document.getElementById('team-users-view').style.display = tabId === 'users' ? 'block' : 'none';
+            document.getElementById('team-roles-view').style.display = tabId === 'roles' ? 'block' : 'none';
+
+            // Toggle active state
+            document.querySelectorAll('button[onclick*="showTeamTab"]').forEach(btn => {
+                btn.classList.remove('active-tab', 'border-b-2');
+                btn.classList.add('text-gray-500', 'border-transparent');
+            });
+            event.currentTarget.classList.add('active-tab', 'border-b-2');
+            event.currentTarget.classList.remove('text-gray-500', 'border-transparent');
+
+            if (tabId === 'users') loadUsers();
+            if (tabId === 'roles') loadRoles();
+        }
+
         async function loadUsers() {
             const tableBody = document.getElementById('users-table-body');
             tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Loading...</td></tr>`;
@@ -4921,6 +5136,141 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     tableBody.innerHTML += `<tr><td class="p-4 flex items-center"><img src="https://placehold.co/40x40/7e22ce/white?text=${user.avatar_char}" alt="Avatar" class="w-10 h-10 rounded-full mr-3"><div><p class="font-semibold">${user.full_name}</p></div></td><td class="p-4">${user.email}</td><td class="p-4"><span class="bg-violet-100 text-violet-800 text-xs font-medium px-2 py-1 rounded-full">${user.role}</span></td><td class="p-4"><span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">${user.status}</span></td><td class="p-4"><button class="text-gray-400 cursor-not-allowed mr-4" title="Edit (coming soon)"><i class="fas fa-pencil-alt"></i></button><button onclick="deleteUser(${user.id}, '${user.full_name.replace(/'/g, "\\'")}')" class="text-red-500 hover:text-red-700 ${isCurrentUser ? 'cursor-not-allowed opacity-50' : ''}" ${isCurrentUser ? 'disabled' : ''} title="Delete User"><i class="fas fa-trash-alt"></i></button></td></tr>`;
                 });
             } else { tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Failed to load users.</td></tr>`;}
+        }
+
+        async function openAddUserModal() {
+            openModal('addUserModal');
+            const roleSelect = document.getElementById('userRole');
+            roleSelect.innerHTML = '<option value="">Loading...</option>';
+
+            const result = await fetchApi('roles_controller.php');
+            if (result && result.status === 'success') {
+                roleSelect.innerHTML = '<option value="">Select Role</option>';
+                result.data.forEach(role => {
+                    roleSelect.innerHTML += `<option value="${role.id}">${role.name}</option>`;
+                });
+            } else {
+                roleSelect.innerHTML = '<option value="">Error loading roles</option>';
+            }
+        }
+
+        // --- RBAC Frontend Logic ---
+        async function loadRoles() {
+            const tableBody = document.getElementById('roles-table-body');
+            tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Loading roles...</td></tr>';
+
+            const result = await fetchApi('roles_controller.php');
+            if (result && result.status === 'success') {
+                tableBody.innerHTML = '';
+                result.data.forEach(role => {
+                    const isSystem = ['Admin', 'Accountant', 'Staff'].includes(role.name); // Simple check
+                    const deleteBtn = isSystem ?
+                        '<span class="text-gray-400 text-xs italic">System Role</span>' :
+                        `<button onclick="deleteRole(${role.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>`;
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td class="p-4 font-semibold">${role.name}</td>
+                            <td class="p-4 text-gray-600">${role.description || '-'}</td>
+                            <td class="p-4 flex gap-3">
+                                <button onclick='openRoleModal(${JSON.stringify(role)})' class="text-violet-600 hover:text-violet-800"><i class="fas fa-edit"></i></button>
+                                ${deleteBtn}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Failed to load roles.</td></tr>';
+            }
+        }
+
+        async function openRoleModal(role = null) {
+            const form = document.getElementById('roleForm');
+            form.reset();
+            document.getElementById('roleId').value = role ? role.id : '';
+            document.getElementById('roleName').value = role ? role.name : '';
+            document.getElementById('roleDesc').value = role ? role.description : '';
+            document.getElementById('role-modal-title').textContent = role ? 'Edit Role' : 'Create New Role';
+
+            // Load Permissions
+            const container = document.getElementById('permissions-container');
+            container.innerHTML = '<p class="col-span-2 text-center">Loading permissions...</p>';
+
+            const [permResult, roleData] = await Promise.all([
+                fetchApi('roles_controller.php?action=permissions'),
+                // If editing, we strictly use the permissions array passed in 'role' object if complete,
+                // but roles_controller list endpoint returns them.
+                Promise.resolve(role)
+            ]);
+
+            if (permResult && permResult.status === 'success') {
+                container.innerHTML = '';
+                // Group by Category
+                const grouped = {};
+                permResult.data.forEach(p => {
+                    if (!grouped[p.category]) grouped[p.category] = [];
+                    grouped[p.category].push(p);
+                });
+
+                const rolePerms = role ? (role.permissions || []) : [];
+
+                for (const [cat, perms] of Object.entries(grouped)) {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'bg-white p-3 rounded border shadow-sm';
+                    groupDiv.innerHTML = `<h5 class="font-bold text-violet-600 mb-2 border-b pb-1 text-sm uppercase">${cat}</h5>`;
+
+                    perms.forEach(p => {
+                        const isChecked = rolePerms.includes(p.id) || rolePerms.includes(String(p.id)) ? 'checked' : '';
+                        groupDiv.innerHTML += `
+                            <label class="flex items-center space-x-2 mb-1 cursor-pointer">
+                                <input type="checkbox" name="permissions[]" value="${p.id}" ${isChecked} class="form-checkbox h-4 w-4 text-violet-600 rounded">
+                                <span class="text-sm text-gray-700">${p.name}</span>
+                            </label>
+                        `;
+                    });
+                    container.appendChild(groupDiv);
+                }
+            }
+            openModal('roleModal');
+        }
+
+        async function handleRoleSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const id = document.getElementById('roleId').value;
+            const name = document.getElementById('roleName').value;
+            const description = document.getElementById('roleDesc').value;
+            const permissions = Array.from(form.querySelectorAll('input[name="permissions[]"]:checked')).map(cb => cb.value);
+
+            const action = id ? 'update' : 'create';
+            const body = { id, name, description, permissions };
+
+            const result = await fetchApi(`roles_controller.php?action=${action}`, {
+                method: 'POST',
+                body: body
+            });
+
+            if (result && result.status === 'success') {
+                showToast(result.message, 'success');
+                closeModal('roleModal');
+                loadRoles();
+            } else {
+                showToast(result ? result.message : 'Error saving role', 'error');
+            }
+        }
+
+        async function deleteRole(id) {
+            if (!await confirmAction('Delete this role? This cannot be undone.')) return;
+            const result = await fetchApi('roles_controller.php?action=delete', {
+                method: 'POST',
+                body: { id }
+            });
+            if (result && result.status === 'success') {
+                showToast(result.message, 'success');
+                loadRoles();
+            } else {
+                showToast(result ? result.message : 'Error deleting role', 'error');
+            }
         }
         async function deleteUser(userId, userName) { if (!await confirmAction(`Are you sure you want to delete '${userName}'?`)) return; const result = await fetchApi('delete_user.php', { method: 'POST', body: { id: userId } }); if (result && result.status === 'success') { showToast(result.message, 'success'); loadUsers(); } else if (result) { showToast('Error: ' + result.message, 'error'); } }
 
@@ -6525,6 +6875,38 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             }
         }
 
+        async function toggleRemoteAccess() {
+            const toggle = document.getElementById('remote-access-toggle');
+            const enable = toggle.checked;
+            const container = document.getElementById('support-pin-container');
+            const pinDisplay = document.getElementById('support-pin-display');
+
+            // Optimistic UI
+            if (enable) {
+                container.classList.remove('hidden');
+                pinDisplay.textContent = 'Generating...';
+            } else {
+                container.classList.add('hidden');
+            }
+
+            const result = await fetchApi('toggle_remote_access.php', {
+                method: 'POST',
+                body: { enable: enable }
+            });
+
+            if (result && result.status === 'success') {
+                if (enable && result.pin) {
+                    pinDisplay.textContent = result.pin;
+                }
+                showToast(result.message, 'success');
+            } else {
+                toggle.checked = !enable; // Revert
+                if (enable) container.classList.add('hidden');
+                else container.classList.remove('hidden');
+                showToast(result ? result.message : 'Action failed', 'error');
+            }
+        }
+
         async function loadSettings() {
         const urlParams = new URLSearchParams(window.location.search);
         // This success check is now handled by the launchWhatsAppSignup function's callback
@@ -6593,6 +6975,21 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 form.querySelector('[name="vrn_number"]').value = settings.vrn_number || '';
                 form.querySelector('[name="default_currency"]').value = settings.default_currency || 'TZS';
                 form.querySelector('[name="exchange_rate"]').value = settings.exchange_rate || '';
+
+                // Support Access Fields
+                const remoteToggle = document.getElementById('remote-access-toggle');
+                const pinContainer = document.getElementById('support-pin-container');
+                const pinDisplay = document.getElementById('support-pin-display');
+
+                if (remoteToggle) {
+                    remoteToggle.checked = !!parseInt(settings.remote_access_enabled || 0);
+                    if (remoteToggle.checked) {
+                        pinContainer.classList.remove('hidden');
+                        pinDisplay.textContent = settings.support_pin || '------';
+                    } else {
+                        pinContainer.classList.add('hidden');
+                    }
+                }
 
                 // VFD Fields
                 const vfdStatusEl = document.getElementById('vfd-verification-status');
@@ -8997,7 +9394,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     'createInvoiceForm', 'createExpenseFormRequisition', 'createExpenseFormClaim',
                     'settingsForm', 'addTaxPaymentForm', 'uploadPayrollForm', 'addAssetForm',
                     'addCostForm', 'pricingCalculatorForm', 'fileUploadForm', 'newProofForm',
-                    'convertDocumentForm', 'linkVideoForm'
+            'convertDocumentForm', 'linkVideoForm', 'roleForm'
                 ];
 
                 if (!managedForms.includes(form.id)) return;
@@ -9005,6 +9402,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 e.preventDefault();
                 let result;
                 switch(form.id) {
+            case 'roleForm':
+                await handleRoleSubmit(e);
+                break;
                     case 'sendMessageForm':
                         await sendMessage(e);
                         break;
@@ -9223,9 +9623,16 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                         openTrackProgressModal(form.dataset.expenseId);
                         break;
                     case 'addUserForm': {
-                        result = await fetchApi('send_invitation.php', { method: 'POST', body: { name: form.querySelector('#userName').value, email: form.querySelector('#userEmail').value, role: form.querySelector('#userRole').value } });
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                // Ensure name and role_id are captured correctly
+                data.name = form.querySelector('#userName').value;
+                data.email = form.querySelector('#userEmail').value;
+                data.role_id = form.querySelector('#userRole').value;
+
+                result = await fetchApi('send_invitation.php', { method: 'POST', body: data });
                         if(result) {
-                            showToast(result.message, 'success');
+                    showToast(result.message, result.status === 'success' ? 'success' : 'error');
                             if (result.status === 'success' || result.status === 'warning') {
                                 closeModal('addUserModal');
                                 form.reset();

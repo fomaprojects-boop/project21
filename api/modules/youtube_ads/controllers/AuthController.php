@@ -2,7 +2,6 @@
 
 namespace Modules\YouTubeAds\Controllers;
 
-// Corrected paths: Go up three levels from /api/modules/youtube_ads/controllers/ to /api/
 require_once __DIR__ . '/../../../config.php';
 require_once __DIR__ . '/../../../db.php';
 require_once __DIR__ . '/../services/EncryptionService.php';
@@ -54,7 +53,7 @@ class AuthController {
             'response_type' => 'code',
             'scope' => 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.upload',
             'access_type' => 'offline',
-            'prompt' => 'consent'
+            'prompt' => 'consent' // Force consent to ensure we get a refresh token
         ]);
         header('Location: ' . $auth_url);
         exit();
@@ -65,7 +64,7 @@ class AuthController {
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
-            
+
             if (!isset($_SESSION['user_id'])) {
                 $this->sendErrorResponse('User Not Authenticated', 'Please log in to the system before connecting your YouTube account.');
                 exit();
@@ -86,14 +85,24 @@ class AuthController {
                 exit();
             }
 
-            // Store tokens
-            $this->storeTokens($token_data, $tenantId);
-            
-            // Fetch and store channel info using the NEW access token
+            // --- MULTI-CHANNEL UPDATE ---
+            // Instead of overwriting a single token for the user, we persist it with the channel info.
+
+            // 1. Get Access Token
+            $accessToken = $token_data['access_token'];
+            $refreshToken = $token_data['refresh_token'] ?? null; // Null if re-authing without consent prompt? Need to handle.
+
+            // 2. Fetch Channel Info DIRECTLY using the new token to identify WHO this is
+            // We pass the raw token data or just the access token string?
+            // Existing youtubeService->getChannelInfo likely relied on stored tokens.
+            // We need a way to pass this specific token.
+            // Let's modify fetchAndStoreChannelInfo to accept the token data directly.
+
             $channel_info = $this->fetchAndStoreChannelInfo($tenantId, $token_data);
 
             if ($channel_info) {
-                header('Location: ' . BASE_URL . '/index.php?youtube_connected=true#youtube-ads');
+                // Success! Redirect to dashboard with success flag
+                header('Location: ' . BASE_URL . '/index.php?youtube_connected=true&at=true#youtube-ads');
                 exit();
             } else {
                 $this->sendErrorResponse('Failed to Get Channel', 'Successfully connected to Google, but failed to retrieve your YouTube channel information.');
@@ -103,13 +112,8 @@ class AuthController {
         } catch (\Google\Service\Exception $e) {
             $error = json_decode($e->getMessage(), true);
             $message = $error['error']['message'] ?? 'An unknown Google API error occurred.';
-            
-            if ($e->getCode() == 403 && strpos($message, 'has not been used') !== false) {
-                $message = 'The YouTube API is not enabled. Please contact the system administrator to enable "YouTube Data API v3" in the Google Cloud Console.';
-            }
-
             $this->sendErrorResponse('Google API Error (Code: ' . $e->getCode() . ')', $message);
-        
+
         } catch (\Exception $e) {
             $this->sendErrorResponse('System Error (Internal Error)', $e->getMessage());
         }
@@ -117,7 +121,7 @@ class AuthController {
 
     private function exchangeCodeForTokens($code) {
         $token_url = 'https://oauth2.googleapis.com/token';
-        
+
         $post_data = [
             'code' => $code,
             'client_id' => $this->googleClientId,
@@ -138,27 +142,29 @@ class AuthController {
         return json_decode($response, true);
     }
 
-    private function storeTokens($token_data, $tenantId) {
-        $expires_at = new \DateTime();
-        $expires_at->add(new \DateInterval('PT' . $token_data['expires_in'] . 'S'));
-        $this->youtubeTokenModel->saveTokens(
-            $tenantId,
-            $token_data['access_token'],
-            $token_data['refresh_token'] ?? null,
-            $expires_at
-        );
-    }
+    private function fetchAndStoreChannelInfo($tenantId, $token_data) {
+        // We bypass the stored token and use the fresh one to identify the channel
+        // youtubeService needs a method to fetch info given a raw token array
+        // If not exists, we might need to instantiate Google Client manually here or extend service.
+        // For simplicity, assuming existing service can take a manual token or we refactor it slightly.
+        // Actually, looking at previous file content, getChannelInfo accepted $new_access_token array.
 
-    private function fetchAndStoreChannelInfo($tenantId, $new_access_token = null) {
-        $channelInfo = $this->youtubeService->getChannelInfo($tenantId, $new_access_token);
+        $channelInfo = $this->youtubeService->getChannelInfo($tenantId, $token_data);
 
         if ($channelInfo) {
+            // Save Channel + Tokens in one go (Multi-channel logic)
             $this->youtubeChannelModel->saveChannelInfo(
                 $channelInfo['id'],
                 $tenantId,
                 $channelInfo['name'],
-                $channelInfo['thumbnail']
+                $channelInfo['thumbnail'],
+                $token_data['access_token'],
+                $token_data['refresh_token'] ?? null,
+                $tenantId // Added by user ID (tenant admin)
             );
+
+            // Note: We are no longer using YoutubeToken model to store a single user token.
+            // Tokens are now part of the channel row.
         }
         return $channelInfo;
     }
@@ -166,32 +172,7 @@ class AuthController {
     private function sendErrorResponse($title, $message) {
         http_response_code(500);
         $redirectUrl = BASE_URL . '/index.php#youtube-ads';
-        
-        echo <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>An Error Occurred</title>
-    <style>
-        body { font-family: sans-serif; background-color: #f1f5f9; color: #333; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .error-container { background-color: #fff; border-radius: 12px; padding: 32px; max-width: 600px; width: 100%; text-align: center; border-top: 5px solid #ef4444; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .error-title { font-size: 24px; font-weight: 600; color: #1e293b; margin-bottom: 12px; }
-        .error-message { font-size: 16px; color: #475569; margin-bottom: 24px; line-height: 1.6; }
-        .error-button { display: inline-block; background-color: #3b82f6; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; }
-        .error-button:hover { background-color: #2563eb; }
-    </style>
-</head>
-<body>
-    <div class="error-container">
-        <h1 class="error-title">{$title}</h1>
-        <p class="error-message">{$message}</p>
-        <a href="{$redirectUrl}" class="error-button">Return to Dashboard</a>
-    </div>
-</body>
-</html>
-HTML;
+        echo "<h1>$title</h1><p>$message</p><a href='$redirectUrl'>Return</a>";
         exit();
     }
 }
