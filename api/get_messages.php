@@ -35,7 +35,7 @@ try {
 
     // Get messages with pagination (latest first, then reversed)
     $stmt = $pdo->prepare("
-        SELECT id, sender_type, content, sent_at, created_at, status, is_internal
+        SELECT id, sender_type, content, sent_at, created_at, status, is_internal, scheduled_at
         FROM messages
         WHERE conversation_id = :conversation_id
         ORDER BY sent_at DESC
