@@ -3671,9 +3671,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         function safeDate(dateStr) {
-            if (!dateStr) return new Date();
-            // Replace space with T for ISO format compatibility (Safari/older browsers)
-            // MySQL: "2023-11-24 13:06:16" -> "2023-11-24T13:06:16"
+            if (!dateStr || dateStr === 'null' || dateStr === '') return null;
             return new Date(dateStr.replace(' ', 'T'));
         }
 
@@ -4494,7 +4492,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 html: `
                     <div class="text-left space-y-3">
                         <p class="text-sm text-gray-500 mb-2">Enter details for IFRS compliance (${year}).</p>
-                        
+
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700">Long Term Bank Loans</label>
@@ -5528,14 +5526,23 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 if (hoursDiff > 24) {
                     // Window is CLOSED (Meta Rule)
                     messageInput.disabled = true;
-                    messageInput.placeholder = 'Select a template to restart the conversation.';
+                    // IMPROVED UX: Clearer placeholder
+                    messageInput.placeholder = 'Waiting for customer reply...';
                     inputWrapper.classList.add('opacity-50', 'bg-gray-100');
                     if (sendBtn) sendBtn.style.display = 'none';
 
                     const windowIndicator = document.createElement('div');
                     windowIndicator.id = 'chat-closed-indicator';
-                    windowIndicator.className = 'my-2 p-3 rounded-lg bg-red-50 text-red-800 text-sm text-center italic border border-red-100';
-                    windowIndicator.innerHTML = `<i>24-hour window closed. Last message at ${lastMessageDate ? lastMessageDate.toLocaleString() : 'Unknown'}. You must send a template to continue.</i>`;
+                    // IMPROVED UX: Visual warning about 24h window
+                    windowIndicator.className = 'my-2 p-3 rounded-lg bg-orange-50 text-orange-800 text-sm text-center border border-orange-200 shadow-sm';
+                    windowIndicator.innerHTML = `
+                        <div class="flex items-center justify-center gap-2">
+                            <i class="fas fa-clock text-orange-600"></i>
+                            <span class="font-semibold">24-Hour Window Closed</span>
+                        </div>
+                        <p class="text-xs mt-1 text-orange-700">Last message: ${lastMessageDate ? lastMessageDate.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'Unknown'}.</p>
+                        <p class="text-xs mt-1">You can only send <button onclick="openTemplateSelector()" class="underline font-bold hover:text-orange-900">Templates</button> until the customer replies.</p>
+                    `;
                     if(chatFooter && chatFooter.parentNode) chatFooter.parentNode.insertBefore(windowIndicator, chatFooter);
                 }
             }
@@ -5662,36 +5669,45 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     return;
                 }
 
-                // Create a temporary container for new messages if prepending
                 const fragment = document.createDocumentFragment();
 
-                // Add "Load Older" button if page 1 and results are full (implying more)
-                // Or if page > 1 and we got results.
-                // Simple logic: If we are on page 1, prepend button.
-                // If we are polling (page 1, !isInitialLoad), we replace content.
-
-                // If this is an automated poll (page 1, not initial), perform a smart update
+                // --- FIX: UPDATE LOGIC KWA POLLING (AUTO-REFRESH) ---
                 if (!isInitialLoad && page === 1) {
                     let hasNewIncomingMessage = false;
 
                     data.messages.forEach(msg => {
                         // Check if message is already displayed
                         if (displayedMessageIds.has(msg.id)) {
-                            // If it exists, just update its status icon
+                            // If it exists, update its status icon only
                             const existingMsg = document.getElementById(`msg-${msg.id}`);
                             if (existingMsg) {
                                 const statusIconContainer = existingMsg.querySelector('.status-icon-container');
                                 if (statusIconContainer) {
                                     let newIcon = '';
                                     if (msg.sender_type === 'agent' || msg.sender_type === 'user') {
-                                        if (msg.status === 'read') {
+
+                                        // --- FIX: ANZA KUANGALIA SCHEDULED KWANZA ---
+                                        if (msg.status === 'scheduled') {
+                                            // Kama ni scheduled, rudisha icon ya saa
+                                            // Tunatumia safeDate kuhakikisha hatupati error
+                                            const dateObj = safeDate(msg.scheduled_at);
+                                            const timeString = dateObj ? dateObj.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+                                            newIcon = `<i class="fas fa-clock text-amber-500 text-[10px] ml-1" title="Scheduled for ${timeString}"></i>`;
+                                        }
+                                        // ---------------------------------------------
+                                        else if (msg.status === 'read') {
                                             newIcon = '<i class="fas fa-check-double text-blue-500 text-xs ml-1"></i>';
-                                        } else if (msg.status === 'delivered') {
+                                        }
+                                        else if (msg.status === 'delivered') {
                                             newIcon = '<i class="fas fa-check-double text-gray-400 text-xs ml-1"></i>';
-                                        } else {
+                                        }
+                                        else {
+                                            // Sent / Pending (Tick moja ya kijivu)
                                             newIcon = '<i class="fas fa-check text-gray-300 text-xs ml-1"></i>';
                                         }
                                     }
+
+                                    // Update HTML only if changed
                                     if (statusIconContainer.innerHTML !== newIcon) {
                                         statusIconContainer.innerHTML = newIcon;
                                     }
@@ -5701,16 +5717,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                             // This is a new message. Append it.
                             const newNode = createMessageElement(msg);
                             messageContainer.appendChild(newNode);
-                            displayedMessageIds.add(msg.id); // Add to our set
+                            displayedMessageIds.add(msg.id);
 
-                            // Check if it's an incoming message to play sound
                             const type = String(msg.sender_type || '').toLowerCase();
                             if (type !== 'agent' && type !== 'user') {
                                 hasNewIncomingMessage = true;
                             }
 
-                            // Auto-scroll if user was at bottom
-                            if (messageContainer.scrollHeight - messageContainer.scrollTop - messageContainer.clientHeight < 150) { // Increased threshold a bit
+                            if (messageContainer.scrollHeight - messageContainer.scrollTop - messageContainer.clientHeight < 150) {
                                 messageContainer.scrollTop = messageContainer.scrollHeight;
                             }
                         }
@@ -5722,9 +5736,8 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
 
                     return; // Stop here for polling
                 }
+                // ----------------------------------------------------
 
-
-                // Standard Logic for Initial Load or Pagination
                 data.messages.forEach(msg => {
                     fragment.appendChild(createMessageElement(msg));
                     displayedMessageIds.add(msg.id);
@@ -5770,15 +5783,18 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             bubbleWrapper.className = 'flex ' + (isAgent ? 'justify-end' : 'justify-start') + ' items-end gap-1 mb-2';
             bubbleWrapper.id = `msg-${msg.id}`;
 
-            const timeString = isScheduled ?
-                `<span class="italic text-gray-500">Scheduled: ${safeDate(msg.scheduled_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</span>` :
+            const dateObj = safeDate(msg.scheduled_at);
+            const timeString = (isScheduled && dateObj) ?
+                `<span class="italic text-gray-500">Scheduled: ${dateObj.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</span>` :
                 safeDate(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
             let statusIcon = '';
             if (isAgent) {
                 if (isScheduled) {
-                    statusIcon = `<i class="fas fa-clock text-amber-500 text-[10px] ml-1" title="Pending"></i>`;
+                    // PRIORITY FIX: Show Clock for Scheduled Messages
+                    statusIcon = `<i class="fas fa-clock text-amber-500 text-[10px] ml-1" title="Scheduled for ${timeString.replace(/<[^>]*>?/gm, '')}"></i>`;
                 } else {
+                    // Standard Ticks for Sent/Delivered/Read
                     let iconClass = 'text-gray-300';
                     let iconType = 'fa-check';
 
@@ -6101,35 +6117,68 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         async function snoozeChat(preset) {
+            // 1. Check kama Conversation ID ipo kabla ya kuanza
+            if (!currentConversationId) {
+                console.error("Snooze Error: currentConversationId is missing.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Chat Selected',
+                    text: 'Please select a conversation from the list first.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                return;
+            }
+
             let snoozeUntil = new Date();
             let successMessage = 'Chat snoozed!';
 
-            switch (preset) {
-                case '1 HOUR':
-                    snoozeUntil.setHours(snoozeUntil.getHours() + 1);
-                    break;
-                case 'TOMORROW':
-                    snoozeUntil.setDate(snoozeUntil.getDate() + 1);
-                    snoozeUntil.setHours(9, 0, 0, 0);
-                    successMessage = 'Snoozed until tomorrow at 9am!';
-                    break;
-                default:
-                    snoozeUntil = new Date(preset);
-                    successMessage = `Snoozed until ${snoozeUntil.toLocaleString()}`;
+            // 2. Logic ya Kuhesabu Muda
+            if (preset === '1 HOUR') {
+                snoozeUntil.setHours(snoozeUntil.getHours() + 1);
+            } else if (preset === 'TOMORROW') {
+                snoozeUntil.setDate(snoozeUntil.getDate() + 1);
+                snoozeUntil.setHours(9, 0, 0, 0); // Kesho saa 3 asubuhi
+                successMessage = 'Snoozed until tomorrow at 9am!';
+            } else {
+                // Hii ni kwa ajili ya Custom Date (preset inakuja kama string ya tarehe)
+                snoozeUntil = new Date(preset);
+                successMessage = `Snoozed until ${snoozeUntil.toLocaleString()}`;
             }
 
-            const mysqlDatetime = snoozeUntil.toISOString().slice(0, 19).replace('T', ' ');
+            // 3. FIX: Format ya MySQL (YYYY-MM-DD HH:MM:SS)
+            // Tunatumia Local Time ili isibadilike kuwa UTC
+            const year = snoozeUntil.getFullYear();
+            const month = String(snoozeUntil.getMonth() + 1).padStart(2, '0');
+            const day = String(snoozeUntil.getDate()).padStart(2, '0');
+            const hours = String(snoozeUntil.getHours()).padStart(2, '0');
+            const minutes = String(snoozeUntil.getMinutes()).padStart(2, '0');
+            const seconds = String(snoozeUntil.getSeconds()).padStart(2, '0');
 
-            if (!mysqlDatetime || !currentConversationId) return;
+            const mysqlDatetime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 
+            console.log("Attempting to snooze conversation:", currentConversationId, "Until:", mysqlDatetime);
+
+            // 4. Tuma Request Server
             const result = await fetchApi('snooze_conversation.php', {
                 method: 'POST',
-                body: { conversation_id: currentConversationId, snooze_until: mysqlDatetime }
+                body: {
+                    conversation_id: currentConversationId,
+                    snooze_until: mysqlDatetime
+                }
             });
 
             if (result && result.success) {
                 document.getElementById('snooze-menu').classList.add('hidden');
-                loadConversations(); // Refresh list to reflect snoozed status
+
+                // Refresh list ili chat ipotee kwenye 'Open' na iende 'Snoozed'
+                loadConversations();
+
+                // Ficha chat view au onyesha ujumbe
+                document.getElementById('message-view-placeholder').classList.remove('hidden');
+                document.getElementById('message-view-content').classList.add('hidden');
+                currentConversationId = null; // Reset ID
+
                 Swal.fire({
                     toast: true,
                     position: 'top-end',
@@ -6138,6 +6187,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     showConfirmButton: false,
                     timer: 2500
                 });
+            } else {
+                console.error("Snooze API Failed:", result);
+                showToast(result ? result.message : 'Failed to snooze chat.', 'error');
             }
         }
 
@@ -6146,7 +6198,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 title: 'Snooze until...',
                 html: '<input type="datetime-local" id="swal-datetime" class="swal2-input">',
                 confirmButtonText: 'Set Snooze',
-                stopKeydownPropagation: false,
+                showCancelButton: true,
+                confirmButtonColor: '#7c3aed',
+                cancelButtonColor: '#d33',
                 customClass: {
                     popup: 'custom-snooze-width'
                 },
@@ -6157,8 +6211,9 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     }
                     return datetime;
                 }
-            }).then(result => {
-                if (result.isConfirmed) {
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    // result.value inakuja kama "2025-11-30T14:30"
                     snoozeChat(result.value);
                 }
             });
