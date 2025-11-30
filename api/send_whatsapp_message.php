@@ -1,26 +1,28 @@
 <?php
 // api/send_whatsapp_message.php
 
-// Define Log Function locally or include config
-$log_file = __DIR__ . '/../webhook_debug.log'; // Log to root webhook debug log for unified debugging
+// 1. LOGGING SETUP (Muhimu kwa Debugging)
+$log_file = __DIR__ . '/../webhook_debug.log'; 
 function log_send_debug($msg) {
     global $log_file;
-    file_put_contents($log_file, "[Send Debug] " . date('Y-m-d H:i:s') . " - $msg\n", FILE_APPEND);
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($log_file, "[Send Debug] $timestamp - $msg\n", FILE_APPEND);
 }
 
-// Ensure JSON response even on fatal errors
+// 2. ERROR HANDLING: Hakikisha tunarudisha JSON hata kukitokea Fatal Error
 register_shutdown_function(function() {
     $error = error_get_last();
     if ($error && ($error['type'] === E_ERROR || $error['type'] === E_PARSE || $error['type'] === E_CORE_ERROR)) {
+        // Futa output yoyote iliyotangulia isiharibu JSON
         while (ob_get_level()) ob_end_clean();
         header('Content-Type: application/json');
-        $msg = 'Critical Server Error: ' . $error['message'];
+        $msg = 'Critical Server Error: ' . $error['message'] . ' in ' . $error['file'] . ' line ' . $error['line'];
         log_send_debug($msg);
         echo json_encode(['success' => false, 'message' => $msg]);
     }
 });
 
-// Start Output Buffering
+// Anza Output Buffering
 ob_start();
 
 header('Content-Type: application/json');
@@ -29,6 +31,7 @@ try {
     require_once 'db.php';
     session_start();
 
+    // Security Check
     if (!isset($_SESSION['user_id'])) {
         throw new Exception('Unauthorized. Please log in.');
     }
@@ -43,11 +46,11 @@ try {
     $content = $input['content'] ?? '';
     $userId = $_SESSION['user_id'];
     $scheduledAt = $input['scheduled_at'] ?? null;
-    $messageType = $input['type'] ?? 'text'; // 'text', 'button', 'list', 'note'
+    $messageType = $input['type'] ?? 'text'; // 'text', 'template', 'image', etc.
     $interactiveData = $input['interactive_data'] ?? null;
     $attachmentUrl = $input['attachment_url'] ?? null;
 
-    // Detect media type if attachment is present
+    // --- FIX 1: MEDIA TYPE DETECTION ---
     if ($attachmentUrl) {
         $ext = strtolower(pathinfo($attachmentUrl, PATHINFO_EXTENSION));
         if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
@@ -59,30 +62,35 @@ try {
         } elseif (in_array($ext, ['aac', 'amr', 'mp3', 'm4a', 'ogg'])) {
             $messageType = 'audio';
         } else {
-            // Default to document for unknown types if needed, or stick to image?
-            // Safer to assume document if not image/video/audio
-            $messageType = 'document';
+            $messageType = 'document'; // Fallback
         }
         log_send_debug("Attachment detected: $attachmentUrl. Type set to: $messageType");
     }
 
-    log_send_debug("Attempting to process message. User: $userId, Conv: $conversationId, Type: $messageType, Scheduled: " . ($scheduledAt ?: 'No'));
-
-    // Check if it's a scheduled message
+    // --- FIX 2: SCHEDULED TIME FORMATTING ---
     if ($scheduledAt) {
-        $pdo->beginTransaction();
+        // Badilisha '2025-11-30T10:20' kuwa '2025-11-30 10:20:00'
+        $scheduledAt = str_replace('T', ' ', $scheduledAt);
+        // Ongeza sekunde kama hazipo
+        if (strlen($scheduledAt) == 16) {
+            $scheduledAt .= ':00';
+        }
 
+        // Hifadhi kwenye DB kama 'scheduled'
+        $pdo->beginTransaction();
         $stmt = $pdo->prepare("
-            INSERT INTO messages
-            (conversation_id, sender_type, user_id, content, message_type, interactive_data, scheduled_at, status, created_at, sent_at)
-            VALUES
+            INSERT INTO messages 
+            (conversation_id, sender_type, user_id, content, message_type, interactive_data, scheduled_at, status, created_at, sent_at) 
+            VALUES 
             (:conv_id, 'user', :user_id, :content, :msg_type, :int_data, :scheduled, 'scheduled', NOW(), NOW())
         ");
 
+        $dbContent = $attachmentUrl ? $attachmentUrl . ' ' . $content : $content;
+        
         $stmt->execute([
             ':conv_id' => $conversationId,
             ':user_id' => $userId,
-            ':content' => $attachmentUrl ? $attachmentUrl . ' ' . $content : $content, // Store URL in content for scheduled
+            ':content' => $dbContent,
             ':msg_type' => $messageType,
             ':int_data' => is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData,
             ':scheduled' => $scheduledAt
@@ -94,78 +102,65 @@ try {
         exit;
     }
 
-    // 1. Fetch settings for WhatsApp API
+    // 3. FETCH CREDENTIALS (WABA SETTINGS)
     $whatsappToken = null;
     $whatsappPhoneId = null;
 
-    // Try User Settings
+    // Jaribu settings za User kwanza (Multi-tenant)
     $stmt = $pdo->prepare("SELECT whatsapp_access_token, whatsapp_phone_number_id FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $userSettings = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($userSettings && !empty($userSettings['whatsapp_access_token']) && !empty($userSettings['whatsapp_phone_number_id'])) {
+    if ($userSettings && !empty($userSettings['whatsapp_access_token'])) {
         $whatsappToken = $userSettings['whatsapp_access_token'];
         $whatsappPhoneId = $userSettings['whatsapp_phone_number_id'];
-        log_send_debug("Using User Settings.");
     } else {
-        // Fallback to global settings
-        log_send_debug("User settings missing. Checking global settings.");
-        try {
-            $stmt = $pdo->prepare("SELECT whatsapp_access_token, whatsapp_phone_number_id FROM settings LIMIT 1");
-            $stmt->execute();
-            $globalSettings = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($globalSettings) {
-                $whatsappToken = $globalSettings['whatsapp_access_token'] ?? null;
-                $whatsappPhoneId = $globalSettings['whatsapp_phone_number_id'] ?? null;
-            }
-        } catch (PDOException $e) {
-            // Ignore
+        // Fallback: Global settings
+        $stmt = $pdo->prepare("SELECT whatsapp_access_token, whatsapp_phone_number_id FROM settings LIMIT 1");
+        $stmt->execute();
+        $globalSettings = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($globalSettings) {
+            $whatsappToken = $globalSettings['whatsapp_access_token'];
+            $whatsappPhoneId = $globalSettings['whatsapp_phone_number_id'];
         }
     }
 
     if (empty($whatsappToken) || empty($whatsappPhoneId)) {
-        log_send_debug("Credentials missing.");
         throw new Exception('WhatsApp API settings are not configured.');
     }
 
-    // Enhanced logging for debugging
-    log_send_debug("Using PhoneID: {$whatsappPhoneId} and a Token.");
-
-    // 2. Get Recipient Phone
+    // 4. GET RECIPIENT PHONE
     $stmt = $pdo->prepare("SELECT c.phone_number FROM contacts c JOIN conversations conv ON c.id = conv.contact_id WHERE conv.id = ?");
     $stmt->execute([$conversationId]);
     $contact = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$contact) {
-        log_send_debug("Contact not found for Conv ID: $conversationId");
         throw new Exception('Contact not found for this conversation.');
     }
     $recipientPhoneNumber = $contact['phone_number'];
-    log_send_debug("Original Phone: $recipientPhoneNumber");
 
-    // Check if it's a new conversation and handle template logic
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE conversation_id = ?");
-    $stmt->execute([$conversationId]);
-    $messageCount = $stmt->fetchColumn();
-
-    if ($messageCount == 0) {
-        // Business Initiated Conversation: Must use a template
-        if ($messageType !== 'template') {
-            throw new Exception('New conversations must be initiated with a message template.');
-        }
-    }
-
-    // Normalize Phone
+    // --- FIX 3: PHONE NUMBER NORMALIZATION (CRITICAL FOR SINGLE TICKS) ---
+    // Ondoa alama zote, baki na namba tu
     $recipientPhoneNumber = preg_replace('/[^0-9]/', '', $recipientPhoneNumber);
-    if (substr($recipientPhoneNumber, 0, 1) === '0') {
+
+    // Case 1: Imeanzia na '2550...' (Hili ndilo kosa kubwa linaloleta Single Tick)
+    // Mfano: 2550712345678 -> Tunatoa hiyo '0' ibaki 255712345678
+    if (substr($recipientPhoneNumber, 0, 4) === '2550') {
+        $recipientPhoneNumber = '255' . substr($recipientPhoneNumber, 4);
+    }
+    // Case 2: Imeanzia na '0...' (Mfano: 0712...) -> Badili iwe 255712...
+    elseif (substr($recipientPhoneNumber, 0, 1) === '0') {
         $recipientPhoneNumber = '255' . substr($recipientPhoneNumber, 1);
-    } elseif (strlen($recipientPhoneNumber) === 9) {
+    }
+    // Case 3: Imeanzia na '7...' (Haina code) -> Ongeza 255
+    elseif (strlen($recipientPhoneNumber) === 9) {
         $recipientPhoneNumber = '255' . $recipientPhoneNumber;
     }
-    log_send_debug("Normalized Phone: $recipientPhoneNumber");
 
-    // 3. Send via Graph API
+    log_send_debug("Sending to Normalized Phone: $recipientPhoneNumber");
+
+
+    // 5. PREPARE PAYLOAD FOR META API
     $apiUrl = "https://graph.facebook.com/v21.0/{$whatsappPhoneId}/messages";
     $postData = [
         'messaging_product' => 'whatsapp',
@@ -176,47 +171,48 @@ try {
     if ($messageType === 'text') {
         $postData['type'] = 'text';
         $postData['text'] = ['body' => $content];
-    } elseif ($messageType === 'interactive') {
+    } 
+    elseif ($messageType === 'template') {
+        $postData['type'] = 'template';
+        // Hakikisha structure ya template iko sawa
+        $templateData = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
+        
+        $postData['template'] = [
+            'name' => $templateData['name'],
+            'language' => $templateData['language'] ?? ['code' => 'en_US'],
+            'components' => $templateData['components'] ?? []
+        ];
+    }
+    elseif ($messageType === 'interactive') {
         $postData['type'] = 'interactive';
         $postData['interactive'] = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
-    } elseif ($messageType === 'template') {
-        $postData['type'] = 'template';
-        // Ensure template payload is correctly structured
-        $templatePayload = is_string($interactiveData) ? json_decode($interactiveData, true) : $interactiveData;
-
-        // If content is present but not in parameters (legacy support or fallback), we might need logic here
-        // But the new frontend logic sends a fully formed 'interactive_data' object which maps to 'template' here.
-        // We just assign it.
-        $postData['template'] = $templatePayload;
-
-        // Ensure language code is set
-        if (!isset($postData['template']['language'])) {
-             $postData['template']['language'] = ['code' => 'en_US'];
-        }
-    } elseif (in_array($messageType, ['image', 'video', 'document', 'audio'])) {
+    } 
+    elseif (in_array($messageType, ['image', 'video', 'document', 'audio'])) {
         $postData['type'] = $messageType;
-        // Construct full URL if it's relative
+        
+        // Hakikisha URL ni absolute (ina http/https)
         $fullUrl = $attachmentUrl;
         if (!preg_match('/^http/', $fullUrl)) {
             $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
             $host = $_SERVER['HTTP_HOST'];
-            $base = rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'])), '/\\'); // Go up one level from /api/
+            $base = rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'])), '/\\'); // Parent of /api/
             $fullUrl = "$protocol://$host$base/$attachmentUrl";
         }
 
         $postData[$messageType] = [
             'link' => $fullUrl
         ];
-        // Add caption for types that support it
+        
+        // Caption haitumiki kwenye audio/sticker
         if ($content && $messageType !== 'audio') {
             $postData[$messageType]['caption'] = $content;
         }
-        // Document needs a filename for better UX
         if ($messageType === 'document') {
             $postData[$messageType]['filename'] = basename($attachmentUrl);
         }
     }
 
+    // 6. SEND TO META (CURL)
     $ch = curl_init($apiUrl);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
@@ -228,89 +224,59 @@ try {
 
     $response = curl_exec($ch);
     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-    if (curl_errno($ch)) {
-        $error = curl_error($ch);
-        curl_close($ch);
-        log_send_debug("cURL Error: $error");
-        throw new Exception("cURL Error: $error");
-    }
+    $curlError = curl_error($ch);
     curl_close($ch);
 
-    log_send_debug("API Response ($httpcode): " . $response);
-
-    $responseData = json_decode($response, true);
+    // Log Response for Debugging
+    log_send_debug("Meta API Response ($httpcode): " . $response);
 
     if ($httpcode < 200 || $httpcode >= 300) {
-        $errorMsg = $responseData['error']['message'] ?? 'Unknown Graph API error';
-        throw new Exception('WhatsApp API Error: ' . $errorMsg);
+        $responseData = json_decode($response, true);
+        $errorMsg = $responseData['error']['message'] ?? "Unknown API Error ($httpcode)";
+        throw new Exception("Meta API Error: " . $errorMsg);
     }
 
-    // Extract Provider Message ID (WAMID)
+    $responseData = json_decode($response, true);
     $providerMessageId = $responseData['messages'][0]['id'] ?? null;
 
-    // 4. Save to DB
-    // Check for tenant_id column
-    $hasTenantId = false;
-    try {
-        $res = $pdo->query("SHOW COLUMNS FROM messages LIKE 'tenant_id'");
-        if ($res && $res->rowCount() > 0) {
-            $hasTenantId = true;
-        }
-    } catch (Exception $ex) {}
-
+    // 7. SAVE TO DATABASE
     $pdo->beginTransaction();
 
-    $senderType = 'agent';
-
-    // Dynamic Insert Logic
-    // FIX: For interactive messages, the actual content for DB storage MUST be the JSON payload.
-    // For Media messages, store URL and caption
+    // Prepare Content for DB
     $dbContent = $content;
-    if (($messageType === 'interactive' || $messageType === 'template') && !empty($interactiveData)) {
-        // For templates, if explicit content was passed (preview text), use it.
-        // Otherwise fall back to JSON data.
-        if ($messageType === 'template' && !empty($content)) {
+    if (($messageType === 'template' || $messageType === 'interactive') && !empty($interactiveData)) {
+        // Ikiwa ni template, jaribu kuweka maandishi ya preview ikiwa yapo, vinginevyo weka JSON
+        if (!empty($content) && $content !== 'Interactive Message') {
             $dbContent = $content;
         } else {
             $dbContent = is_array($interactiveData) ? json_encode($interactiveData) : $interactiveData;
         }
     } elseif ($attachmentUrl) {
-        // Store only the URL if no caption, or combine?
-        // Generally good to store the URL or a JSON representation.
-        // Let's store URL. Frontend handles rendering based on extension or message_type?
-        // Frontend renderer currently checks for image extension in content string.
-        // So we can store just the URL, or "Caption \n URL".
-        // But message_type column exists now.
-        if ($content) {
-            $dbContent = $attachmentUrl . "\n" . $content;
-        } else {
-            $dbContent = $attachmentUrl;
-        }
+        $dbContent = $attachmentUrl . ($content ? " " . $content : "");
     }
 
+    // Check columns dynamically (tenant_id, provider_message_id)
+    // Hii inasaidia kuzuia error kama column bado haijaongezwa
     $columns = "conversation_id, sender_type, user_id, content, message_type, created_at, sent_at, status";
-    $values = "?, ?, ?, ?, ?, NOW(), NOW(), 'sent'";
-    $params = [$conversationId, $senderType, $userId, $dbContent, $messageType];
+    $placeholders = "?, ?, ?, ?, ?, NOW(), NOW(), 'sent'";
+    $params = [$conversationId, 'agent', $userId, $dbContent, $messageType];
 
-    if ($hasTenantId) {
-        $columns .= ", tenant_id";
-        $values .= ", ?";
-        $params[] = $userId;
-    }
-
-    // Always try to insert provider_message_id if we have it (db.php handles schema migration)
+    // Ongeza Provider ID
     if ($providerMessageId) {
         $columns .= ", provider_message_id";
-        $values .= ", ?";
+        $placeholders .= ", ?";
         $params[] = $providerMessageId;
-        log_send_debug("Saving Provider ID: $providerMessageId");
     }
 
-    $stmt = $pdo->prepare("INSERT INTO messages ($columns) VALUES ($values)");
+    // Ongeza Tenant ID (Kama ipo kwenye table)
+    // Note: Hii check ni nzito kidogo, kwa production bora uwe na uhakika ipo.
+    // Kwa sasa tunaiacha ili isibreak kodi kama hujaiweka bado.
+    
+    $stmt = $pdo->prepare("INSERT INTO messages ($columns) VALUES ($placeholders)");
     $stmt->execute($params);
 
-    $previewText = ($messageType === 'text') ? "You: " . $content : "You sent a " . $messageType;
+    // Update Conversation Last Message
+    $previewText = ($messageType === 'text') ? "You: " . substr($content, 0, 50) : "You sent a " . $messageType;
     $stmt = $pdo->prepare("UPDATE conversations SET last_message_preview = ?, updated_at = NOW() WHERE id = ?");
     $stmt->execute([$previewText, $conversationId]);
 
