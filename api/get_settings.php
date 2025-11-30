@@ -9,45 +9,47 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once 'db.php';
+require_once 'helpers/PermissionHelper.php';
+
 $user_id = $_SESSION['user_id'];
+$tenant_id = getCurrentTenantId();
 
 try {
-    // 1. Pata Mipangilio Mikuu (General Settings)
-    $stmt = $pdo->prepare("SELECT * FROM settings WHERE id = 1");
-    $stmt->execute();
+    // 1. Fetch Tenant Settings
+    // We strictly fetch settings for the current tenant.
+    $stmt = $pdo->prepare("SELECT * FROM settings WHERE tenant_id = ? LIMIT 1");
+    $stmt->execute([$tenant_id]);
     $settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$settings) {
-        // Hili ni tatizo kubwa kama 'settings' table haina row ya id=1
-        http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'System settings not found.']);
-        exit();
+        // Fallback: If no settings row exists for this tenant, verify if tenant exists and create default row?
+        // Or return empty/default structure.
+        // For now, if migration worked, this should exist.
+        // If not, we might return error or defaults.
+        $settings = [];
     }
 
-    // 2. Pata Mipangilio ya Mtumiaji (User-specific Settings)
-    $user_stmt = $pdo->prepare("SELECT flw_webhook_secret_hash, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_business_account_id, whatsapp_status, corporate_tax_rate, tin_number, vrn_number, vfd_enabled, vfd_frequency, vfd_is_verified, exchange_rate FROM users WHERE id = ?");
-    $user_stmt->execute([$user_id]);
-    $user_settings = $user_stmt->fetch(PDO::FETCH_ASSOC);
+    // 2. Add calculated/dynamic fields (e.g., Free Tier Check) if needed
+    // $settings['free_tier_limit_reached'] = ... (Future SaaS logic)
 
-    if ($user_settings) {
-        // Unganisha mipangilio ya mtumiaji kwenye mipangilio mikuu
-        $settings = array_merge($settings, $user_settings);
-    }
-
-    // 3. Ficha 'Keys' za Siri kabla ya kutuma (Security)
+    // 3. Security: Mask Secret Keys
     unset($settings['smtp_password']);
-    
-    // Ficha Flutterwave keys
+
+    // Mask Flutterwave keys if they exist
     if (!empty($settings['flw_secret_key'])) $settings['flw_secret_key'] = true;
     if (!empty($settings['flw_encryption_key'])) $settings['flw_encryption_key'] = true;
     if (!empty($settings['flw_webhook_secret_hash'])) $settings['flw_webhook_secret_hash'] = true;
 
-    // Ficha WhatsApp token
+    // Mask WhatsApp token
+    if (!empty($settings['whatsapp_token'])) { // Note: Column name changed in migration from 'whatsapp_access_token'
+        $settings['whatsapp_token'] = true;
+    }
+    // Also check legacy name just in case
     if (!empty($settings['whatsapp_access_token'])) {
-        $settings['whatsapp_access_token'] = true; // Onyesha tu kama ipo, sio token yenyewe
+        $settings['whatsapp_access_token'] = true;
     }
 
-    // 4. Tuma mipangilio iliyounganishwa
+    // 4. Return Settings
     echo json_encode($settings);
 
 } catch (PDOException $e) {

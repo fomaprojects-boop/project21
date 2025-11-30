@@ -256,6 +256,14 @@ try {
         }
     }
 
+    // --- SAAS ARCHITECTURE MIGRATION (PHASE 1) ---
+    $saas_migration_lock = __DIR__ . '/../migrations/saas_migration_001.lock';
+    if (!file_exists($saas_migration_lock)) {
+        // Include the migration script
+        // Note: The script handles its own transaction and error logging
+        require_once __DIR__ . '/../migrations/saas_migration_001.php';
+    }
+
 } catch (PDOException $e) {
     // Ikishindikana, toa ujumbe wa kosa katika format ya JSON
     header('Content-Type: application/json');

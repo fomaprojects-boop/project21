@@ -1,0 +1,375 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        </head>
+        <body class="bg-gray-100 p-10">
+            <div class="p-8 h-full flex flex-col">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Settings</h2>
+                    <p class="text-gray-500 mt-1">Manage your account settings and preferences.</p>
+                </div>
+
+                <div class="flex flex-col lg:flex-row gap-8 h-full">
+                    <!-- Settings Sidebar -->
+                    <div class="w-full lg:w-64 flex-shrink-0">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-4">
+                            <nav class="space-y-1">
+                                <button onclick="showSettingsTab('profile', event)" class="settings-sidebar-btn settings-tab active-tab">
+                                    <i class="fas fa-building"></i> Business Profile
+                                </button>
+                                <button onclick="showSettingsTab('channels', event)" class="settings-sidebar-btn settings-tab">
+                                    <i class="fas fa-share-alt"></i> Channels
+                                </button>
+                                <button onclick="showSettingsTab('webhooks', event)" class="settings-sidebar-btn settings-tab">
+                                    <i class="fas fa-plug"></i> Webhooks
+                                </button>
+                                <button onclick="showSettingsTab('smtp', event)" class="settings-sidebar-btn settings-tab">
+                                    <i class="fas fa-envelope"></i> Email SMTP
+                                </button>
+                                <button onclick="showSettingsTab('invoice_design', event)" class="settings-sidebar-btn settings-tab">
+                                    <i class="fas fa-palette"></i> Invoice Design
+                                </button>
+                                <button onclick="showSettingsTab('client_settings', event)" class="settings-sidebar-btn settings-tab">
+                                    <i class="fas fa-sliders-h"></i> Client Settings
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <!-- Settings Content -->
+                    <div class="flex-1 min-w-0">
+                        <form id="settingsForm" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div id="settings-profile" class="settings-content">
+                            <div class="bg-white p-8 rounded-lg shadow-md border mb-8">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-xl font-bold">Business Profile</h3>
+                                    <button id="edit-profile-btn" type="button" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Edit Profile</button>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    <div class="md:col-span-1 flex flex-col items-center">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Profile Picture / Logo</label>
+                                        <img id="profile-pic-preview" src="https://placehold.co/128x128/e0e7ff/4f46e5?text=Logo" class="w-32 h-32 rounded-full object-cover bg-gray-200 mb-4">
+                                        <input type="file" id="profile-pic-upload" class="hidden" disabled accept="image/*">
+                                        <button type="button" id="upload-pic-btn" onclick="document.getElementById('profile-pic-upload').click()" class="text-sm bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Upload Image</button>
+                                    </div>
+                                    <div class="md:col-span-2 grid grid-cols-1 gap-6">
+                                        <div><label class="block text-sm font-medium text-gray-700">Business Name</label><input type="text" name="business_name" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled></div>
+                                        <div><label class="block text-sm font-medium text-gray-700">Business Email</label><input type="email" name="business_email" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled></div>
+                                        <div><label class="block text-sm font-medium text-gray-700">Business Address</label><textarea name="business_address" rows="3" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled></textarea></div>
+                                    </div>
+                                </div>
+                                <div class="md:col-span-3 border-t pt-6 mt-6">
+                                    <h4 class="font-bold text-lg text-gray-800 mb-4 flex items-center">
+                                        <i class="fas fa-headset text-violet-600 mr-2"></i> Remote Support Access
+                                    </h4>
+                                    <div class="flex items-center justify-between bg-violet-50 p-4 rounded-lg border border-violet-100">
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-800">Allow Super Admin Access</p>
+                                            <p class="text-xs text-gray-500 mt-1">Enable this to allow support staff to log in to your account for troubleshooting.</p>
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            <div id="support-pin-container" class="hidden text-right">
+                                                <span class="text-xs text-gray-500 block uppercase tracking-wider">Support PIN</span>
+                                                <span id="support-pin-display" class="text-xl font-mono font-bold text-violet-700 tracking-widest">------</span>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" id="remote-access-toggle" class="sr-only peer" onchange="toggleRemoteAccess()">
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-violet-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="settings-channels" class="settings-content hidden">
+                            <div class="bg-white p-8 rounded-lg shadow-md border">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <i class="fab fa-whatsapp text-5xl text-green-500"></i>
+                                        <div class="ml-4">
+                                            <h4 class="font-bold text-lg">WhatsApp Connection</h4>
+                                            <p id="whatsapp-status" class="text-sm text-gray-500">Not Connected</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button id="whatsapp-connect-btn" onclick="launchWhatsAppSignup()" class="bg-violet-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-violet-700">Connect with Facebook</button>
+                                        <button id="whatsapp-register-btn" onclick="completeWhatsappRegistration()" class="hidden bg-green-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-green-700" title="Fix Pending Status">Complete Registration</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="settings-webhooks" class="settings-content hidden">
+                            <div class="bg-white p-8 rounded-lg shadow-md border">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-xl font-bold">Webhook Settings</h3>
+                                    <button id="edit-webhooks-btn" type="button" class... >Edit Settings</button>
+                                </div>
+                                <p class="text-gray-500 mb-6">Configure webhooks for payment gateways to automate payment status updates.</p>
+
+                                <div class="mb-6 bg-violet-50 p-4 rounded-lg border border-violet-200">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Your Unique Webhook URL:</label>
+                                    <p class="text-xs text-gray-600 mb-2">Copy this URL and paste it into your Flutterwave dashboard.</p>
+                                    <div class="flex items-center bg-white p-2 border border-gray-300 rounded-md">
+                                        <strong class="text-violet-700 font-mono text-sm break-all" id="unique-webhook-url-display" data-full-url="">
+                                            ************************************
+                                        </strong>
+                                        <div class="ml-auto pl-2">
+                                            <button type="button" id="toggle-webhook-visibility" class="text-gray-500 hover:text-gray-700">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button type="button" id="copy-webhook-url" class="text-gray-500 hover:text-gray-700 ml-2">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-6 border p-6 rounded-lg">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-bold text-lg text-gray-800">Flutterwave</h4>
+                                            <p class="text-sm text-gray-500">Provider: <span class="font-semibold">Flutterwave</span></p>
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <label for="flw-test-mode" class="flex items-center cursor-pointer">
+                                                <span class="text-sm font-medium text-gray-700 mr-2">Test Mode</span>
+                                                <div class="relative">
+                                                    <input type="checkbox" id="flw-test-mode" name="flw_test_mode" class="sr-only webhook-input" disabled>
+                                                    <div class="block bg-gray-300 w-10 h-6 rounded-full"></div>
+                                                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                                                </div>
+                                            </label>
+                                            <label for="flw-active" class="flex items-center cursor-pointer">
+                                                <span class="text-sm font-medium text-gray-700 mr-2">Active</span>
+                                                <div class="relative">
+                                                    <input type="checkbox" id="flw-active" name="flw_active" class="sr-only webhook-input" disabled>
+                                                    <div class="block bg-gray-300 w-10 h-6 rounded-full"></div>
+                                                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div><label class="block text-sm font-medium text-gray-700">Display Name</label><input type="text" name="flw_display_name" class="webhook-input mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled placeholder="e.g., Flutterwave Payments"></div>
+                                        <div><label class="block text-sm font-medium text-gray-700">Internal Name</label><input type="text" value="flutterwave" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-200" disabled></div>
+
+                                        <div><label class="block text-sm font-medium text-gray-700">Public Key</label><input type="text" name="flw_public_key" class="webhook-input mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled></div>
+
+                                        <div class="relative">
+                                            <label class="block text-sm font-medium text-gray-700">Secret Key</label>
+                                            <input type="password" name="flw_secret_key" class="webhook-input mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100 pr-10" disabled>
+                                            <button type="button" class="absolute inset-y-0 right-0 top-6 flex items-center px-3 text-gray-500 hover:text-gray-700" onclick="togglePasswordVisibility(this)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+
+                                        <div class="md:col-span-2 relative">
+                                            <label class="block text-sm font-medium text-gray-700">Encryption Key</label>
+                                            <input type="password" name="flw_encryption_key" class="webhook-input mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100 pr-10" disabled>
+                                             <button type="button" class="absolute inset-y-0 right-0 top-6 flex items-center px-3 text-gray-500 hover:text-gray-700" onclick="togglePasswordVisibility(this)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+
+                                        <div class="md:col-span-2 relative">
+                                            <label class="block text-sm font-medium text-gray-700">Webhook Secret Hash</label>
+                                            <input type="password" name="flw_webhook_secret_hash" class="webhook-input mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100 pr-10" disabled>
+                                             <button type="button" class="absolute inset-y-0 right-0 top-6 flex items-center px-3 text-gray-500 hover:text-gray-700" onclick="togglePasswordVisibility(this)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="settings-smtp" class="settings-content hidden">
+                             <div class="bg-white p-8 rounded-lg shadow-md border">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-xl font-bold">Email SMTP Settings</h3>
+                                    <div class="flex items-center space-x-2">
+                                        <button id="test-smtp-btn" type="button" onclick="testSmtpSettings()" class="text-sm bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-200 disabled:opacity-50" disabled>Test Connection</button>
+                                        <button id="edit-smtp-btn" type="button" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Edit Settings</button>
+                                    </div>
+                                </div>
+                                <div id="smtp-test-result" class="mb-4"></div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Email Provider</label>
+                                        <div class="flex space-x-4 mt-2">
+                                            <label class="flex items-center"><input type="radio" name="smtp_choice" value="default" class="mr-2" disabled checked> Use ChatMe Mail (Default)</label>
+                                            <label class="flex items-center"><input type="radio" name="smtp_choice" value="custom" class="mr-2" disabled> Use Custom SMTP</label>
+                                        </div>
+                                    </div>
+                                    <div id="smtp-custom-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-6 mt-6 hidden">
+                                        <div><label class="block text-sm font-medium text-gray-700">SMTP Host</label><input type="text" name="smtp_host" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" placeholder="e.g., smtp.gmail.com" disabled></div>
+                                        <div><label class="block text-sm font-medium text-gray-700">SMTP Port</label><input type="text" name="smtp_port" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" placeholder="e.g., 465 or 587" disabled></div>
+                                        <div><label class="block text-sm font-medium text-gray-700">SMTP Secure</label><select name="smtp_secure" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled><option value="ssl">SSL</option><option value="tls">TLS</option><option value="">None</option></select></div>
+                                        <div><label class="block text-sm font-medium text-gray-700">SMTP Username</label><input type="text" name="smtp_username" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" placeholder="e.g., your-email@gmail.com" disabled></div>
+                                        <div><label class="block text-sm font-medium text-gray-700">SMTP Password</label><input type="password" name="smtp_password" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" placeholder="Leave blank to keep unchanged" disabled></div>
+                                        <div><label class="block text-sm font-medium text-gray-700">From Email</label><input type="email" name="smtp_from_email" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" placeholder="e.g., info@yourcompany.com" disabled></div>
+                                        <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700">From Name</label><input type="text" name="smtp_from_name" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" placeholder="e.g., Your Company Name" disabled></div>
+                                    </div>
+                                </div>
+                             </div>
+                        </div>
+
+                        <div id="settings-invoice_design" class="settings-content hidden">
+                            <div class="bg-white p-8 rounded-lg shadow-md border">
+                                <div class="flex justify-between items-center mb-6">
+                                     <h3 class="text-xl font-bold">Choose Your Invoice Template</h3>
+                                     <button id="edit-invoice-design-btn" type="button" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Edit Selection</button>
+                                </div>
+                                <p class="text-gray-500 mb-6">Select the default template. Click "Preview" to see how it looks.</p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="invoice-template-options">
+
+                                    <div class="border-2 rounded-lg p-4 relative invoice-template-label" data-template-id="default">
+                                        <label class="cursor-pointer" for="template-default">
+                                            <input type="radio" name="default_invoice_template" value="default" id="template-default" class="absolute top-2 right-2 invoice-template-radio" disabled checked>
+                                            <div class="font-semibold text-center mb-2">Default Template</div>
+                                            <div class="w-full h-40 bg-gray-200 flex items-center justify-center text-gray-500 rounded">
+
+                                            </div>
+                                        </label>
+                                        <button type="button" onclick="previewInvoiceTemplate('default', event)" class="mt-2 w-full text-sm bg-gray-600 text-white py-1 rounded hover:bg-gray-700">Preview</button>
+                                    </div>
+
+                                    <div class="border-2 rounded-lg p-4 relative invoice-template-label" data-template-id="modern_blue">
+                                         <label class="cursor-pointer" for="template-modern_blue">
+                                            <input type="radio" name="default_invoice_template" value="modern_blue" id="template-modern_blue" class="absolute top-2 right-2 invoice-template-radio" disabled>
+                                            <div class="font-semibold text-center mb-2">Modern Blue</div>
+                                            <div class="w-full h-40 bg-gray-200 flex items-center justify-center text-gray-500 rounded">
+
+                                            </div>
+                                        </label>
+                                        <button type="button" onclick="previewInvoiceTemplate('modern_blue', event)" class="mt-2 w-full text-sm bg-gray-600 text-white py-1 rounded hover:bg-gray-700">Preview</button>
+                                    </div>
+
+                                    <div class="border-2 rounded-lg p-4 relative invoice-template-label" data-template-id="classic_bw">
+                                         <label class="cursor-pointer" for="template-classic_bw">
+                                            <input type="radio" name="default_invoice_template" value="classic_bw" id="template-classic_bw" class="absolute top-2 right-2 invoice-template-radio" disabled>
+                                            <div class="font-semibold text-center mb-2">Classic Black & White</div>
+                                            <div class="w-full h-40 bg-gray-200 flex items-center justify-center text-gray-500 rounded">
+
+                                            </div>
+                                        </label>
+                                        <button type="button" onclick="previewInvoiceTemplate('classic_bw', event)" class="mt-2 w-full text-sm bg-gray-600 text-white py-1 rounded hover:bg-gray-700">Preview</button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div id="settings-client_settings" class="settings-content hidden">
+                            <div class="bg-white p-8 rounded-lg shadow-md border">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-xl font-bold">Client Settings</h3>
+                                    <button id="edit-client-settings-btn" type="button" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Edit Settings</button>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Business Stamp / Signature</label>
+                                        <img id="business-stamp-preview" src="https://placehold.co/128x128/e0e7ff/4f46e5?text=Stamp" class="w-32 h-32 object-cover bg-gray-200 my-2">
+                                        <input type="file" id="business-stamp-upload" name="business_stamp" class="hidden" disabled accept="image/*">
+                                        <button type="button" id="upload-stamp-btn" onclick="document.getElementById('business-stamp-upload').click()" class="text-sm bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Upload Image</button>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Default Currency</label>
+                                        <select name="default_currency" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100" disabled>
+                                            <option value="TZS">TZS - Tanzanian Shilling</option>
+                                            <option value="USD">USD - US Dollar</option>
+                                            <option value="KES">KES - Kenyan Shilling</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">VRN (VAT Registration Number)</label>
+                                        <input type="text" name="vrn_number" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100 client-settings-input" placeholder="e.g., 40-012345-X" disabled>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Corporate Tax Rate (%)</label>
+                                        <input type="number" name="corporate_tax_rate" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100 client-settings-input" step="0.01" placeholder="e.g., 30.00" disabled>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Exchange Rate (1 USD = ? TZS)</label>
+                                        <input type="number" name="exchange_rate" class="mt-1 w-full p-2 border-gray-300 border rounded-md bg-gray-100 client-settings-input" step="0.01" placeholder="e.g., 2500" disabled>
+                                        <p class="text-xs text-gray-500 mt-1">Used for converting financial reports if currency is changed.</p>
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- VFD Integration Section -->
+                            <div class="bg-white p-8 rounded-lg shadow-md border mt-8">
+                                <h3 class="text-xl font-bold mb-6">TRA VFD Integration</h3>
+                                <div class="space-y-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label for="tin_number" class="block text-sm font-medium text-gray-700">TIN Number *</label>
+                                            <input type="text" name="tin_number" id="tin_number" class="mt-1 w-full p-2 border-gray-300 border rounded-md client-settings-input" disabled>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Registration Status</label>
+                                            <p id="vfd-verification-status" class="mt-2 text-sm font-bold px-3 py-1.5 rounded-full inline-block">Loading...</p>
+                                        </div>
+                                    </div>
+
+                                    <div id="vfd-submission-options" class="hidden">
+                                        <div class="border-t pt-6 mt-6">
+                                            <label class="block text-sm font-medium text-gray-700">Automatic EFD Receipt Submission</label>
+                                            <label for="vfd_enabled" class="flex items-center cursor-pointer mt-2">
+                                                <div class="relative">
+                                                    <input type="checkbox" id="vfd_enabled" name="vfd_enabled" class="sr-only client-settings-input" onchange="toggleVfdFrequency()" disabled>
+                                                    <div class="block bg-gray-300 w-10 h-6 rounded-full"></div>
+                                                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                                                </div>
+                                                <div class="ml-3 text-gray-700 font-medium">
+                                                    Enable
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div id="vfd-frequency-options" class="hidden pl-4 border-l-2 border-gray-200 ml-4 mt-4">
+                                            <label class="block text-sm font-medium text-gray-700">Submission Frequency</label>
+                                            <div class="mt-2 space-y-2">
+                                                <label class="flex items-center">
+                                                    <input type="radio" name="vfd_frequency" value="daily" class="client-settings-input" disabled>
+                                                    <span class="ml-2">Daily</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="radio" name="vfd_frequency" value="weekly" class="client-settings-input" disabled>
+                                                    <span class="ml-2">Weekly</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="radio" name="vfd_frequency" value="monthly" class="client-settings-input" disabled>
+                                                    <span class="ml-2">Monthly</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                            <div id="save-changes-container" class="p-4 bg-gray-50 border-t border-gray-200 flex justify-end hidden">
+                                <button type="submit" class="bg-violet-600 text-white px-6 py-2 rounded-lg hover:bg-violet-700 font-semibold shadow-sm transition-colors">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <script>
+                // Mock toggle function
+                function toggleRemoteAccess() { console.log('Toggled'); }
+
+                // Show the PIN container manually to verify styling
+                document.getElementById('support-pin-container').classList.remove('hidden');
+                document.getElementById('support-pin-display').textContent = 'XYZ789';
+                document.getElementById('remote-access-toggle').checked = true;
+
+                // Show profile tab
+                document.getElementById('settings-profile').style.display = 'block';
+            </script>
+        </body>
+        </html>
