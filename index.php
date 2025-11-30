@@ -3671,7 +3671,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
         }
 
         function safeDate(dateStr) {
-            if (!dateStr) return new Date();
+            if (!dateStr || dateStr === 'null' || dateStr === '') return null;
             // Replace space with T for ISO format compatibility (Safari/older browsers)
             // MySQL: "2023-11-24 13:06:16" -> "2023-11-24T13:06:16"
             return new Date(dateStr.replace(' ', 'T'));
@@ -4494,7 +4494,7 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 html: `
                     <div class="text-left space-y-3">
                         <p class="text-sm text-gray-500 mb-2">Enter details for IFRS compliance (${year}).</p>
-                        
+
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700">Long Term Bank Loans</label>
@@ -5528,14 +5528,23 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                 if (hoursDiff > 24) {
                     // Window is CLOSED (Meta Rule)
                     messageInput.disabled = true;
-                    messageInput.placeholder = 'Select a template to restart the conversation.';
+                    // IMPROVED UX: Clearer placeholder
+                    messageInput.placeholder = 'Waiting for customer reply...';
                     inputWrapper.classList.add('opacity-50', 'bg-gray-100');
                     if (sendBtn) sendBtn.style.display = 'none';
 
                     const windowIndicator = document.createElement('div');
                     windowIndicator.id = 'chat-closed-indicator';
-                    windowIndicator.className = 'my-2 p-3 rounded-lg bg-red-50 text-red-800 text-sm text-center italic border border-red-100';
-                    windowIndicator.innerHTML = `<i>24-hour window closed. Last message at ${lastMessageDate ? lastMessageDate.toLocaleString() : 'Unknown'}. You must send a template to continue.</i>`;
+                    // IMPROVED UX: Visual warning about 24h window
+                    windowIndicator.className = 'my-2 p-3 rounded-lg bg-orange-50 text-orange-800 text-sm text-center border border-orange-200 shadow-sm';
+                    windowIndicator.innerHTML = `
+                        <div class="flex items-center justify-center gap-2">
+                            <i class="fas fa-clock text-orange-600"></i>
+                            <span class="font-semibold">24-Hour Window Closed</span>
+                        </div>
+                        <p class="text-xs mt-1 text-orange-700">Last message: ${lastMessageDate ? lastMessageDate.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'Unknown'}.</p>
+                        <p class="text-xs mt-1">You can only send <button onclick="openTemplateSelector()" class="underline font-bold hover:text-orange-900">Templates</button> until the customer replies.</p>
+                    `;
                     if(chatFooter && chatFooter.parentNode) chatFooter.parentNode.insertBefore(windowIndicator, chatFooter);
                 }
             }
@@ -5770,15 +5779,18 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
             bubbleWrapper.className = 'flex ' + (isAgent ? 'justify-end' : 'justify-start') + ' items-end gap-1 mb-2';
             bubbleWrapper.id = `msg-${msg.id}`;
 
-            const timeString = isScheduled ?
-                `<span class="italic text-gray-500">Scheduled: ${safeDate(msg.scheduled_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</span>` :
+            const dateObj = safeDate(msg.scheduled_at);
+            const timeString = (isScheduled && dateObj) ?
+                `<span class="italic text-gray-500">Scheduled: ${dateObj.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</span>` :
                 safeDate(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
             let statusIcon = '';
             if (isAgent) {
                 if (isScheduled) {
-                    statusIcon = `<i class="fas fa-clock text-amber-500 text-[10px] ml-1" title="Pending"></i>`;
+                    // PRIORITY FIX: Show Clock for Scheduled Messages
+                    statusIcon = `<i class="fas fa-clock text-amber-500 text-[10px] ml-1" title="Scheduled for ${timeString.replace(/<[^>]*>?/gm, '')}"></i>`;
                 } else {
+                    // Standard Ticks for Sent/Delivered/Read
                     let iconClass = 'text-gray-300';
                     let iconType = 'fa-check';
 
@@ -6118,7 +6130,14 @@ $baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $path;
                     successMessage = `Snoozed until ${snoozeUntil.toLocaleString()}`;
             }
 
-            const mysqlDatetime = snoozeUntil.toISOString().slice(0, 19).replace('T', ' ');
+            // Calculate Local MySQL Format (YYYY-MM-DD HH:MM:SS)
+            const year = snoozeUntil.getFullYear();
+            const month = String(snoozeUntil.getMonth() + 1).padStart(2, '0');
+            const day = String(snoozeUntil.getDate()).padStart(2, '0');
+            const hours = String(snoozeUntil.getHours()).padStart(2, '0');
+            const minutes = String(snoozeUntil.getMinutes()).padStart(2, '0');
+            const seconds = String(snoozeUntil.getSeconds()).padStart(2, '0');
+            const mysqlDatetime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 
             if (!mysqlDatetime || !currentConversationId) return;
 
