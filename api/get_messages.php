@@ -34,11 +34,22 @@ try {
     $offset = ($page - 1) * $limit;
 
     // Get messages with pagination (latest first, then reversed)
+    // --- FIX: Tumeongeza 'message_type' na 'interactive_data' ili frontend ijue cha kuonyesha ---
     $stmt = $pdo->prepare("
-        SELECT id, sender_type, content, sent_at, created_at, status, is_internal, scheduled_at
+        SELECT 
+            id, 
+            sender_type, 
+            content, 
+            message_type,       /* Muhimu kwa aina ya meseji */
+            interactive_data,   /* Muhimu kwa buttons */
+            sent_at, 
+            created_at, 
+            status, 
+            is_internal, 
+            scheduled_at        /* Muhimu kwa hiyo icon ya saa */
         FROM messages
         WHERE conversation_id = :conversation_id
-        ORDER BY sent_at DESC
+        ORDER BY created_at DESC /* Bora kutumia created_at kupanga mtiririko */
         LIMIT :limit OFFSET :offset
     ");
 
