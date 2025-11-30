@@ -38,7 +38,7 @@ try {
             m.interactive_data,
             con.phone_number as recipient_phone,
             u.whatsapp_phone_number_id,
-            u.facebook_access_token
+            u.whatsapp_access_token
         FROM messages m
         JOIN conversations cv ON m.conversation_id = cv.id
         JOIN contacts con ON cv.contact_id = con.id
@@ -76,7 +76,7 @@ try {
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $msg['facebook_access_token'],
+            'Authorization: Bearer ' . $msg['whatsapp_access_token'],
             'Content-Type: application/json'
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
