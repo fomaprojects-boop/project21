@@ -3,133 +3,113 @@
 session_start();
 header('Content-Type: application/json');
 
+require_once 'db.php';
+require_once 'helpers/PermissionHelper.php';
+
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
     exit();
 }
 
-require_once 'db.php';
-$user_id = $_SESSION['user_id']; // Hii ni ID ya mteja aliye-login
+$user_id = $_SESSION['user_id'];
+$tenant_id = getCurrentTenantId();
 
-// Initialize $data with POST data
+// 1. Check Permissions
+if (!hasPermission($user_id, 'manage_settings')) {
+    http_response_code(403);
+    echo json_encode(['status' => 'error', 'message' => 'Access Denied: manage_settings permission required.']);
+    exit();
+}
+
 $data = $_POST;
 
-// --- [MABADILIKO YANAANZIA HAPA] ---
-
-// 1. Tenganisha 'Columns' Kulingana na 'Table'
-// Hizi ni za Mfumo Mzima (zitaenda 'settings' table)
-$system_columns = [
+// 2. Define Allowed Columns for 'settings' table
+// These are all now in one table.
+$allowed_columns = [
     'business_name', 'business_email', 'business_address',
-    'whatsapp_token', 'whatsapp_phone_id',
+    'whatsapp_token', 'whatsapp_phone_id', 'whatsapp_business_account_id', // Renamed in migration
     'smtp_host', 'smtp_port', 'smtp_secure', 'smtp_username',
     'smtp_password', 'smtp_from_email', 'smtp_from_name',
     'smtp_choice', 'default_invoice_template',
-    'business_stamp_url', 'default_currency'
-];
-
-// Hizi ni za Mteja (zitaenda 'users' table)
-$user_columns = [
+    'business_stamp_url', 'default_currency',
     'flw_public_key', 'flw_secret_key', 'flw_encryption_key',
     'flw_display_name', 'flw_test_mode', 'flw_active', 'flw_webhook_secret_hash',
     'corporate_tax_rate', 'tin_number', 'vrn_number', 'vfd_enabled', 'vfd_frequency', 'vfd_is_verified',
     'exchange_rate'
 ];
 
-// --- Upload ya Picha (Hii inabaki kama ilivyo) ---
+// 3. Handle File Upload (Business Stamp)
 if (isset($_FILES['business_stamp']) && $_FILES['business_stamp']['error'] == UPLOAD_ERR_OK) {
-    // ... (Code yako ya upload ya 'business_stamp' inabaki hapa) ...
-    // ... (Hakikisha 'business_stamp_url' inaongezwa kwenye $data) ...
-    if (move_uploaded_file($_FILES['business_stamp']['tmp_name'], $uploadFile)) {
-        $data['business_stamp_url'] = '../uploads/' . $fileName; // Hakikisha path ni sahihi
-    }
-}
-// ... (Logic yako yote ya ku-handle upload) ...
+    $uploadDir = '../uploads/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
+    $fileExt = strtolower(pathinfo($_FILES['business_stamp']['name'], PATHINFO_EXTENSION));
+    $allowedExts = ['jpg', 'jpeg', 'png', 'gif'];
 
-// 2. Andaa 'Queries' mbili tofauti
-$system_sql_parts = [];
-$system_params = [];
-$user_sql_parts = [];
-$user_params = [];
+    if (in_array($fileExt, $allowedExts)) {
+        $fileName = 'stamp_' . $tenant_id . '_' . time() . '.' . $fileExt;
+        $uploadFile = $uploadDir . $fileName;
 
-// Tenganisha data kulingana na kile kilichotumwa
-foreach ($data as $key => $value) {
-
-    // --- Logic maalum kwa fields (Hii inabaki kama ilivyokuwa) ---
-    if ($key === 'smtp_password' || $key === 'flw_secret_key' || $key === 'flw_encryption_key') {
-        if (empty($value)) {
-            continue; // Ruka
+        if (move_uploaded_file($_FILES['business_stamp']['tmp_name'], $uploadFile)) {
+            $data['business_stamp_url'] = 'uploads/' . $fileName;
         }
     }
-    if ($key === 'smtp_port') {
-        $value = ($value === '') ? null : (int)$value;
-    }
-    if ($key === 'flw_test_mode' || $key === 'flw_active' || $key === 'vfd_enabled') {
-        $value = ($value === 'on') ? 1 : 0;
-    }
-    // ... (Unaweza kuongeza logic nyingine hapa) ...
+}
 
-    if ($key === 'corporate_tax_rate') {
+// 4. Prepare Update Query
+$sql_parts = [];
+$params = [];
+
+foreach ($data as $key => $value) {
+    if (!in_array($key, $allowed_columns)) {
+        continue;
+    }
+
+    // Skip empty password fields (don't overwrite with empty string)
+    if (($key === 'smtp_password' || $key === 'flw_secret_key' || $key === 'flw_encryption_key' || $key === 'flw_webhook_secret_hash' || $key === 'whatsapp_token') && empty($value)) {
+        continue;
+    }
+
+    // Data Type Handling
+    if ($key === 'smtp_port') $value = ($value === '') ? null : (int)$value;
+    if ($key === 'flw_test_mode' || $key === 'flw_active' || $key === 'vfd_enabled') {
+        $value = ($value === 'on' || $value === '1' || $value === true) ? 1 : 0;
+    }
+    if ($key === 'corporate_tax_rate' || $key === 'exchange_rate') {
         $value = ($value === '') ? null : $value;
     }
 
-    // --- [MABADILIKO] Tenganisha data kwenye 'queries' mbili ---
-    if (in_array($key, $system_columns)) {
-        // Hii ni ya 'settings' table
-        $system_sql_parts[] = "$key = ?";
-        $system_params[] = $value;
-
-    } elseif (in_array($key, $user_columns)) {
-        // Hii ni ya 'users' table
-        $user_sql_parts[] = "$key = ?";
-        $user_params[] = $value;
-    }
+    $sql_parts[] = "$key = ?";
+    $params[] = $value;
 }
 
-// Handle checkboxes za Flutterwave zisipotumwa
-if (!isset($data['flw_test_mode'])) {
-    $user_sql_parts[] = "flw_test_mode = ?";
-    $user_params[] = 0;
+// Handle checkboxes if not present in POST (unchecked = 0)
+// Only if we are saving that section? Ideally yes, but simplistic approach:
+if (!isset($data['flw_test_mode']) && isset($data['flw_public_key'])) { // Heuristic: if editing FLW section
+    $sql_parts[] = "flw_test_mode = 0";
 }
-if (!isset($data['flw_active'])) {
-    $user_sql_parts[] = "flw_active = ?";
-    $user_params[] = 0;
+if (!isset($data['flw_active']) && isset($data['flw_public_key'])) {
+    $sql_parts[] = "flw_active = 0";
 }
-
-// Handle vfd_enabled checkbox
-if (!isset($data['vfd_enabled'])) {
-    $user_sql_parts[] = "vfd_enabled = ?";
-    $user_params[] = 0;
+if (!isset($data['vfd_enabled']) && isset($data['tin_number'])) {
+    $sql_parts[] = "vfd_enabled = 0";
 }
 
-// 3. Endesha 'Queries' ndani ya 'Transaction'
+if (empty($sql_parts)) {
+    echo json_encode(['status' => 'success', 'message' => 'No changes to save.']);
+    exit();
+}
+
 try {
-    $pdo->beginTransaction(); // Anzisha transaction
+    $sql = "UPDATE settings SET " . implode(', ', $sql_parts) . " WHERE tenant_id = ?";
+    $params[] = $tenant_id;
 
-    // Query ya kwanza: Update 'settings' table (kwa Mfumo Mzima)
-    if (!empty($system_sql_parts)) {
-        $sql_system = "UPDATE settings SET " . implode(', ', $system_sql_parts) . " WHERE id = 1";
-        $stmt_system = $pdo->prepare($sql_system);
-        $stmt_system->execute($system_params);
-    }
-
-    // Query ya pili: Update 'users' table (kwa Mteja Aliye-login)
-    if (!empty($user_sql_parts)) {
-        $sql_user = "UPDATE users SET " . implode(', ', $user_sql_parts) . " WHERE id = ?";
-
-        // Ongeza ID ya mteja mwishoni mwa 'params'
-        $user_params[] = $user_id;
-
-        $stmt_user = $pdo->prepare($sql_user);
-        $stmt_user->execute($user_params);
-    }
-
-    $pdo->commit(); // Kiri (commit) mabadiliko yote
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
 
     echo json_encode(['status' => 'success', 'message' => 'Settings saved successfully.']);
 
 } catch (PDOException $e) {
-    $pdo->rollBack(); // Futa mabadiliko kama kosa limetokea
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
 }
